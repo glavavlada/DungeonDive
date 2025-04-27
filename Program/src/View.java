@@ -7,4 +7,5 @@
  * @version 4/26/2025
  */
 public class View {
+
 }
