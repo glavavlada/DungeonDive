@@ -1,5 +1,5 @@
 /**
- *
+ * Controls how user input is passed from view to model.
  *
  * @author Jacob Hilliker
  * @author Emanuel Feria

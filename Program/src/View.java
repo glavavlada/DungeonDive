@@ -1,5 +1,5 @@
 /**
- *
+ * The GUI of DungeonDive.
  *
  * @author Jacob Hilliker
  * @author Emanuel Feria

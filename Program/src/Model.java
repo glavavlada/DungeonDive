@@ -1,5 +1,5 @@
 /**
- *
+ * Where the logic and data of DungeonDive is.
  *
  * @author Jacob Hilliker
  * @author Emanuel Feria
