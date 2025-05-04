@@ -68,23 +68,23 @@ public class Hero extends Character {
         return true;
     }
 
-    /**
-     * Activate a pillar when found.
-     * @param pillar The pillar to activate
-     */
-    public void activatePillar(Pillar pillar) {
-        pillar.activate(this);
-        pillarsActivated++;
-    }
+//    /**
+//     * Activate a pillar when found.
+//     * @param pillar The pillar to activate
+//     */
+//    public void activatePillar(Pillar pillar) {
+//        pillar.activate(this);
+//        pillarsActivated++;
+//    }
 
-    /**
-     * Enter a room in the dungeon.
-     * @param room The room to enter
-     */
-    public void enterRoom(Room room) {
-        room.setVisited(true);
-        // Room could have elements that interact with hero
-    }
+//    /**
+//     * Enter a room in the dungeon.
+//     * @param room The room to enter
+//     */
+//    public void enterRoom(Room room) {
+//        room.setVisited(true);
+//        // Room could have elements that interact with hero
+//    }
 
     // Getters and setters
     public ArrayList<Item> getInventory() {
