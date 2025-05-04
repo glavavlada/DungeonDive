@@ -1,4 +1,4 @@
-package model.element;
+package Model.element;
 
 public class HealthPotion {
 }

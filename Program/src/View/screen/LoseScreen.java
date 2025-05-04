@@ -1,4 +1,4 @@
-package view.screen;
+package View.screen;
 
 public class LoseScreen {
 }

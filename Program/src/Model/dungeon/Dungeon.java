@@ -1,4 +1,4 @@
-package model.dungeon;
+package Model.dungeon;
 
 public class Dungeon {
 }

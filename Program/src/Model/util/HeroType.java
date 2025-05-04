@@ -1,4 +1,4 @@
-package model.util;
+package Model.util;
 
 public enum HeroType {
 }
