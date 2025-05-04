@@ -1,11 +1,13 @@
+package Model;
+
 /**
- * Controls how user input is passed from view to model.
+ * Where the logic and data of DungeonDive is.
  *
  * @author Jacob Hilliker
  * @author Emanuel Feria
  * @author Vladyslav Glavatskyi
  * @version 4/26/2025
  */
-public class Controller {
+public class Model {
 
 }
