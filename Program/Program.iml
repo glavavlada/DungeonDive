@@ -20,5 +20,6 @@
         <jarDirectory url="file://$USER_HOME$/Downloads/openjfx-21.0.7_windows-x64_bin-sdk/javafx-sdk-21.0.7/lib" recursive="false" />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="javafx-swt" level="project" />
   </component>
 </module>
