@@ -3,6 +3,7 @@ package Controller;
 import View.GameUI;
 import javafx.event.ActionEvent;
 import View.util.UIConstants;
+import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 
@@ -32,13 +33,12 @@ public class Controller {
         theUI.showHeroSelection();
     }
 
-    public void exitProgram(ActionEvent theEvent) {
-        System.exit(0);
+    public void resumeGame(ActionEvent theEvent, GameUI theUI) {
+        theUI.showSavesScreen();
     }
 
-    public void selectHero(ToggleGroup theHeroButtons) {
-        RadioButton heroChoice;
-        heroChoice = (RadioButton) theHeroButtons.getSelectedToggle();
+    public void exitProgram(ActionEvent theEvent) {
+        System.exit(0);
     }
 
     /**
@@ -48,6 +48,19 @@ public class Controller {
         // The actual hero name value in Model package would be set here.
         // But that is a job for another day...
         nameSet = true;
+    }
+
+    public void heroDescription(int heroType, Label theDescription) {
+        if (heroType == 1) {
+            theDescription.setText("A heavy hitter with lots of health but " +
+                    "low attack speed.");
+        } else if (heroType == 2) {
+            theDescription.setText("A healer with average health and " +
+                    "average attack (heal) speed.");
+        } else if (heroType == 3) {
+            theDescription.setText("A sneaky attacker with average health" +
+                    " and high attack speed.");
+        }
     }
 
     /**
