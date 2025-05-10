@@ -10,18 +10,31 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
+/**
+ * Class for the HeroSelectionScreen.
+ *
+ * @author Jacob Hilliker
+ * @version 5/10/2025
+ */
 public class HeroSelectionScreen extends Screen {
-
+    /**
+     * Calls Screen constructor.
+     *
+     * @param thePrimaryStage the Stage to be assigned to MY_PRIMARY_STAGE.
+     */
     public HeroSelectionScreen(Stage thePrimaryStage) {
         super(thePrimaryStage);
     }
-
+    /**
+     * showScreen for the HeroSelectionScreen.
+     *
+     * @param theUI GameUI used for Observer ActionEvent stuff.
+     */
     @Override
     public void showScreen(GameUI theUI) {
         // Pane type and Scene.
         VBox root = new VBox(5);
         Scene heroSelection = new Scene(root, 600, 500);
-
 
         // Buttons, textboxes, etc.
         ToggleGroup heroButtons = new ToggleGroup();
@@ -62,10 +75,5 @@ public class HeroSelectionScreen extends Screen {
 
         PRIMARY_STAGE.setScene(heroSelection);
         PRIMARY_STAGE.show();
-
-
-
     }
-
-
 }

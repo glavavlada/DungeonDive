@@ -2,9 +2,7 @@ package Controller;
 
 import View.GameUI;
 import javafx.event.ActionEvent;
-import View.util.UIConstants;
 import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
 
 /**
@@ -13,7 +11,7 @@ import javafx.scene.control.ToggleGroup;
  * @author Jacob Hilliker
  * @author Emanuel Feria
  * @author Vladyslav Glavatskyi
- * @version 5/4/2025
+ * @version 5/10/2025
  */
 public class Controller {
 
@@ -27,16 +25,27 @@ public class Controller {
      * next screen.
      *
      * @param theEvent the ActionEvent.
-     * @param theUI the UI used for switching screens after an event.
+     * @param theUI the GameUI which can show different screens.
      */
     public void newGame(ActionEvent theEvent, GameUI theUI) {
         theUI.showHeroSelection();
     }
 
+    /**
+     * Goes to the SavesScreen after clicking Resume Game button in the intro.
+     *
+     * @param theEvent the ActionEvent.
+     * @param theUI the GameUI which can show different screens.
+     */
     public void resumeGame(ActionEvent theEvent, GameUI theUI) {
         theUI.showSavesScreen();
     }
 
+    /**
+     * Fully exits the program after clicking exit button in intro screen.
+     *
+     * @param theEvent the ActionEvent.
+     */
     public void exitProgram(ActionEvent theEvent) {
         System.exit(0);
     }
@@ -50,7 +59,15 @@ public class Controller {
         nameSet = true;
     }
 
+    /**
+     * Swaps hero description in the HeroSelectionScreen depending on which
+     * hero type has been selected.
+     *
+     * @param heroType integer representing which hero.
+     * @param theDescription the Label whose text will be changed.
+     */
     public void heroDescription(int heroType, Label theDescription) {
+        // HeroType 1 is warrior. 2 is Priestess. 3 is thief.
         if (heroType == 1) {
             theDescription.setText("A heavy hitter with lots of health but " +
                     "low attack speed.");
@@ -73,14 +90,31 @@ public class Controller {
         }
     }
 
+    /**
+     * Leads to PauseScreen after clicking pause game in the GameScreen.
+     *
+     * @param theEvent
+     * @param theUI
+     */
     public void pauseGame(ActionEvent theEvent, GameUI theUI) {
         theUI.showPauseMenu();
     }
 
-    public void resumeGame(GameUI theUI) {
+    /**
+     * Resumes the current game while in the PauseScreen.
+     *
+     * @param theUI the GameUI that can show different screens.
+     */
+    public void resumeCurrentGame(GameUI theUI) {
         theUI.showGameScreen();
     }
 
+    /**
+     *  Goes to the intro screen after clicking quit to menu button in the
+     *  PauseScreen.
+     *
+     * @param theUI the GameUI that can show different screens.
+     */
     public void quitToMenu(GameUI theUI) {
         theUI.showIntroScreen();
     }
