@@ -7,6 +7,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 
 public class HeroSelectionScreen extends Screen {
@@ -18,17 +19,20 @@ public class HeroSelectionScreen extends Screen {
     @Override
     public void showScreen(GameUI theUI) {
         // Pane type and Scene.
-        VBox root = new VBox();
+        VBox root = new VBox(5);
         Scene heroSelection = new Scene(root, 600, 500);
 
 
         // Buttons, textboxes, etc.
         ToggleGroup heroButtons = new ToggleGroup();
-        RadioButton warrior = new RadioButton("Warrior");
+        // The spaces in the names help the radio buttons align while
+        // the VBox is centered. There is probably a better solution
+        // but this works I guess.
+        RadioButton warrior = new RadioButton("Warrior   ");
         warrior.setToggleGroup(heroButtons);
-        RadioButton priestess = new RadioButton("Priestess");
+        RadioButton priestess = new RadioButton("Priestess ");
         priestess.setToggleGroup(heroButtons);
-        RadioButton thief = new RadioButton("Theif");
+        RadioButton thief = new RadioButton("Theif       ");
         thief.setToggleGroup(heroButtons);
         TextField nameBox = new TextField();
         nameBox.setPromptText("Enter Your Hero's Name");
@@ -58,6 +62,7 @@ public class HeroSelectionScreen extends Screen {
 
         PRIMARY_STAGE.setScene(heroSelection);
         PRIMARY_STAGE.show();
+
 
 
     }
