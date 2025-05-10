@@ -8,12 +8,27 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
+/**
+ * Class for the GameScreen.
+ *
+ * @author Jacob Hilliker
+ * @version 5/10/2025
+ */
 public class GameScreen extends Screen {
-
+    /**
+     * Calls Screen constructor.
+     *
+     * @param thePrimaryStage the Stage to be assigned to MY_PRIMARY_STAGE.
+     */
     public GameScreen(Stage thePrimaryStage) {
         super(thePrimaryStage);
     }
 
+    /**
+     * showScreen for the GameScreen.
+     *
+     * @param theUI GameUI used for Observer ActionEvent stuff.
+     */
     @Override
     public void showScreen(GameUI theUI) {
         Pane root = new Pane();

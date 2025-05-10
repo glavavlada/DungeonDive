@@ -6,12 +6,27 @@ import javafx.scene.control.Button;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
+/**
+ * Class for the PauseScreen.
+ *
+ * @author Jacob Hilliker
+ * @version 5/10/2025
+ */
 public class PauseScreen extends Screen {
-
+    /**
+     * Calls Screen constructor.
+     *
+     * @param thePrimaryStage the Stage to be assigned to MY_PRIMARY_STAGE.
+     */
     public PauseScreen(Stage thePrimaryStage) {
         super(thePrimaryStage);
     }
 
+    /**
+     * showScreen for the PauseScreen.
+     *
+     * @param theUI GameUI used for Observer ActionEvent stuff.
+     */
     @Override
     public void showScreen(GameUI theUI) {
         Pane root = new Pane();
@@ -27,12 +42,14 @@ public class PauseScreen extends Screen {
 
         root.getChildren().addAll(resumeBtn, quitToMenuBtn);
 
-        resumeBtn.setOnAction(event -> CONTROLLER.resumeGame(theUI));
+        resumeBtn.setOnAction(event -> CONTROLLER.resumeCurrentGame(theUI));
         quitToMenuBtn.setOnAction(event -> CONTROLLER.quitToMenu(theUI));
 
         PRIMARY_STAGE.setScene(gameScreen);
         PRIMARY_STAGE.show();
 
+        // Stuff for centering things in the Pane. Probably could be made better,
+        // but it works for now.
         resumeBtn.setLayoutX((600 - resumeBtn.getWidth()) / 2);
         resumeBtn.setLayoutY((500 - resumeBtn.getHeight()) / 2);
         quitToMenuBtn.setLayoutX((600 - quitToMenuBtn.getWidth()) / 2);
