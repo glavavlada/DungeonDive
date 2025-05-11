@@ -1,9 +1,16 @@
 package Controller;
 
+import Model.Model;
+import Model.character.Hero;
+import Model.util.HeroType;
+import Model.util.Point;
+import Model.dungeon.Dungeon;
 import View.GameUI;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.RadioButton;
+
 
 /**
  * Controls how user input is passed from view to model.
@@ -21,6 +28,18 @@ public class Controller {
     private Boolean nameSet = false;
 
     /**
+     * Reference to the game model.
+     */
+    private Model gameModel;
+
+    /**
+     * Constructor for Controller.
+     */
+    public Controller() {
+        this.gameModel = new Model();
+    }
+
+    /**
      * Takes in the event, but also the UI. The UI is used to switch to the
      * next screen.
      *
@@ -30,6 +49,9 @@ public class Controller {
     public void newGame(ActionEvent theEvent, GameUI theUI) {
         theUI.showHeroSelection();
     }
+
+
+
 
     /**
      * Goes to the SavesScreen after clicking Resume Game button in the intro.
@@ -86,7 +108,17 @@ public class Controller {
     public void startGame(ActionEvent theEvent, GameUI theUI,
                           ToggleGroup theHeroes) {
         if (theHeroes.getSelectedToggle() != null && nameSet) {
+            // Create the hero based on selection
+            HeroType selectedType = getHeroTypeFromToggle(theHeroes);
+
+            // Initialize the game model with the selected hero
+            gameModel.initializeGame(selectedType);
+
+            // Show the game screen
             theUI.showGameScreen();
+
+            // Initialize other controllers if needed
+            initializeGameControllers(theUI);
         }
     }
 
@@ -118,5 +150,55 @@ public class Controller {
     public void quitToMenu(GameUI theUI) {
         theUI.showIntroScreen();
     }
+
+    /**
+     * gets HeroType enum value from toggle group selection
+     *
+     * @param theHeroes toggle group containing hero selection
+     * @return corresponding HeroType enum value
+     */
+    private HeroType getHeroTypeFromToggle(ToggleGroup theHeroes) {
+        //get selected toggle
+        RadioButton selectedButton = (RadioButton) theHeroes.getSelectedToggle();
+
+        //get the text or user data from selected button
+        String heroName = selectedButton.getText();
+
+        //convert to HeroType enum
+        if (heroName.equalsIgnoreCase("Warrior")) {
+            return HeroType.WARRIOR;
+        } else if (heroName.equalsIgnoreCase("Priestess")) {
+            return HeroType.PRIESTESS;
+        } else if (heroName.equalsIgnoreCase("Thief")) {
+            return HeroType.THIEF;
+        } else {
+            //default to warrior if something goes wrong
+            return HeroType.WARRIOR;
+        }
+    }
+
+    /**
+     * initialize game controllers needed for gameplay
+     * @param theUI GameUI reference
+     */
+    private void initializeGameControllers(GameUI theUI) {
+        // create initialize other controllers
+        GameController gameController = new GameController(gameModel, theUI);
+        InputController inputController = new InputController(gameController);
+        StateController stateController = new StateController();
+
+        //print some debug info
+        System.out.println("Game controllers initialized");
+
+        //connect controllers to UI
+        theUI.setInputController(inputController);
+
+        //this is just for testing - remove this later
+        gameController.printStatus();
+
+        //connect controllers to UI
+        theUI.setInputController(inputController);
+    }
+
 
 }
