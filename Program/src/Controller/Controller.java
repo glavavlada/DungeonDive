@@ -37,7 +37,7 @@ public class Controller {
      * @param theEvent the ActionEvent.
      * @param theUI the GameUI which can show different screens.
      */
-    public void resumeGame(ActionEvent theEvent, GameUI theUI) {
+    public void savedGames(ActionEvent theEvent, GameUI theUI) {
         theUI.showSavesScreen();
     }
 

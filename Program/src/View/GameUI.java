@@ -29,10 +29,6 @@ public class GameUI {
      * Primary Stage needed to show every scene.
      */
     private final Stage PRIMARY_STAGE;
-    /**
-     * Controller used for event handlers.
-     */
-    private final Controller CONTROLLER;
 
     /**
      * Constructor that takes Stage from Main, assigning it to the
@@ -43,7 +39,6 @@ public class GameUI {
     public GameUI(Stage thePrimaryStage) {
         PRIMARY_STAGE = thePrimaryStage;
         PRIMARY_STAGE.setTitle("DungeonDive");
-        CONTROLLER = new Controller();
     }
 
     /**
@@ -86,12 +81,20 @@ public class GameUI {
         screen.showScreen(this);
     }
 
+    /**
+     * Displays the win screen.
+     */
     public void showWinScreen() {
-
+        WinScreen screen = new WinScreen(PRIMARY_STAGE);
+        screen.showScreen(this);
     }
 
+    /**
+     * Displays the loss screen.
+     */
     public void showLoseScreen() {
-
+        LoseScreen screen = new LoseScreen(PRIMARY_STAGE);
+        screen.showScreen(this);
     }
 
     public void updateDisplay() {

@@ -42,11 +42,11 @@ public class PauseScreen extends Screen {
 
         root.getChildren().addAll(resumeBtn, quitToMenuBtn);
 
-        resumeBtn.setOnAction(event -> CONTROLLER.resumeCurrentGame(theUI));
-        quitToMenuBtn.setOnAction(event -> CONTROLLER.quitToMenu(theUI));
+        resumeBtn.setOnAction(event -> getController().resumeCurrentGame(theUI));
+        quitToMenuBtn.setOnAction(event -> getController().quitToMenu(theUI));
 
-        PRIMARY_STAGE.setScene(gameScreen);
-        PRIMARY_STAGE.show();
+        getStage().setScene(gameScreen);
+        getStage().show();
 
         // Stuff for centering things in the Pane. Probably could be made better,
         // but it works for now.

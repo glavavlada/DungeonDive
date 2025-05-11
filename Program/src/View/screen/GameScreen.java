@@ -41,12 +41,11 @@ public class GameScreen extends Screen {
 
         root.getChildren().addAll(pauseBtn);
 
-        Controller controller = new Controller();
         pauseBtn.setOnAction(event ->
-                controller.pauseGame(new ActionEvent(), theUI));
+                getController().pauseGame(new ActionEvent(), theUI));
 
-        PRIMARY_STAGE.setScene(gameScreen);
-        PRIMARY_STAGE.show();
+        getStage().setScene(gameScreen);
+        getStage().show();
 
         pauseBtn.setLayoutX(600 - pauseBtn.getWidth());
         pauseBtn.setLayoutY(0);
