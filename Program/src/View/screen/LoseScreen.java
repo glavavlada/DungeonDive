@@ -1,19 +1,16 @@
 package View.screen;
 
 import View.GameUI;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.event.ActionEvent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.scene.paint.Color;
-import javafx.scene.control.Button;
-
-import java.awt.*;
 
 /**
  * Class for the LoseScreen.
@@ -38,27 +35,31 @@ public class LoseScreen extends Screen {
      */
     @Override
     public void showScreen(GameUI theUI) {
-        VBox root = new VBox(10);
+        BorderPane root = new BorderPane();
+        VBox buttons = tripleButtonVBox();
         Scene loseScreen = new Scene(root, 600, 500);
         root.setBackground(Background.fill(Color.BLACK));
 
         Text text = new Text("You Lost!");
-        Button newGameBtn = new Button("New Game");
-        Button savedGamesBtn = new Button("Saved Games");
-        Button quitToMenuBtn = new Button("Quit to Menu");
-        setButtonSize(newGameBtn);
-        setButtonSize(savedGamesBtn);
-        setButtonSize(quitToMenuBtn);
-
         text.setFont(Font.font( "Impact", 70));
         text.setFill(Color.RED);
-        root.setAlignment(Pos.TOP_CENTER);
-        root.getChildren().addAll(text, newGameBtn, savedGamesBtn, quitToMenuBtn);
-        VBox.setMargin(newGameBtn, new Insets(200, 0, 0, 0));
+
+        // Gets buttons from the VBox to set Event handler stuff.
+        Button newGameBtn = (Button) buttons.getChildren().getFirst();
+        Button gameSavesBtn = (Button) buttons.getChildren().get(1);
+        Button quitToMenuBtn = (Button) buttons.getChildren().getLast();
+
+        newGameBtn.setOnAction(event ->
+                getController().newGame(new ActionEvent(), theUI));
+        gameSavesBtn.setOnAction(event ->
+                getController().savedGames(new ActionEvent(), theUI));
+        quitToMenuBtn.setOnAction(event ->
+                getController().quitToMenu(theUI));
+
+        tripleButtonStructure(text, buttons, root);
 
         getStage().setScene(loseScreen);
         getStage().show();
-
     }
 
 }

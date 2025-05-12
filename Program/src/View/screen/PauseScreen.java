@@ -3,7 +3,9 @@ package View.screen;
 import View.GameUI;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 /**
@@ -29,30 +31,36 @@ public class PauseScreen extends Screen {
      */
     @Override
     public void showScreen(GameUI theUI) {
-        Pane root = new Pane();
+        BorderPane root = new BorderPane();
+        VBox buttons = tripleButtonVBox();
         Scene gameScreen = new Scene(root, 600, 500);
 
-        Button resumeBtn = new Button();
-        resumeBtn.setText("Resume Game");
-        Button quitToMenuBtn = new Button();
-        quitToMenuBtn.setText("Quit to Menu");
+        root.setCenter(buttons);
 
-        setButtonSize(resumeBtn);
-        setButtonSize(quitToMenuBtn);
-
-        root.getChildren().addAll(resumeBtn, quitToMenuBtn);
+        Button resumeBtn = (Button) buttons.getChildren().getFirst();
+        Button saveGameBtn = (Button) buttons.getChildren().get(1);
+        Button quitToMenuBtn = (Button) buttons.getChildren().getLast();
 
         resumeBtn.setOnAction(event -> getController().resumeCurrentGame(theUI));
         quitToMenuBtn.setOnAction(event -> getController().quitToMenu(theUI));
 
         getStage().setScene(gameScreen);
         getStage().show();
+    }
 
-        // Stuff for centering things in the Pane. Probably could be made better,
-        // but it works for now.
-        resumeBtn.setLayoutX((600 - resumeBtn.getWidth()) / 2);
-        resumeBtn.setLayoutY((500 - resumeBtn.getHeight()) / 2);
-        quitToMenuBtn.setLayoutX((600 - quitToMenuBtn.getWidth()) / 2);
-        quitToMenuBtn.setLayoutY((440 - quitToMenuBtn.getHeight()) / 2);
+    /**
+     * Creates VBox buttons but with the first two names changed to Resume
+     * and Save.
+     *
+     * @return VBox with updated Button names for the PauseScreen.
+     */
+    @Override
+    public VBox tripleButtonVBox() {
+        VBox buttons = super.tripleButtonVBox();
+        Button resumeBtn = (Button) buttons.getChildren().getFirst();
+        Button saveGameBtn = (Button) buttons.getChildren().get(1);
+        resumeBtn.setText("Resume Game");
+        saveGameBtn.setText("Save Game");
+        return buttons;
     }
 }

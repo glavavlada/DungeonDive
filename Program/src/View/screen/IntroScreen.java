@@ -4,7 +4,11 @@ import View.GameUI;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 /**
@@ -30,46 +34,45 @@ public class IntroScreen extends Screen {
      */
     @Override
     public void showScreen(GameUI theUI) {
-        // Creates pane as root and Scene for intro screen.
-        Pane root = new Pane();
+        BorderPane root = new BorderPane();
+        VBox buttons = tripleButtonVBox();
         Scene intro = new Scene(root, 600, 500);
 
-        // Buttons resuming, new game, and exit.
-        Button newGameBtn = new Button();
-        Button exitBtn = new Button();
-        Button gameSavesBtn = new Button();
-        newGameBtn.setText("New Game");
-        exitBtn.setText("Exit");
-        gameSavesBtn.setText("Saved Games");
+        Text text = new Text("Dungeon Dive");
+        text.setFont(Font.font( "Impact", 70));
+        text.setFill(Color.RED);
 
-        setButtonSize(newGameBtn);
-        setButtonSize(exitBtn);
-        setButtonSize(gameSavesBtn);
+        tripleButtonStructure(text, buttons, root);
 
-        // Adds buttons to root.
-        root.getChildren().addAll(newGameBtn, gameSavesBtn, exitBtn);
+        // Gets buttons from the VBox to set Event handler stuff.
+        Button newGameBtn = (Button) buttons.getChildren().getFirst();
+        Button gameSavesBtn = (Button) buttons.getChildren().get(1);
+        Button exitBtn = (Button) buttons.getChildren().getLast();
 
-        // Event Handler stuff here.
-        // Takes in ActionEvent (click), and passes itself to newGame().
         newGameBtn.setOnAction(event ->
                 getController().newGame(new ActionEvent(), theUI));
-        exitBtn.setOnAction(event ->
-                getController().exitProgram(new ActionEvent()));
         gameSavesBtn.setOnAction(event ->
                 getController().savedGames(new ActionEvent(), theUI));
+        exitBtn.setOnAction(event ->
+                getController().exitProgram(new ActionEvent()));
 
         // Sets scene and shows screen.
         getStage().setScene(intro);
         getStage().show();
 
-        // The setLayout is after .show(), because button size is needed for
-        // location calculation, and the getWidth and getHeight return 0 until
-        // button in shown on the screen.
-        newGameBtn.setLayoutX((root.getWidth() - newGameBtn.getWidth()) / 2);
-        newGameBtn.setLayoutY(((root.getHeight() - newGameBtn.getHeight()) / 2) + 50);
-        gameSavesBtn.setLayoutX(newGameBtn.getLayoutX());
-        gameSavesBtn.setLayoutY(newGameBtn.getLayoutY() + 30);
-        exitBtn.setLayoutX(newGameBtn.getLayoutX());
-        exitBtn.setLayoutY(gameSavesBtn.getLayoutY() + 30);
+    }
+
+    /**
+     * Calls tripleButtonVBox then changes Final button to fit the intro
+     * screen.
+     *
+     * @return VBox with an exit program button instead of a quit to menu.
+     */
+    @Override
+    public VBox tripleButtonVBox() {
+        VBox buttons = super.tripleButtonVBox();
+        Button exitBtn = (Button) buttons.getChildren().getLast();
+        exitBtn.setText("Exit");
+        return buttons;
     }
 }

@@ -42,27 +42,6 @@ public class GameScreen extends Screen {
      */
     @Override
     public void showScreen(GameUI theUI) {
-      //  Pane root = new Pane();
-      //  Scene gameScreen = new Scene(root, 600, 500);
-
-      //  Button pauseBtn = new Button();
-      //  pauseBtn.setText("Pause Game");
-
-      //  setButtonSize(pauseBtn);
-
-      //  root.getChildren().addAll(pauseBtn);
-
-      //  Controller controller = new Controller();
-      //  pauseBtn.setOnAction(event ->
-      //          controller.pauseGame(new ActionEvent(), theUI));
-
-      //  PRIMARY_STAGE.setScene(gameScreen);
-      //  PRIMARY_STAGE.show();
-
-      //  pauseBtn.setLayoutX(600 - pauseBtn.getWidth());
-      //  pauseBtn.setLayoutY(0);
-
-
 
         BorderPane root = new BorderPane();
         Scene gameScene = new Scene(root, 800, 600);
