@@ -15,19 +15,19 @@ abstract class Screen {
     /**
      * Primary Stage needed to show every scene.
      */
-    protected final Stage PRIMARY_STAGE;
+    private final Stage PRIMARY_STAGE;
     /**
      * Controller used for event handlers.
      */
-    protected final Controller CONTROLLER;
+    private final Controller CONTROLLER;
     /**
      * Width for consistent button widths.
      */
-    protected final double BUTTON_WIDTH = 100;
+    private final double BUTTON_WIDTH = 100;
     /**
      * Height for consistent button heights.
      */
-    protected final double BUTTON_HEIGHT = 20;
+    private final double BUTTON_HEIGHT = 20;
 
     /**
      * Assigns Stage and Controller used by Screen subclasses.
@@ -55,4 +55,24 @@ abstract class Screen {
         theButton.setPrefWidth(BUTTON_WIDTH);
         theButton.setPrefHeight(BUTTON_HEIGHT);
     }
+
+    /**
+     * Getter for PRIMARY_STAGE.
+     *
+     * @return PRIMARY_STAGE.
+     */
+    public Stage getStage() {
+        return PRIMARY_STAGE;
+    }
+
+    /**
+     * Getter for CONTROLLER.
+     *
+     * @return CONTROLLER.
+     */
+    public Controller getController() {
+        return CONTROLLER;
+    }
+
+
 }

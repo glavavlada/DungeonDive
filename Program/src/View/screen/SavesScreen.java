@@ -55,8 +55,8 @@ public class SavesScreen extends Screen {
 
         root.getChildren().addAll(saveOne, saveTwo, saveThree);
 
-        PRIMARY_STAGE.setScene(saves);
-        PRIMARY_STAGE.show();
+        getStage().setScene(saves);
+        getStage().show();
 
         root.setAlignment(Pos.CENTER);
     }

@@ -59,21 +59,21 @@ public class HeroSelectionScreen extends Screen {
         nameBox.setMaxWidth(100);
 
         warrior.setOnAction(event ->
-                CONTROLLER.heroDescription(1, description));
+                getController().heroDescription(1, description));
         priestess.setOnAction(event ->
-                CONTROLLER.heroDescription(2, description));
+                getController().heroDescription(2, description));
         thief.setOnAction(event ->
-                CONTROLLER.heroDescription(3, description));
+                getController().heroDescription(3, description));
 
-        nameBox.setOnAction(event -> CONTROLLER.setHeroName());
+        nameBox.setOnAction(event -> getController().setHeroName());
         startGameBtn.setOnAction(event ->
-                CONTROLLER.startGame(new ActionEvent(), theUI, heroButtons));
+                getController().startGame(new ActionEvent(), theUI, heroButtons));
 
         // Adds stuff to root, then shows on screen.
         root.getChildren().addAll(nameBox, warrior, priestess, thief,
                 description, startGameBtn);
 
-        PRIMARY_STAGE.setScene(heroSelection);
-        PRIMARY_STAGE.show();
+        getStage().setScene(heroSelection);
+        getStage().show();
     }
 }
