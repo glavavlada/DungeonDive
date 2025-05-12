@@ -12,6 +12,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import Controller.Controller;
+import Controller.InputController;
 
 
 
@@ -29,6 +30,20 @@ public class GameUI {
      * Primary Stage needed to show every scene.
      */
     private final Stage PRIMARY_STAGE;
+    /**
+     * Controller used for event handlers.
+     */
+    private final Controller CONTROLLER;
+
+    /**
+     * Input controller for handling key events.
+     */
+    private InputController inputController;
+
+    /**
+     * The current game scene.
+     */
+    private Scene gameScene;
 
     /**
      * Constructor that takes Stage from Main, assigning it to the
@@ -39,6 +54,7 @@ public class GameUI {
     public GameUI(Stage thePrimaryStage) {
         PRIMARY_STAGE = thePrimaryStage;
         PRIMARY_STAGE.setTitle("DungeonDive");
+        CONTROLLER = new Controller();
     }
 
     /**
@@ -82,7 +98,7 @@ public class GameUI {
     }
 
     /**
-     * Displays the win screen.
+     * Displays win screen.
      */
     public void showWinScreen() {
         WinScreen screen = new WinScreen(PRIMARY_STAGE);
@@ -90,15 +106,72 @@ public class GameUI {
     }
 
     /**
-     * Displays the loss screen.
+     * Displays lose screen.
      */
     public void showLoseScreen() {
         LoseScreen screen = new LoseScreen(PRIMARY_STAGE);
         screen.showScreen(this);
     }
 
+    /**
+     * Updates the game display.
+     */
     public void updateDisplay() {
+        // This will be implemented to update the game view
+        // based on the current state of the model
+    }
 
+    /**
+     * set input controller and sets up event handlers
+     *
+     * @param inputController input controller to use
+     */
+    public void setInputController(InputController inputController) {
+        this.inputController = inputController;
+        System.out.println("Input controller set in GameUI");
+
+        // If we already have a game scene, set up the input handlers
+        if (PRIMARY_STAGE.getScene() != null) {
+            PRIMARY_STAGE.getScene().setOnKeyPressed(event ->
+                    inputController.handleKeyInput(event));
+            System.out.println("Key event handlers set up");
+        }
+    }
+
+    /**
+     * set up input handlers for game scene
+     */
+    private void setupInputHandlers() {
+        //set up key event handlers
+        gameScene.setOnKeyPressed(event -> inputController.handleKeyInput(event));
+    }
+
+    /**
+     * set current game scene for input handling
+     *
+     * @param scene game scene
+     */
+    public void setGameScene(Scene scene) {
+        this.gameScene = scene;
+
+        //set up input handling if controller is available
+        if (inputController != null) {
+            setupInputHandlers();
+        }
+    }
+
+    /**
+     * gets the controller instance
+     *
+     * @return controller instance
+     */
+    public Controller getController() {
+        return CONTROLLER;
     }
 
 }
+
+
+
+
+

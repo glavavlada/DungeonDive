@@ -92,7 +92,6 @@ public class Database {
                             "special_attack TEXT," +
                             "crit_chance REAL DEFAULT 0.05," +
                             "crit_multiplier REAL DEFAULT 2.0," +
-                            "gold_reward INTEGER," +
                             "is_elite BOOLEAN DEFAULT 0," +
                             "is_boss BOOLEAN DEFAULT 0," +
                             "description TEXT" +
@@ -215,23 +214,23 @@ public class Database {
         if (isTablePopulated("monster_types")) {
             // Populate regular monster types (Goblin, Skeleton, Slime) with crit chances
             executeUpdate("INSERT INTO monster_types (name, health, attack, special_attack, crit_chance, gold_reward, is_elite, is_boss, description) VALUES " +
-                    "('Goblin', 40, 8, 'Stab', 0.04, 10, 0, 0, 'A small green creature with a knife')");
+                    "('Goblin', 40, 8, 'Stab', 0.04, 0, 0, 'A small green creature with a knife')");
             executeUpdate("INSERT INTO monster_types (name, health, attack, special_attack, crit_chance, gold_reward, is_elite, is_boss, description) VALUES " +
-                    "('Skeleton', 35, 10, 'Bone Throw', 0.03, 15, 0, 0, 'An animated body of bones with a sword')");
+                    "('Skeleton', 35, 10, 'Bone Throw', 0.03, 0, 0, 'An animated body of bones with a sword')");
             executeUpdate("INSERT INTO monster_types (name, health, attack, special_attack, crit_chance, gold_reward, is_elite, is_boss, description) VALUES " +
-                    "('Slime', 30, 5, 'Acid Splash', 0.02, 8, 0, 0, 'A green blob on the floor')");
+                    "('Slime', 30, 5, 'Acid Splash', 0.02, 0, 0, 'A green blob on the floor')");
 
             // Populate elite monster types (Orc, Big Slime, Wizard) with higher crit chances
             executeUpdate("INSERT INTO monster_types (name, health, attack, special_attack, crit_chance, gold_reward, is_elite, is_boss, description) VALUES " +
-                    "('Orc', 80, 15, 'Cleave', 0.06, 30, 1, 0, 'A large brutish goblin-alike with green skin')");
+                    "('Orc', 80, 15, 'Cleave', 0.06, 1, 0, 'A large brutish goblin-alike with green skin')");
             executeUpdate("INSERT INTO monster_types (name, health, attack, special_attack, crit_chance, gold_reward, is_elite, is_boss, description) VALUES " +
-                    "('Big Slime', 70, 12, 'Engulf', 0.05, 25, 1, 0, 'A massive slime that can split into smaller slime')");
+                    "('Big Slime', 70, 12, 'Engulf', 0.05, 1, 0, 'A massive slime that can split into smaller slime')");
             executeUpdate("INSERT INTO monster_types (name, health, attack, special_attack, crit_chance, gold_reward, is_elite, is_boss, description) VALUES " +
-                    "('Wizard', 60, 20, 'Lightning Bolt', 0.08, 35, 1, 0, 'A powerful wizard with magic')");
+                    "('Wizard', 60, 20, 'Lightning Bolt', 0.08, 1, 0, 'A powerful wizard with magic')");
 
             // Populate boss monster (Giant) with significant crit chance
             executeUpdate("INSERT INTO monster_types (name, health, attack, special_attack, crit_chance, gold_reward, is_elite, is_boss, description) VALUES " +
-                    "('Giant', 200, 25, 'Ground Slam', 0.10, 100, 0, 1, 'A massive humanoid that towers over anyone')");
+                    "('Giant', 200, 25, 'Ground Slam', 0.10, 0, 1, 'A massive humanoid that towers over anyone')");
         }
 
         if (isTablePopulated("item_types")) {
