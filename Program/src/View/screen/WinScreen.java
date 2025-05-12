@@ -1,12 +1,10 @@
 package View.screen;
 
 import View.GameUI;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import javafx.event.ActionEvent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -36,33 +34,26 @@ public class WinScreen extends Screen {
     @Override
     public void showScreen(GameUI theUI) {
         BorderPane root = new BorderPane();
-        VBox buttons = new VBox(10);
-        HBox message = new HBox();
+        VBox buttons = tripleButtonVBox();
         Scene scene = new Scene(root, 600, 500);
 
         Text text = new Text("You Won!");
-        Button newGameBtn = new Button("New Game");
-        Button savedGamesBtn = new Button("Saved Games");
-        Button quitToMenuBtn = new Button("Quit to Menu");
-        setButtonSize(newGameBtn);
-        setButtonSize(savedGamesBtn);
-        setButtonSize(quitToMenuBtn);
-
-
-//        BorderPane.setAlignment(text, Pos.TOP_CENTER);
-//        root.setTop(text);
-//        BorderPane.setAlignment(buttons, Pos.BOTTOM_CENTER);
-//        root.setCenter(buttons);
-
         text.setFont(Font.font( "Impact", 70));
         text.setFill(Color.GOLD);
 
-        root.setTop(message);
-        root.setCenter(buttons);
+        // Gets buttons from the VBox to set Event handler stuff.
+        Button newGameBtn = (Button) buttons.getChildren().getFirst();
+        Button gameSavesBtn = (Button) buttons.getChildren().get(1);
+        Button quitToMenuBtn = (Button) buttons.getChildren().getLast();
 
-//        message.getChildren().add(text);
-//        buttons.getChildren().addAll(newGameBtn, savedGamesBtn, quitToMenuBtn);
-        root.getChildren().addAll(message, buttons);
+        newGameBtn.setOnAction(event ->
+                getController().newGame(new ActionEvent(), theUI));
+        gameSavesBtn.setOnAction(event ->
+                getController().savedGames(new ActionEvent(), theUI));
+        quitToMenuBtn.setOnAction(event ->
+                getController().quitToMenu(theUI));
+
+        tripleButtonStructure(text, buttons, root);
 
         getStage().setScene(scene);
         getStage().show();

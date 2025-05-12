@@ -2,8 +2,12 @@ package View.screen;
 
 import Controller.Controller;
 import View.GameUI;
+import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.scene.text.Text;
 
 /**
  * An abstract class for the various Screens.
@@ -54,6 +58,40 @@ abstract class Screen {
     public void setButtonSize(Button theButton) {
         theButton.setPrefWidth(BUTTON_WIDTH);
         theButton.setPrefHeight(BUTTON_HEIGHT);
+    }
+
+    /**
+     * Gives a VBox of buttons that are given text for the win and
+     * lose screens.
+     *
+     * @return A VBox of buttons.
+     */
+    public VBox tripleButtonVBox() {
+        VBox buttons = new VBox(10);
+        buttons.setAlignment(Pos.CENTER);
+
+        Button newGameBtn = new Button("New Game");
+        Button savedGamesBtn = new Button("Saved Games");
+        Button quitToMenuBtn = new Button("Quit to Menu");
+
+        setButtonSize(newGameBtn);
+        setButtonSize(savedGamesBtn);
+        setButtonSize(quitToMenuBtn);
+
+        buttons.getChildren().addAll(newGameBtn, savedGamesBtn, quitToMenuBtn);
+        return buttons;
+    }
+
+    /**
+     * Sets the placements of buttons and title for the intro, win and
+     * lose screens.
+     */
+    public void tripleButtonStructure(Text theTitle, VBox theButtons,
+                                      BorderPane theRoot) {
+        BorderPane.setAlignment(theTitle, Pos.TOP_CENTER);
+        theRoot.setTop(theTitle);
+        BorderPane.setAlignment(theButtons, Pos.CENTER);
+        theRoot.setCenter(theButtons);
     }
 
     /**
