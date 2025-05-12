@@ -31,7 +31,7 @@ public class Main extends Application {
     public void start(Stage thePrimaryStage) {
 
         UIConstants UIConst = new UIConstants(thePrimaryStage);
-       UIConst.MY_GAME_UI.showIntroScreen();
-
+        UIConst.MY_GAME_UI.showIntroScreen();
+       
     }
 }

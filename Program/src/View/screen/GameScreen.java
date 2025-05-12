@@ -94,8 +94,8 @@ public class GameScreen extends Screen {
         pauseBtn.setOnAction(event ->
                 theUI.getController().pauseGame(new ActionEvent(), theUI));
 
-        PRIMARY_STAGE.setScene(gameScene);
-        PRIMARY_STAGE.show();
+        getStage().setScene(gameScene);
+        getStage().show();
 
         //it allows the GameUI to set up key event handlers
         theUI.setGameScene(gameScene);
