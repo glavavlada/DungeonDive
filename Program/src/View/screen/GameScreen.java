@@ -1,17 +1,14 @@
 package View.screen;
 
-import Controller.Controller;
 import View.GameUI;
 import javafx.event.ActionEvent;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.*;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Label;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.awt.*;
@@ -44,7 +41,9 @@ public class GameScreen extends Screen {
     public void showScreen(GameUI theUI) {
 
         BorderPane root = new BorderPane();
+        Pane playerOptions = playerOptionsPane();
         Scene gameScene = new Scene(root, 800, 600);
+
 
         //create game canvas for rendering dungeon
         gameCanvas = new Canvas(600, 400);
@@ -57,6 +56,7 @@ public class GameScreen extends Screen {
         Button pauseBtn = new Button("Pause Game");
         Label statusLabel = new Label("Explore the dungeon and find the pillars!");
 
+
         //create top panel with pause button
         HBox topPanel = new HBox(10);
         topPanel.getChildren().addAll(statusLabel, pauseBtn);
@@ -64,9 +64,13 @@ public class GameScreen extends Screen {
         //create side panel for inventory and stats
         VBox sidePanel = createSidePanel();
 
+
         //set up layout
         root.setTop(topPanel);
-        root.setCenter(gameCanvas);
+        root.setLeft(gameCanvas);
+        // Player options centered for now because it was the only spot the
+        // custom placements did not get crammed and messed up.
+        root.setCenter(playerOptions);
         root.setRight(sidePanel);
 
         //use controller from GameUI instead of creating a new one
@@ -76,11 +80,74 @@ public class GameScreen extends Screen {
         getStage().setScene(gameScene);
         getStage().show();
 
+        buttonPanePlacements(playerOptions);
+
         //it allows the GameUI to set up key event handlers
         theUI.setGameScene(gameScene);
 
 
     }
+
+    /**
+     * Pane with player options like movement and potions. Pane because finding
+     * something for specific placements of these items was hard.
+     *
+     * @return a Pane with player options.
+     */
+    private Pane playerOptionsPane() {
+        Pane playerOptions = new Pane();
+
+        Button up = new Button("\u2191");
+        Button down = new Button("\u2193");
+        Button left = new Button("\u2190");
+        Button right = new Button("\u2192");
+
+        setMoveButtons(up);
+        setMoveButtons(down);
+        setMoveButtons(left);
+        setMoveButtons(right);
+
+        playerOptions.setMaxWidth(55);
+        playerOptions.setMaxHeight(55);
+
+        playerOptions.getChildren().addAll(up, down, left, right);
+
+        return playerOptions;
+    }
+
+    /**
+     * Helper method that puts the move buttons in a specific format.
+     *
+     * @param thePane the Pane of Buttons.
+     */
+    private void buttonPanePlacements(Pane thePane) {
+        Button up =  (Button) thePane.getChildren().get(0);
+        Button down = (Button) thePane.getChildren().get(1);
+        Button left = (Button) thePane.getChildren().get(2);
+        Button right = (Button) thePane.getChildren().get(3);
+
+        up.setLayoutX(thePane.getWidth() / 2);
+        up.setLayoutY(0);
+        down.setLayoutX(thePane.getWidth() / 2);
+        down.setLayoutY(thePane.getHeight());
+        left.setLayoutX(0);
+        left.setLayoutY(thePane.getHeight() / 2);
+        right.setLayoutX(thePane.getWidth());
+        right.setLayoutY(thePane.getHeight() /2);
+    }
+
+    /**
+     * Helper method for playerOptionsPane() which gives move buttons their
+     * proper size.
+     *
+     * @param theButton the Button to be sized.
+     */
+    private void setMoveButtons(Button theButton) {
+        // 27 by 27 here because that was the minimum for the arrows to show.
+        theButton.setPrefHeight(27);
+        theButton.setPrefWidth(27);
+    }
+
 
     /**
      *creates side panel with inventory and stats
@@ -126,13 +193,13 @@ public class GameScreen extends Screen {
         double cellHeight = gameCanvas.getHeight() / 5;
 
         // Draw horizontal lines
-        for (int i = 0; i <= 5; i++) {
-            gc.strokeLine(0, i * cellHeight, gameCanvas.getWidth(), i * cellHeight);
+        for (int i = 0; i <= 3; i++) {
+            gc.strokeLine(0, i * cellHeight, cellWidth * 3, i * cellHeight);
         }
 
         // Draw vertical lines
-        for (int i = 0; i <= 5; i++) {
-            gc.strokeLine(i * cellWidth, 0, i * cellWidth, gameCanvas.getHeight());
+        for (int i = 0; i <= 3; i++) {
+            gc.strokeLine(i * cellWidth, 0, i * cellWidth, cellHeight * 3);
         }
     }
 
