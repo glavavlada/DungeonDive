@@ -1,2 +1,2 @@
 # DungeonDive
-A small dungeon Crawl game worked by a group 
+A small main.Model.dungeon Crawl game worked by a group 
