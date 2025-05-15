@@ -1,3 +1,36 @@
-# Default ignored files
-/shelf/
-/workspace.xml
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+modules.xml
+workspace.xml
+tasks.xml
+project.iml
+
+# Build output
+out/
+build/
+target/
+
+# JavaFX SDK (better to manage as an external dependency)
+# If you have the SDK folder inside your project and don't want to commit it:
+javafx-sdk-*/
+# Or be more specific if you know the exact name:
+# javafx-sdk-21.0.7/
+
+# SQLite Database file
+*.db
+*.sqlite
+*.sqlite3
+dungeondive.db
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*~
+
+# OS generated files
+.DS_Store
+Thumbs.db
