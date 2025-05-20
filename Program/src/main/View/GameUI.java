@@ -144,8 +144,14 @@ public class GameUI {
      */
     public void showCombatScreen(List<Monster> monsters) {
         //display combat interface with monster information
+        CombatScreen combatScreen = new CombatScreen(myPrimaryStage, myController);
+        combatScreen.showScreen(this);
         System.out.println("Combat screen shown with " + monsters.size() + " monsters");
         //this would typically involve showing monster sprites, health bars, and combat options
+    }
+    public void showCombatTestDeleteMe() {
+        CombatScreen combatScreen = new CombatScreen(myPrimaryStage, myController);
+        combatScreen.showScreen(this);
     }
 
     /**
@@ -223,6 +229,8 @@ public class GameUI {
      */
     public void showInventoryScreen() {
         // Display inventory interface
+        InventoryScreen inventoryScreen = new InventoryScreen();
+        inventoryScreen.showScreen(this);
         System.out.println("Inventory screen shown");
     }
 

@@ -97,16 +97,13 @@ public class GameScreen extends Screen {
         actionsBox.setStyle("-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;");
 
         // TODO: Add buttons for Attack, Use Item, Inventory display
-        Button attackButton = new Button("Base Attack");
-        Button SpecialAttackButton = new Button(getController().getPlayer().
-                getType().getSpecialAttackName());
+
         Button InventoryButton = new Button("Inventory");
-        setButtonSize(attackButton);
-        setButtonSize(SpecialAttackButton);
+
         setButtonSize(InventoryButton);
-//        attackButton.setOnAction();
-//        SpecialAttackButton.setOnAction();
-        InventoryButton.setOnAction(event -> inventoryPopUp(getController().getPlayer().getInventory()));
+
+        InventoryButton.setOnAction(event -> getController().getGameController().openInventory());
+
 
         Label movementLabel = new Label("--- Movement ---");
         Button northButton = new Button("North");
@@ -118,9 +115,27 @@ public class GameScreen extends Screen {
         setButtonSize(eastButton);
         setButtonSize(southButton);
 
+        // REMINDER CHANGE NORTH BUTTON BACK TO NORMAL, just testing a screen for now
+        northButton.setOnAction(event -> theUI.showCombatTestDeleteMe());
+
+        westButton.setOnAction(event -> {
+            getController().getGameController().movePlayerWest();
+            addGameMessage(getController().getGameController().getCurrentRoomDescription());
+        });
+
+        eastButton.setOnAction(event -> {
+            getController().getGameController().movePlayerEast();
+            addGameMessage(getController().getGameController().getCurrentRoomDescription());
+        });
+
+        southButton.setOnAction(event -> {
+          getController().getGameController().movePlayerSouth();
+          addGameMessage(getController().getGameController().getCurrentRoomDescription());
+        });
+
+
         actionsBox.getChildren().addAll(new Label("--- Actions/Inventory ---"),
-                attackButton, SpecialAttackButton, InventoryButton, movementLabel,
-                northButton, westButton, eastButton, southButton);
+                InventoryButton, movementLabel, northButton, westButton, eastButton, southButton);
 
         actionsBox.setAlignment(Pos.TOP_CENTER);
         root.setRight(actionsBox);
@@ -136,7 +151,8 @@ public class GameScreen extends Screen {
         // Initial update of UI elements
         updatePlayerStats();
         updateDungeonView(); // This would be called by GameController
-        addGameMessage("Welcome to the Dungeon!");
+        addGameMessage("Welcome to the dungeon!");
+        addGameMessage(getController().getGameController().getCurrentRoomDescription());
 
 
         getStage().setScene(gameScene);
@@ -145,6 +161,17 @@ public class GameScreen extends Screen {
 
         // Notify GameController that the game screen is ready if needed
         // e.g., getController().getGameController().onGameScreenReady(this);
+    }
+
+    /**
+     * Updates room description in the message area.
+     */
+    public void displayRoomDescription() {
+        if (getController() != null && getController().getGameController() != null &&
+                getController().getGameController().getCurrentRoomDescription() != null) {
+            //myMessagesArea.getChildren()
+            addGameMessage(getController().getGameController().getCurrentRoomDescription());
+        }
     }
 
     /**
@@ -184,7 +211,7 @@ public class GameScreen extends Screen {
         // The GameController should ideally handle the specifics of this.
 
         String str = getController().getDungeon().getMapString(getController().getPlayer().getPosition());
-
+        int strIndex = 0;
         for (int x = 0; x < getController().getDungeon().getHeight(); x++) {
             for (int y = 0; y < getController().getDungeon().getWidth(); y++) {
 
@@ -212,39 +239,7 @@ public class GameScreen extends Screen {
              }
         }
     }
+   // You were going to work on figuring out save game stuff, and look at other gameController stuff for wiring.
+    // Also fix message area issue where full message not displayed after multiple displays. 
 
-    /**
-     * Creates a Stage showing inventory items.
-     *
-     * @param theInventory the player's inventory of Items.
-     */
-    public void inventoryPopUp(List<Item> theInventory) {
-        Stage inventoryStage = new Stage();
-        VBox items = new VBox(10);
-        Scene inventoryScene = new Scene(items, 200, 300);
-
-        // This will be updated later to erase items from view after use.
-        for (Item item : theInventory) {
-            HBox currHBox = new HBox(15);
-            Button b = new Button("Use Item");
-            b.setOnAction(event -> getController().getPlayer().useItem(item));
-            currHBox.getChildren().addAll(new Label(item.toString()),
-                                          new Button("Use Item"));
-            items.getChildren().add(currHBox);
-        }
-
-        // Test items here until program running and can actually store items in inventory.
-        for (int i = 0; i < 3; i++) {
-            Button b = new Button("Use Item");
-            HBox currHBox = new HBox(15);
-            currHBox.getChildren().addAll(new Label("Test Item"),
-                    b);
-            items.getChildren().add(currHBox);
-        }
-
-
-        inventoryStage.setTitle("Inventory");
-        inventoryStage.setScene(inventoryScene);
-        inventoryStage.show();
-    }
 }

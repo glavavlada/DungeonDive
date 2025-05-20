@@ -54,21 +54,21 @@ public class IntroScreen extends Screen {
         buttons.setAlignment(Pos.CENTER);
 
         Button newGameBtn = new Button("New Game");
-        Button resumeGameBtn = new Button("Resume Game"); // Was "Saved Games" in tripleButtonVBox
+        Button loadGameBtn = new Button("Load Game"); // Was "Saved Games" in tripleButtonVBox
         Button exitBtn = new Button("Exit Program");
 
         // Use the setButtonSize from the Screen superclass
         setButtonSize(newGameBtn);
-        setButtonSize(resumeGameBtn);
+        setButtonSize(loadGameBtn);
         setButtonSize(exitBtn);
 
         // Set actions using the controller from the Screen superclass
         newGameBtn.setOnAction(event -> getController().newGame(event, theUI));
-        resumeGameBtn.setOnAction(event -> getController().savedGames(event, theUI)); // Assuming this leads to saves screen
+        loadGameBtn.setOnAction(event -> getController().savedGames(event, theUI)); // Assuming this leads to saves screen
         exitBtn.setOnAction(event -> getController().exitProgram(event));
 
 
-        buttons.getChildren().addAll(newGameBtn, resumeGameBtn, exitBtn);
+        buttons.getChildren().addAll(newGameBtn, loadGameBtn, exitBtn);
 
         // Use the tripleButtonStructure from Screen superclass if it fits, or layout manually
         // tripleButtonStructure(title, buttons, root);
