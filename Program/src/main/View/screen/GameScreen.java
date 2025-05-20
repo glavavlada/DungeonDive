@@ -1,7 +1,12 @@
 package main.View.screen;
 
+import javafx.event.ActionEvent;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Font;
 import main.Controller.Controller;
+import main.Model.element.Item;
+import main.Model.util.Point;
 import main.View.GameUI;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -11,6 +16,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
+import java.util.List;
 
 /**
  * Class for the GameScreen.
@@ -88,8 +95,20 @@ public class GameScreen extends Screen {
         // Right: Inventory / Actions (Optional, or could be part of bottom)
         VBox actionsBox = new VBox(10);
         actionsBox.setStyle("-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;");
-        actionsBox.getChildren().add(new Label("--- Actions/Inventory ---"));
         // TODO: Add buttons for Attack, Use Item, Inventory display
+        Button attackButton = new Button("Base Attack");
+        Button SpecialAttackButton = new Button(getController().getPlayer().
+                getType().getSpecialAttackName());
+        Button InventoryButton = new Button("Inventory");
+        setButtonSize(attackButton);
+        setButtonSize(SpecialAttackButton);
+        setButtonSize(InventoryButton);
+//        attackButton.setOnAction();
+//        SpecialAttackButton.setOnAction();
+        InventoryButton.setOnAction(event -> inventoryPopUp(getController().getPlayer().getInventory()));
+        actionsBox.getChildren().addAll(new Label("--- Actions/Inventory ---"),
+                attackButton, SpecialAttackButton, InventoryButton);
+        actionsBox.setAlignment(Pos.TOP_CENTER);
         root.setRight(actionsBox);
 
         // Bottom: Message Log
@@ -141,14 +160,28 @@ public class GameScreen extends Screen {
         if (getController() == null || getController().getDungeon() == null || myDungeonViewPane == null) {
             return;
         }
+
+        myDungeonViewPane.getChildren().clear(); // Clear old view
+
         // TODO: Implement logic to draw the dungeon map in myDungeonViewPane
         // This will involve iterating through getController().getDungeon().getRooms()
         // and creating Labels or other Nodes for each room.
         // Example: myDungeonViewPane.add(new Label("[R]"), x, y);
         // The GameController should ideally handle the specifics of this.
-        myDungeonViewPane.getChildren().clear(); // Clear old view
-        Label placeholder = new Label("Dungeon map will appear here.\n(GameController should draw this)");
-        myDungeonViewPane.add(placeholder, 0,0);
+
+        String str = getController().getDungeon().getMapString(getController().getPlayer().getPosition());
+
+        for (int x = 0; x < getController().getDungeon().getHeight(); x++) {
+            for (int y = 0; y < getController().getDungeon().getWidth(); y++) {
+
+                Label currRoom = new Label(getController().getDungeon().getRoom(x, y).getRoomType().getDisplayName());
+                myDungeonViewPane.add(currRoom, x, y);
+            }
+        }
+
+
+//        Label placeholder = new Label("Dungeon map will appear here.\n(GameController should draw this)");
+//        myDungeonViewPane.add(placeholder, 0,0);
     }
 
     /**
@@ -164,5 +197,40 @@ public class GameScreen extends Screen {
                  ((ScrollPane)myMessagesArea.getParent()).setVvalue(1.0);
              }
         }
+    }
+
+    /**
+     * Creates a Stage showing inventory items.
+     *
+     * @param theInventory the player's inventory of Items.
+     */
+    public void inventoryPopUp(List<Item> theInventory) {
+        Stage inventoryStage = new Stage();
+        VBox items = new VBox(10);
+        Scene inventoryScene = new Scene(items, 200, 300);
+
+        // This will be updated later to erase items from view after use.
+        for (Item item : theInventory) {
+            HBox currHBox = new HBox(15);
+            Button b = new Button("Use Item");
+            b.setOnAction(event -> getController().getPlayer().useItem(item));
+            currHBox.getChildren().addAll(new Label(item.toString()),
+                                          new Button("Use Item"));
+            items.getChildren().add(currHBox);
+        }
+
+        // Test items here until program running and can actually store items in inventory.
+        for (int i = 0; i < 3; i++) {
+            Button b = new Button("Use Item");
+            HBox currHBox = new HBox(15);
+            currHBox.getChildren().addAll(new Label("Test Item"),
+                    b);
+            items.getChildren().add(currHBox);
+        }
+
+
+        inventoryStage.setTitle("Inventory");
+        inventoryStage.setScene(inventoryScene);
+        inventoryStage.show();
     }
 }
