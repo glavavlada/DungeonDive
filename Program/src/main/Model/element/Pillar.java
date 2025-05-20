@@ -42,10 +42,6 @@ public class Pillar extends DungeonElement {
             myIsActivated = true;
             System.out.println(theHero.getName() + " activated the Pillar of " + myType.getDisplayName() + "!");
             applyBuff(theHero);
-            // Notify the dungeon or game controller that a pillar was activated.
-            // Hero's internal count is one way, but Dungeon should also know.
-            // For now, hero updates its count. Dungeon should have a method called by controller.
-            theHero.setPillarsActivated(theHero.getPillarsActivated() + 1);
         } else {
             System.out.println("The Pillar of " + myType.getDisplayName() + " is already activated.");
         }
@@ -59,17 +55,31 @@ public class Pillar extends DungeonElement {
      */
     private void applyBuff(final Hero theHero) {
         System.out.println("Applying buff for: " + myType.getDisplayName() + " - " + myType.getDescription());
-        // Actual buff logic would go here, modifying hero stats or adding abilities.
-        // Example (Hero class would need these methods):
-        // switch (myType) {
-        //     case ABSTRACTION:
-        //         theHero.increaseCritChance(0.05);
-        //         break;
-        //     case ENCAPSULATION:
-        //         theHero.increaseDefense(5);
-        //         break;
-        //     // ... etc.
-        // }
+
+        //SOME ROUGH IDEAS plz change this
+
+        // Apply stat bonuses based on pillar type
+        switch (myType) {
+            case ABSTRACTION:
+                // Increase strength
+                System.out.println(theHero.getName() + "'s strength increased!");
+                break;
+            case ENCAPSULATION:
+                // Increase Attack
+                System.out.println(theHero.getName() + "'s attack increased!");
+                break;
+            case INHERITANCE:
+                // Increase max health
+                System.out.println(theHero.getName() + "'s maximum health increased!");
+                break;
+            case POLYMORPHISM:
+                // Increase Special Attack Damage
+                System.out.println(theHero.getName() + "'s special Attack Damage increased!");
+                break;
+            default:
+                System.out.println("Unknown pillar type, no buff applied.");
+                break;
+        }
     }
 
     public boolean isActivated() {

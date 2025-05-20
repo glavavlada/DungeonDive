@@ -2,6 +2,8 @@ package main.Controller;
 
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.KeyCode;
+import main.Controller.StateController.GameState;
+
 
 /**
  * Handles raw keyboard input events and translates them into actions
@@ -14,86 +16,199 @@ import javafx.scene.input.KeyCode;
  */
 public class InputController {
     private final GameController myGameController;
+    private final StateController myStateController;
 
     /**
-     * Constructor for InputController.
+     * Constructor for InputController
      *
-     * @param theGameController The game controller that will process game actions.
+     * @param theGameController game controller will process game actions
+     * @param theStateController state controller tracks game state
      */
-    public InputController(final GameController theGameController) {
+    public InputController(final GameController theGameController, final StateController theStateController) {
         if (theGameController == null) {
             throw new IllegalArgumentException("GameController cannot be null for InputController.");
         }
+        if (theStateController == null) {
+            throw new IllegalArgumentException("StateController cannot be null for InputController.");
+        }
         this.myGameController = theGameController;
-        System.out.println("InputController initialized with GameController.");
+        this.myStateController = theStateController;
+        System.out.println("InputController initialized with GameController and StateController.");
     }
 
     /**
-     * Handles key pressed events.
-     * This method is typically set as the OnKeyPressed event handler for a scene.
+     * Handles key pressed events based on the current game state.
      *
      * @param event The KeyEvent representing the key press.
      */
     public void handleKeyPress(KeyEvent event) {
         KeyCode code = event.getCode();
-        System.out.println("Key Pressed: " + code);
+        System.out.println("Key Pressed: " + code + " in state: " + myStateController.getCurrentState());
 
-        // Delegate to GameController to handle the actual game logic for the key press
-        // For example:
-        // myGameController.processPlayerAction(code, true); // true for pressed
-        // Or more specific methods:
-        switch (code) {
-            case UP:
-            case W:
-                // myGameController.movePlayerNorth();
-                System.out.println("InputController: Forward/Up action initiated.");
+        // Handle input based on current game state
+        switch (myStateController.getCurrentState()) {
+            case EXPLORING:
+                handleExplorationInput(code);
                 break;
-            case DOWN:
-            case S:
-                // myGameController.movePlayerSouth();
-                System.out.println("InputController: Backward/Down action initiated.");
+            case COMBAT:
+                handleCombatInput(code);
                 break;
-            case LEFT:
-            case A:
-                // myGameController.movePlayerWest();
-                System.out.println("InputController: Left action initiated.");
+            case INVENTORY:
+                handleInventoryInput(code);
                 break;
-            case RIGHT:
-            case D:
-                // myGameController.movePlayerEast();
-                System.out.println("InputController: Right action initiated.");
+            case CHEST:
+                handleChestInput(code);
                 break;
-            case SPACE:
-                // myGameController.playerAttack();
-                System.out.println("InputController: Attack action initiated.");
+            case PAUSED:
+                // Handle pause menu inputs if needed
                 break;
-            case E:
-                // myGameController.playerInteract();
-                System.out.println("InputController: Interact action initiated.");
-                break;
-            // Add other key bindings as needed (e.g., for inventory, using items)
-            default:
-                // Optional: handle other keys or do nothing
+            case GAME_OVER:
+            case VICTORY:
+                // Handle game over/victory screen inputs
                 break;
         }
-        event.consume(); // Consume the event if it's handled here
+
+        event.consume();
     }
 
     /**
+     * Handles input during exploration mode.
+     *
+     * @param code The key code pressed
+     */
+    private void handleExplorationInput(KeyCode code) {
+        switch (code) {
+            case UP:
+            case W:
+                myGameController.movePlayerNorth();
+                break;
+            case DOWN:
+            case S:
+                myGameController.movePlayerSouth();
+                break;
+            case LEFT:
+            case A:
+                myGameController.movePlayerWest();
+                break;
+            case RIGHT:
+            case D:
+                myGameController.movePlayerEast();
+                break;
+            case I:
+                // Open inventory
+                myGameController.openInventory();
+                break;
+            case E:
+                // Interact with objects in the room (like chests)
+                myGameController.interact();
+                break;
+            case ESCAPE:
+                // Pause game
+                myGameController.pauseGame();
+                break;
+            default:
+                // Ignore other keys
+                break;
+        }
+    }
+
+    /**
+     * Handles input during combat mode.
+     *
+     * @param code The key code pressed
+     */
+    private void handleCombatInput(KeyCode code) {
+        switch (code) {
+            case A:
+                // Regular attack
+                myGameController.playerAttack();
+                break;
+            case S:
+                // Special attack
+                myGameController.playerSpecialAttack();
+                break;
+            case R:
+                // Run from combat
+                myGameController.playerRun();
+                break;
+            case I:
+                // Open inventory during combat
+                myGameController.openInventory();
+                break;
+            case ESCAPE:
+                // Pause game
+                myGameController.pauseGame();
+                break;
+            default:
+                // Ignore other keys
+                break;
+        }
+    }
+
+    /**
+     * Handles input during inventory mode.
+     *
+     * @param code The key code pressed
+     */
+    private void handleInventoryInput(KeyCode code) {
+        switch (code) {
+            case UP:
+            case W:
+                // Scroll inventory up
+                myGameController.scrollInventoryUp();
+                break;
+            case DOWN:
+            case S:
+                // Scroll inventory down
+                myGameController.scrollInventoryDown();
+                break;
+            case E:
+            case ENTER:
+                // Use selected item
+                myGameController.useSelectedItem();
+                break;
+            case I:
+            case ESCAPE:
+                // Close inventory
+                myGameController.closeInventory();
+                break;
+            default:
+                // Ignore other keys
+                break;
+        }
+    }
+
+    /**
+     * Handles input when interacting with a chest.
+     *
+     * @param code The key code pressed
+     */
+    private void handleChestInput(KeyCode code) {
+        switch (code) {
+            case E:
+            case ENTER:
+                // Open chest and collect items
+                myGameController.openChest();
+                break;
+            case ESCAPE:
+                // Cancel chest interaction
+                myGameController.cancelChestInteraction();
+                break;
+            default:
+                // Ignore other keys
+                break;
+        }
+    }
+
+
+    /**
      * Handles key released events.
-     * This method is typically set as the OnKeyReleased event handler for a scene.
      *
      * @param event The KeyEvent representing the key release.
      */
     public void handleKeyRelease(KeyEvent event) {
-        KeyCode code = event.getCode();
-        // System.out.println("Key Released: " + code); // Often less critical to log releases
-
-        // Delegate to GameController if specific release actions are needed
-        // For example, to stop continuous movement:
-        // myGameController.processPlayerAction(code, false); // false for released
-        // Or if movement is state-based (e.g., isMovingUp = false), GameController handles that.
-
-        event.consume(); // Consume the event if it's handled here
+        // For most actions in this game, we only care about key presses
+        // But we could handle key releases for continuous actions if needed
+        event.consume();
     }
 }

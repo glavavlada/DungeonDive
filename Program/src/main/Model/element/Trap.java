@@ -95,6 +95,15 @@ public class Trap extends DungeonElement {
                 Objects.equals(myDescription, trap.myDescription);
     }
 
+    /**
+     *gets damage amount this trap deals
+     * @return damage amount
+     */
+    public int getDamage() {
+        return getDamageAmount();
+    }
+
+
     @Override
     public int hashCode() {
         return Objects.hash(myName, myDescription, myDamageAmount, myIsSprung);
