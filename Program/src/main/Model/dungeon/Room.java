@@ -8,12 +8,13 @@ import main.Model.element.Pillar;
 import main.Model.element.Trap;
 import main.Model.util.Point;
 import main.Model.util.RoomType;
+import java.util.ArrayList;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+
 
 /**
  * Represents a single room within a dungeon.
@@ -208,4 +209,72 @@ public class Room {
     public int hashCode() {
         return Objects.hash(myPosition);
     }
+
+    /**
+     *checks if this room has chest
+     *
+     * @return true if the room has chest false otherwise
+     */
+    public boolean hasChest() {
+        //check if this room contains chest
+        return false; //replace with actual implementation
+    }
+
+    /**
+     *opens chest in this room and returns its contents
+     *
+     * @return list of items from chest
+     */
+    public List<Item> openChest() {
+        //open chest and return contents
+        //add chest items to the list
+        //remove chest from room or mark as opened
+        return new ArrayList<>(); //replace with actual implementation
+    }
+
+    /**
+     *checks if this room has pillar
+     *
+     * @return true if room has pillar, false otherwise
+     */
+    public boolean hasPillar() {
+        return myPillar != null;
+    }
+
+    /**
+     *removes pillar from this room
+     */
+    public void removePillar() {
+        myPillar = null;
+    }
+
+    /**
+     *checks if this room has a trap
+     *
+     * @return true if room has trap, false otherwise
+     */
+    public boolean hasTrap() {
+        return myTrap != null;
+    }
+
+    /**
+     *clears all items from this room
+     */
+    public void clearItems() {
+        myItems.clear();
+    }
+
+    /**
+     *get description of this room
+     *
+     * @return string description of room
+     */
+    public String getDescription() {
+        return myRoomType.getDisplayName() + " room";
+    }
+
+
+
+
+
 }

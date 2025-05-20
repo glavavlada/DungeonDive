@@ -22,6 +22,11 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
     private final ArrayList<Item> myInventory;
     private int myPillarsActivated;
     private int myGold;
+    // Replace the pillar collection counter with stat tracking
+    private int myStrengthBonus = 0;
+    private int myDefenseBonus = 0;
+    private int myAgilityBonus = 0;
+    private int myHealthBonus = 0;
     // Add fields for other stats derived from HeroType if they can be modified by game events (buffs, items)
     // example:
     // private int myCurrentAttackPower;
@@ -207,4 +212,86 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
             // Game over logic would typically be handled by a GameController observing this state.
         }
     }
+
+    /**
+     *add item to hero's inventory
+     *
+     * @param item item to add
+     * @return true if item was added successfully, false otherwise
+     */
+    public boolean addItem(Item item) {
+        return pickupItem(item); // Use existing pickupItem method
+    }
+
+    /**
+     * Activates a pillar and receives its stat bonus.
+     *
+     * @param pillar The pillar to activate
+     * @return true if the pillar was successfully activated
+     */
+    public boolean activatePillar(Pillar pillar) {
+        if (pillar == null || pillar.isActivated()) {
+            return false;
+        }
+
+        // Mark the pillar as activated - pass this hero as the parameter
+        pillar.activate(this);
+
+        return true;
+    }
+
+    /**
+     * Checks if the hero has activated all pillars.
+     *
+     * @return true if all pillars have been activated, false otherwise
+     */
+    public boolean hasActivatedAllPillars() {
+        // Assuming there are 4 pillars in total
+        final int TOTAL_PILLARS = 4;
+        return myPillarsActivated >= TOTAL_PILLARS;
+    }
+
+
+
+    /**
+     * Performs a special attack, now affected by strength and agility bonuses.
+     *
+     * @return The amount of damage dealt
+     */
+    public int specialAttack() {
+        int baseDamage = myType.getBaseAttack() * 2;
+        int bonusDamage = myStrengthBonus + myAgilityBonus;
+        int totalDamage = baseDamage + bonusDamage;
+
+        System.out.println(myName + " performs a special attack!");
+        return totalDamage;
+    }
+
+    /**
+     *checks if hero can use special attack
+     * This is simple implementation that always returns true
+     *modify this later to add limitations as needed
+     *
+     * @return true if hero can use special attack
+     */
+    public boolean canUseSpecialAttack() {
+        // For now, always allow special attacks
+        // You can modify this later to add limitations like:
+        // - Once per combat
+        // - Every other turn
+        // - Based on health percentage
+        return true;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 }

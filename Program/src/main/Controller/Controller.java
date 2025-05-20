@@ -161,14 +161,17 @@ public class Controller {
      * @param theUI GameUI reference.
      */
     private void initializeGameControllers(GameUI theUI) {
-        // Ensure these controller classes also use main.Controller package if they are in it.
-        // And that their constructors match.
-        myGameController = new GameController(myGameModel, theUI);
-        myInputController = new InputController(myGameController); // InputController now takes GameController
-        // myStateController = new StateController(); // Initialize if needed
+        // Initialize StateController first
+        myStateController = new StateController();
+
+        // Then initialize GameController with Model, UI, and StateController
+        myGameController = new GameController(myGameModel, theUI, myStateController);
+
+        // Initialize InputController with GameController and StateController
+        myInputController = new InputController(myGameController, myStateController);
 
         System.out.println("Game controllers initialized.");
-        theUI.setInputController(myInputController); // This line should now work
+        theUI.setInputController(myInputController);
 
         // For testing - remove later
         // myGameController.printStatus();
@@ -183,7 +186,6 @@ public class Controller {
         return myGameModel.getDungeon();
     }
 
-    // Getter for GameController if other parts of UI need it (e.g., GameScreen for direct updates)
     public GameController getGameController() {
         return myGameController;
     }

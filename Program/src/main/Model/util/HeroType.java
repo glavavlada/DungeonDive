@@ -16,7 +16,7 @@ public enum HeroType {
     private final String mySpecialAttackName;
     private final int mySpecialAttackDamage;
     private final double myCritChance;          // ex: 0.05 for 5%
-    private final double myCritMultiplier;      // ex: 2.0 for double damage
+    private final double myCritMultiplier;
 
     HeroType(String displayName, String description, int baseHealth, int baseAttack,
              String specialAttackName, int specialAttackDamage, double critChance, double critMultiplier) {
