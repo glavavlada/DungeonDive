@@ -95,6 +95,7 @@ public class GameScreen extends Screen {
         // Right: Inventory / Actions (Optional, or could be part of bottom)
         VBox actionsBox = new VBox(10);
         actionsBox.setStyle("-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;");
+
         // TODO: Add buttons for Attack, Use Item, Inventory display
         Button attackButton = new Button("Base Attack");
         Button SpecialAttackButton = new Button(getController().getPlayer().
@@ -106,8 +107,21 @@ public class GameScreen extends Screen {
 //        attackButton.setOnAction();
 //        SpecialAttackButton.setOnAction();
         InventoryButton.setOnAction(event -> inventoryPopUp(getController().getPlayer().getInventory()));
+
+        Label movementLabel = new Label("--- Movement ---");
+        Button northButton = new Button("North");
+        Button westButton = new Button("West");
+        Button eastButton = new Button("East");
+        Button southButton = new Button("South");
+        setButtonSize(northButton);
+        setButtonSize(westButton);
+        setButtonSize(eastButton);
+        setButtonSize(southButton);
+
         actionsBox.getChildren().addAll(new Label("--- Actions/Inventory ---"),
-                attackButton, SpecialAttackButton, InventoryButton);
+                attackButton, SpecialAttackButton, InventoryButton, movementLabel,
+                northButton, westButton, eastButton, southButton);
+
         actionsBox.setAlignment(Pos.TOP_CENTER);
         root.setRight(actionsBox);
 
