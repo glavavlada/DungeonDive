@@ -46,6 +46,8 @@ public class GameController {
         System.out.println("GameController initialized with model, UI, and state controller");
     }
 
+
+
     /**
      * Moves the player north if possible.
      */
@@ -68,14 +70,13 @@ public class GameController {
             Room newRoom = myGameModel.getDungeon().getRoom(newPos);
             enterRoom(newRoom);
 
-            // Update UI - replace updatePlayerPosition with appropriate method
-            // myGameUI.updatePlayerPosition();
-            // If no direct equivalent exists, update the room description instead
-            myGameUI.updateRoomDescription(newRoom);
+            // Update UI
+            myGameUI.updatePlayerPosition();
             System.out.println("Player moved north to " + newPos);
         } else {
             System.out.println("Cannot move north - no door in that direction");
         }
+
     }
 
     /**
