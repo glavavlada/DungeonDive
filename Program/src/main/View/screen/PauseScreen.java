@@ -62,11 +62,7 @@ public class PauseScreen extends Screen {
         resumeBtn.setOnAction(event -> getController().resumeCurrentGame(theUI));
         saveGameBtn.setOnAction(event -> {
             // TODO: Implement save game functionality
-            // This might involve showing a sub-dialog for save name or just saving to a default slot.
-            // getController().saveGame("defaultSave"); // Example call
-            System.out.println("Save Game button clicked (not implemented yet).");
-            // For now, maybe just add a message or disable it
-            // Add a label to show save status if needed
+            getController().getGameController().saveGame();
         });
         quitToMenuBtn.setOnAction(event -> getController().quitToMenu(theUI));
 

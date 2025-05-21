@@ -1,7 +1,15 @@
 package main.View.screen;
 
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import main.Controller.Controller;
+import main.Model.element.Item;
+import main.Model.util.Point;
 import main.View.GameUI;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -11,6 +19,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+
+import java.util.List;
 
 /**
  * Class for the GameScreen.
@@ -58,7 +68,14 @@ public class GameScreen extends Screen {
         setButtonSize(pauseButton);
         pauseButton.setOnAction(event -> getController().pauseGame(event, theUI));
         BorderPane.setAlignment(pauseButton, Pos.TOP_RIGHT);
-        root.setTop(pauseButton);
+        Label placeholder = new Label("This is placeholder map for testing. Please delete me at" +
+                " View.Screen.GameScreen at line 237-245!");
+        placeholder.setFont(Font.font("impact", FontWeight.BOLD, 14));
+        placeholder.setStyle("-fx-text-fill: red;");
+        HBox tempHBox = new HBox(10);
+        tempHBox.getChildren().addAll(placeholder, pauseButton);
+        tempHBox.setAlignment(Pos.TOP_RIGHT);
+        root.setTop(tempHBox);
 
         // Left: Player Stats
         VBox statsBox = new VBox(10);
@@ -88,22 +105,78 @@ public class GameScreen extends Screen {
         // Right: Inventory / Actions (Optional, or could be part of bottom)
         VBox actionsBox = new VBox(10);
         actionsBox.setStyle("-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;");
-        actionsBox.getChildren().add(new Label("--- Actions/Inventory ---"));
+
         // TODO: Add buttons for Attack, Use Item, Inventory display
+
+        Button interactButton = new Button("Interact");
+        setButtonSize(interactButton);
+        interactButton.setOnAction(event -> {
+            MY_CONTROLLER.getGameController().interact();
+            updatePlayerStats();
+        });
+
+        Button InventoryButton = new Button("Inventory");
+        setButtonSize(InventoryButton);
+        InventoryButton.setOnAction(event -> getController().getGameController().openInventory());
+
+
+        Label movementLabel = new Label("--- Movement ---");
+        Button northButton = new Button("North");
+        Button westButton = new Button("West");
+        Button eastButton = new Button("East");
+        Button southButton = new Button("South");
+        setButtonSize(northButton);
+        setButtonSize(westButton);
+        setButtonSize(eastButton);
+        setButtonSize(southButton);
+
+
+        northButton.setOnAction( event -> {
+            getController().getGameController().movePlayerNorth();
+            displayRoomDescription();
+            updatePlayerStats();
+        });
+
+        westButton.setOnAction(event -> {
+            getController().getGameController().movePlayerWest();
+            displayRoomDescription();
+            updatePlayerStats();
+        });
+
+        eastButton.setOnAction(event -> {
+            getController().getGameController().movePlayerEast();
+            displayRoomDescription();
+            updatePlayerStats();
+        });
+
+        southButton.setOnAction(event -> {
+          getController().getGameController().movePlayerSouth();
+          displayRoomDescription();
+          updatePlayerStats();
+        });
+
+
+        actionsBox.getChildren().addAll(new Label("--- Actions/Inventory ---"),
+                interactButton, InventoryButton, movementLabel, northButton, westButton, eastButton, southButton);
+
+        actionsBox.setAlignment(Pos.TOP_CENTER);
         root.setRight(actionsBox);
 
         // Bottom: Message Log
-        myMessagesArea = new VBox(5);
+        myMessagesArea = new VBox(20);
         myMessagesArea.setStyle("-fx-padding: 10; -fx-border-color: silver; -fx-border-width: 1; -fx-background-color: #f0f0f0;");
-        myMessagesArea.setPrefHeight(100);
         ScrollPane messageScrollPane = new ScrollPane(myMessagesArea);
         messageScrollPane.setFitToWidth(true);
+        // It was MyMessagesArea that had pref height, but it was causing
+        // text display problems, so I set it to Scroll pane instead.
+        messageScrollPane.setPrefHeight(100);
         root.setBottom(messageScrollPane);
 
         // Initial update of UI elements
         updatePlayerStats();
         updateDungeonView(); // This would be called by GameController
-        addGameMessage("Welcome to the Dungeon!");
+        addGameMessage("Welcome to the dungeon!");
+        addGameMessage(getController().getGameController().getCurrentRoomDescription());
 
 
         getStage().setScene(gameScene);
@@ -112,6 +185,17 @@ public class GameScreen extends Screen {
 
         // Notify GameController that the game screen is ready if needed
         // e.g., getController().getGameController().onGameScreenReady(this);
+    }
+
+    /**
+     * Updates room description in the message area.
+     */
+    public void displayRoomDescription() {
+        if (getController() != null && getController().getGameController() != null &&
+                getController().getGameController().getCurrentRoomDescription() != null) {
+            //myMessagesArea.getChildren()
+            addGameMessage(getController().getGameController().getCurrentRoomDescription());
+        }
     }
 
     /**
@@ -141,14 +225,25 @@ public class GameScreen extends Screen {
         if (getController() == null || getController().getDungeon() == null || myDungeonViewPane == null) {
             return;
         }
+
+        myDungeonViewPane.getChildren().clear(); // Clear old view
+
         // TODO: Implement logic to draw the dungeon map in myDungeonViewPane
         // This will involve iterating through getController().getDungeon().getRooms()
         // and creating Labels or other Nodes for each room.
         // Example: myDungeonViewPane.add(new Label("[R]"), x, y);
         // The GameController should ideally handle the specifics of this.
-        myDungeonViewPane.getChildren().clear(); // Clear old view
-        Label placeholder = new Label("Dungeon map will appear here.\n(GameController should draw this)");
-        myDungeonViewPane.add(placeholder, 0,0);
+
+        String str = getController().getDungeon().getMapString(getController().getPlayer().getPosition());
+        int strIndex = 0;
+        for (int x = 0; x < getController().getDungeon().getHeight(); x++) {
+            for (int y = 0; y < getController().getDungeon().getWidth(); y++) {
+
+                Label currRoom = new Label(getController().getDungeon().getRoom(x, y).getRoomType().getDisplayName());
+                myDungeonViewPane.add(currRoom, x, y);
+            }
+        }
+
     }
 
     /**
@@ -160,9 +255,9 @@ public class GameScreen extends Screen {
             Label messageLabel = new Label(message);
             myMessagesArea.getChildren().add(messageLabel);
             // Auto-scroll to bottom
-             if (myMessagesArea.getParent() instanceof ScrollPane) {
-                 ((ScrollPane)myMessagesArea.getParent()).setVvalue(1.0);
-             }
+            if (myMessagesArea.getParent() instanceof ScrollPane) {
+                ((ScrollPane)myMessagesArea.getParent()).setVvalue(1.0);
+            }
         }
     }
 }

@@ -123,7 +123,7 @@ public class GameController {
         // Check if there's a door to the east
         if (currentRoom.hasEastDoor()) {
             // Move player to the east room
-            Point newPos = new Point(currentPos.getX()+1, currentPos.getY() - 1);
+            Point newPos = new Point(currentPos.getX()+1, currentPos.getY());
             player.setPosition(newPos);
 
             // Enter the new room and handle room effects
@@ -153,7 +153,7 @@ public class GameController {
         // Check if there's a door to the west
         if (currentRoom.hasWestDoor()) {
             // Move player to the west room
-            Point newPos = new Point(currentPos.getX() - 1, currentPos.getY() - 1);
+            Point newPos = new Point(currentPos.getX() - 1, currentPos.getY());
             player.setPosition(newPos);
 
             // Enter the new room and handle room effects

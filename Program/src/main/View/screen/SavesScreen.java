@@ -48,14 +48,20 @@ public class SavesScreen extends Screen {
         Label titleLabel = new Label("Load Game");
         titleLabel.setFont(javafx.scene.text.Font.font("Verdana", 24));
 
-        Label placeholderLabel = new Label("Save slots will be listed here.\n(Load game functionality not yet implemented)");
-        placeholderLabel.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        Button save1 = new Button("Empty Save");
+        Button save2 = new Button("Empty Save");
+        Button save3 = new Button("Empty Save");
+        setButtonSize(save1);
+        setButtonSize(save2);
+        setButtonSize(save3);
+
+
 
         Button backButton = new Button("Back to Main Menu");
         setButtonSize(backButton);
         backButton.setOnAction(event -> theUI.showIntroScreen()); // Directly go back
 
-        root.getChildren().addAll(titleLabel, placeholderLabel, backButton);
+        root.getChildren().addAll(titleLabel, save1, save2, save3, backButton);
 
         getStage().setScene(savesScene);
         getStage().setTitle("Dungeon Dive - Load Game");
