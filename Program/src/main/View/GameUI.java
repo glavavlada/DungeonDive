@@ -28,6 +28,12 @@ public class GameUI {
     private final Stage myPrimaryStage;
     private final Controller myController;
     private InputController myInputController; // Field to store the InputController
+    /**
+     * This is here because the inventory screen worked differently than others.
+     * it is on a separate stage, and therefore needed an outside field to deal
+     * with opening and closing inventory.
+     */
+    private final InventoryScreen myInventoryScreen;
 
     /**
      * Constructor for GameUI.
@@ -44,6 +50,7 @@ public class GameUI {
         }
         this.myPrimaryStage = thePrimaryStage;
         this.myController = theController;
+        myInventoryScreen = new InventoryScreen(myPrimaryStage, myController);
     }
 
     public void showIntroScreen() {
@@ -229,8 +236,7 @@ public class GameUI {
      */
     public void showInventoryScreen() {
         // Display inventory interface
-        InventoryScreen inventoryScreen = new InventoryScreen();
-        inventoryScreen.showScreen(this);
+        myInventoryScreen.showScreen(this);
         System.out.println("Inventory screen shown");
     }
 
@@ -239,6 +245,7 @@ public class GameUI {
      */
     public void hideInventoryScreen() {
         // Hide inventory interface
+        myInventoryScreen.closeScreen();
         System.out.println("Inventory screen hidden");
     }
 

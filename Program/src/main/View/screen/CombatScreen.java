@@ -84,8 +84,8 @@ public class CombatScreen extends Screen {
         // Combat message log at the bottom.
         myCombatMessages = new VBox(5);
         myCombatMessages.setStyle("-fx-padding: 10; -fx-border-color: silver; -fx-border-width: 1; -fx-background-color: #f0f0f0;");
-        myCombatMessages.setPrefHeight(100);
         ScrollPane messageScrollPane = new ScrollPane(myCombatMessages);
+        messageScrollPane.setPrefHeight(100);
         messageScrollPane.setFitToWidth(true);
         root.setBottom(messageScrollPane);
 
