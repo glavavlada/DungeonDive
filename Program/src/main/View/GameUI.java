@@ -28,6 +28,8 @@ public class GameUI {
     private final Stage myPrimaryStage;
     private final Controller myController;
     private InputController myInputController; // Field to store the InputController
+    private GameScreen myGameScreen;
+
     /**
      * This is here because the inventory screen worked differently than others.
      * it is on a separate stage, and therefore needed an outside field to deal
@@ -63,13 +65,6 @@ public class GameUI {
         heroSelection.showScreen(this);
     }
 
-    public void showGameScreen() {
-        GameScreen gameScreen = new GameScreen(myPrimaryStage, myController);
-        gameScreen.showScreen(this);
-        // After game screen is shown, its scene is set. Now attach key listeners.
-        attachKeyListenersToScene();
-    }
-
     public void showPauseMenu() {
         PauseScreen pauseScreen = new PauseScreen(myPrimaryStage, myController);
         pauseScreen.showScreen(this);
@@ -96,6 +91,24 @@ public class GameUI {
 
     public Stage getPrimaryStage() {
         return myPrimaryStage;
+    }
+
+    public GameScreen getGameScreen() {
+        return myGameScreen;
+    }
+
+    public void setGameScreen(GameScreen gameScreen) {
+        this.myGameScreen = gameScreen;
+    }
+
+    // Modify the showGameScreen method to save the reference
+    public void showGameScreen() {
+        GameScreen gameScreen = new GameScreen(myPrimaryStage, myController);
+        this.myGameScreen = gameScreen; // Save the reference
+        gameScreen.showScreen(this);
+
+        // After game screen is shown, its scene is set. Now attach key listeners.
+        attachKeyListenersToScene();
     }
 
     /**
