@@ -3,6 +3,7 @@ package main.Controller;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.KeyCode;
 import main.Controller.StateController.GameState;
+import main.Model.util.Direction;
 
 
 /**
@@ -80,36 +81,47 @@ public class InputController {
         switch (code) {
             case UP:
             case W:
-                myGameController.movePlayerNorth();
+                myGameController.startPlayerMovement(Direction.NORTH);
                 break;
             case DOWN:
             case S:
-                myGameController.movePlayerSouth();
+                myGameController.startPlayerMovement(Direction.SOUTH);
                 break;
             case LEFT:
             case A:
-                myGameController.movePlayerWest();
+                myGameController.startPlayerMovement(Direction.WEST);
                 break;
             case RIGHT:
             case D:
-                myGameController.movePlayerEast();
+                myGameController.startPlayerMovement(Direction.EAST);
                 break;
-            case I:
-                // Open inventory
-                myGameController.openInventory();
-                break;
-            case E:
-                // Interact with objects in the room (like chests)
-                myGameController.interact();
-                break;
-            case ESCAPE:
-                // Pause game
-                myGameController.pauseGame();
-                break;
-            default:
-                // Ignore other keys
-                break;
+            // ... other cases
         }
+    }
+
+    /**
+     * Handles key released events.
+     *
+     * @param event The KeyEvent representing the key release.
+     */
+     public void handleKeyRelease(KeyEvent event) {
+        KeyCode code = event.getCode();
+
+        if (myStateController.getCurrentState() == GameState.EXPLORING) {
+            switch (code) {
+                case UP:
+                case W:
+                case DOWN:
+                case S:
+                case LEFT:
+                case A:
+                case RIGHT:
+                case D:
+                    myGameController.stopPlayerMovement();
+                    break;
+            }
+        }
+        event.consume();
     }
 
     /**
@@ -198,17 +210,5 @@ public class InputController {
                 // Ignore other keys
                 break;
         }
-    }
-
-
-    /**
-     * Handles key released events.
-     *
-     * @param event The KeyEvent representing the key release.
-     */
-    public void handleKeyRelease(KeyEvent event) {
-        // For most actions in this game, we only care about key presses
-        // But we could handle key releases for continuous actions if needed
-        event.consume();
     }
 }

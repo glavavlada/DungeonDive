@@ -6,10 +6,13 @@ import main.Model.character.Monster;
 import main.Model.dungeon.Room;
 import main.Model.element.Item;
 import main.Model.element.Pillar;
+import main.Model.util.Direction;
 import main.View.GameUI;
 import main.Controller.StateController.GameState;
 
 import main.Model.util.Point;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -46,7 +49,21 @@ public class GameController {
         System.out.println("GameController initialized with model, UI, and state controller");
     }
 
+    public void startPlayerMovement(Direction direction) {
+        if (!myStateController.isInState(GameState.EXPLORING)) {
+            return;
+        }
 
+        Hero player = myGameModel.getPlayer();
+        player.startMoving(direction);
+    }
+
+    public void stopPlayerMovement() {
+        Hero player = myGameModel.getPlayer();
+        if (player != null) {
+            player.stopMoving();
+        }
+    }
 
     /**
      * Moves the player north if possible.
@@ -444,7 +461,7 @@ public class GameController {
         }
 
         // Get monster as target
-        Monster target = monsters.getFirst();
+        Monster target = monsters.get(0);
 
         // Call the attack method with target monster as argument
         int damage = player.attack(target);
@@ -455,7 +472,7 @@ public class GameController {
         //check if monster is defeated
         if (target.getHealth() <= 0) {
             System.out.println("Defeated " + target.getName() + "!");
-            monsters.remove(target);
+            currentRoom.removeMonster(target);
 
             // Check if all monsters are defeated
             if (monsters.isEmpty()) {
@@ -463,11 +480,12 @@ public class GameController {
                 return;
             }
         }
-        // Monsters' turn to attack
-        monsterAttacks();
 
-        // Update combat UI
-        myGameUI.updateCombatScreen(monsters);
+        // Monsters' turn to attack (only if combat continues)
+        if (myStateController.isInState(GameState.COMBAT)) {
+            monsterAttacks();
+            myGameUI.updateCombatScreen(currentRoom.getMonsters());
+        }
     }
 
 
@@ -491,14 +509,16 @@ public class GameController {
         Room currentRoom = myGameModel.getDungeon().getRoom(player.getPosition());
         List<Monster> monsters = currentRoom.getMonsters();
 
-        if (monsters.isEmpty()) {
+        if (currentRoom.getMonsters().isEmpty()) {
             endCombat();
             return;
         }
 
+        Monster target = monsters.get(0);
+
         // Perform special attack
         int damage = player.specialAttack();
-        Monster target = monsters.getFirst();
+        target.takeDamage(damage);
 
         target.takeDamage(damage);
         System.out.println("Player used special attack on " + target.getName() + " for " + damage + " damage!");
@@ -506,23 +526,21 @@ public class GameController {
         // Check if monster is defeated
         if (target.getHealth() <= 0) {
             System.out.println("Defeated " + target.getName() + "!");
-            monsters.remove(target);
-
-
+            currentRoom.removeMonster(target);
 
             // Check if all monsters are defeated
-            if (monsters.isEmpty()) {
+            if (currentRoom.getMonsters().isEmpty()) {
                 endCombat();
                 return;
             }
         }
 
-        // Monsters' turn to attack
-        monsterAttacks();
-
-        // Update combat UI
-        myGameUI.updateCombatScreen(monsters);
-        myGameUI.updatePlayerStats(); // Update mana/energy display
+        // Monsters' turn to attack (only if combat continues)
+        if (myStateController.isInState(GameState.COMBAT)) {
+            monsterAttacks();
+            myGameUI.updateCombatScreen(currentRoom.getMonsters());
+            myGameUI.updatePlayerStats(); // Update mana/energy display
+        }
     }
 
     /**
@@ -533,20 +551,19 @@ public class GameController {
         Room currentRoom = myGameModel.getDungeon().getRoom(player.getPosition());
         List<Monster> monsters = currentRoom.getMonsters();
 
-        for (Monster monster : monsters) {
-            //call attack method with player as argument
-            int damage = monster.attack(player);
+        // Create a copy to iterate over, as monsters might die and be removed
+        List<Monster> attackers = new ArrayList<>(monsters);
 
-            player.takeDamage(damage);
-
-            System.out.println(monster.getName() + " attacked player for " + damage + " damage!");
-            myGameUI.showMonsterAttackEffect(monster, damage);
+        for (Monster monster : attackers) {
+            if (monster.isAlive()) { // Only living monsters attack
+                int damage = monster.attack(player); // attack should call takeDamage
+                System.out.println(monster.getName() + " attacked player for " + damage + " damage!");
+                myGameUI.showMonsterAttackEffect(monster, damage);
+            }
         }
 
-        // Update player stats in UI
         myGameUI.updatePlayerStats();
-
-        // Check if player died
+        myGameUI.updateCombatScreen(currentRoom.getMonsters());
         checkPlayerStatus();
     }
 
@@ -789,6 +806,14 @@ public class GameController {
         }
 
         return description.toString();
+    }
+
+    /**
+     * Gets the StateController associated with this GameController.
+     * @return The StateController instance.
+     */
+    public StateController getStateController() {
+        return myStateController;
     }
 
     /**

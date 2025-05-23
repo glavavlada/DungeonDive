@@ -13,6 +13,7 @@ public class Monster extends Character {
     private String name;
     private MonsterType type;
     private ArrayList<Item> rewards;
+    private final int myMaxHealth;
 
     /**
      * Constructor for Monster.
@@ -24,6 +25,7 @@ public class Monster extends Character {
      */
     public Monster(String name, MonsterType type, boolean isElite, int health, Point position) {
         super(health, position);
+        this.myMaxHealth = health;
         this.name = name;
         this.type = type;
         this.isElite = isElite;
@@ -37,17 +39,19 @@ public class Monster extends Character {
      */
     @Override
     public int attack(Character target) {
-        // Base damage calculation
-        int baseDamage = 5;
+        // Use base damage from MonsterType
+        int baseDamage = this.type.getBaseAttack(); // <-- Use MonsterType for base damage
 
         // Elite monsters deal more damage
         if (isElite) {
-            baseDamage *= 2;
+            baseDamage *= 1.5; // Example: 50% increase
         }
 
-        // Additional logic could be added based on monster type
+        System.out.println(getName() + " attacks " + target.getClass().getSimpleName() + " for " + baseDamage + " damage!");
+        target.takeDamage(baseDamage); // Apply the damage
         return baseDamage;
     }
+
 
     /**
      * Get rewards when monster is defeated.
@@ -80,5 +84,9 @@ public class Monster extends Character {
 
     public MonsterType getType() {
         return type;
+    }
+
+    public int getMaxHealth() {
+        return myMaxHealth;
     }
 }

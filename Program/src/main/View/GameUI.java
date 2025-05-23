@@ -29,6 +29,7 @@ public class GameUI {
     private final Controller myController;
     private InputController myInputController; // Field to store the InputController
     private GameScreen myGameScreen;
+    private CombatScreen myCombatScreen;
 
     /**
      * This is here because the inventory screen worked differently than others.
@@ -52,7 +53,9 @@ public class GameUI {
         }
         this.myPrimaryStage = thePrimaryStage;
         this.myController = theController;
-        myInventoryScreen = new InventoryScreen(myPrimaryStage, myController);
+        this.myGameScreen = new GameScreen(myPrimaryStage, myController);
+        this.myCombatScreen = new CombatScreen(myPrimaryStage, myController);
+        this.myInventoryScreen = new InventoryScreen(myPrimaryStage, myController);
     }
 
     public void showIntroScreen() {
@@ -66,6 +69,7 @@ public class GameUI {
     }
 
     public void showPauseMenu() {
+        myGameScreen.stopGameLoop();
         PauseScreen pauseScreen = new PauseScreen(myPrimaryStage, myController);
         pauseScreen.showScreen(this);
     }
@@ -76,13 +80,27 @@ public class GameUI {
     }
 
     public void showWinScreen() {
+        myGameScreen.stopGameLoop();
         WinScreen winScreen = new WinScreen(myPrimaryStage, myController);
         winScreen.showScreen(this);
     }
 
     public void showLoseScreen() {
+        myGameScreen.stopGameLoop();
         LoseScreen loseScreen = new LoseScreen(myPrimaryStage, myController);
         loseScreen.showScreen(this);
+    }
+
+    public void showCombatScreen(List<Monster> monsters) {
+        myCombatScreen.showScreen(this, monsters); // <-- Use the instance
+        attachKeyListenersToScene();
+        System.out.println("Combat screen shown via GameUI.");
+    }
+
+    public void showGameScreen() {
+        myGameScreen.showScreen(this);
+        attachKeyListenersToScene();
+        System.out.println("Game screen shown.");
     }
 
     public Controller getController() {
@@ -101,16 +119,6 @@ public class GameUI {
         this.myGameScreen = gameScreen;
     }
 
-    // Modify the showGameScreen method to save the reference
-    public void showGameScreen() {
-        GameScreen gameScreen = new GameScreen(myPrimaryStage, myController);
-        this.myGameScreen = gameScreen; // Save the reference
-        gameScreen.showScreen(this);
-
-        // After game screen is shown, its scene is set. Now attach key listeners.
-        attachKeyListenersToScene();
-    }
-
     /**
      * Sets the input controller and attaches its listeners to the current scene.
      * This method should be called after a scene that requires input (like GameScreen) is set on the stage.
@@ -122,24 +130,35 @@ public class GameUI {
     }
 
     /**
+     * Updates the combat screen by calling its update method.
+     * MODIFIED: Actually calls the screen's update method.
+     */
+    public void updateCombatScreen(List<Monster> monsters) {
+        if (myCombatScreen != null) {
+            // Check if the combat scene is currently active (optional but good)
+            Scene currentScene = myPrimaryStage.getScene();
+            if (currentScene != null && myPrimaryStage.getTitle().contains("Combat")) {
+                myCombatScreen.updateDisplay(monsters); // <-- CALL THE UPDATE METHOD
+                System.out.println("GameUI: Combat screen update called.");
+            }
+        } else {
+            System.err.println("GameUI: CombatScreen instance is null, cannot update.");
+        }
+    }
+
+    /**
      * Attaches key listeners from the InputController to the current scene on the primary stage.
      * This should be called whenever the scene changes to one that needs key input (e.g., GameScreen).
      */
     private void attachKeyListenersToScene() {
         Scene currentScene = myPrimaryStage.getScene();
         if (currentScene != null && this.myInputController != null) {
-            // Remove old listeners first to prevent duplicates if called multiple times on same scene
-            currentScene.setOnKeyPressed(null);
-            currentScene.setOnKeyReleased(null);
-
-            // Add new listeners
             currentScene.setOnKeyPressed(this.myInputController::handleKeyPress);
             currentScene.setOnKeyReleased(this.myInputController::handleKeyRelease);
             System.out.println("InputController key listeners attached to scene.");
-        } else if (currentScene == null) {
-            System.err.println("GameUI: Cannot attach key listeners, current scene is null.");
-        } else { // myInputController is null
-            System.err.println("GameUI: Cannot attach key listeners, InputController is null.");
+            currentScene.getRoot().requestFocus(); // Ensure focus for key events
+        } else {
+            System.err.println("GameUI: Cannot attach key listeners - Scene or InputController is null.");
         }
     }
 
@@ -157,39 +176,17 @@ public class GameUI {
         }
     }
 
-    /**
-     *shows combat screen with given monster.
-     *
-     * @param monsters The list of monsters the player is fighting
-     */
-    public void showCombatScreen(List<Monster> monsters) {
-        //display combat interface with monster information
-        CombatScreen combatScreen = new CombatScreen(myPrimaryStage, myController);
-        combatScreen.showScreen(this);
-        System.out.println("Combat screen shown with " + monsters.size() + " monsters");
-        //this would typically involve showing monster sprites, health bars, and combat options
-    }
     public void showCombatTestDeleteMe() {
         CombatScreen combatScreen = new CombatScreen(myPrimaryStage, myController);
         combatScreen.showScreen(this);
     }
 
     /**
-     * Updates the combat screen with current monster information.
-     *
-     * @param monsters The list of monsters currently in combat
-     */
-    public void updateCombatScreen(List<Monster> monsters) {
-        // Update monster health, status effects, etc.
-        System.out.println("Combat screen updated with " + monsters.size() + " monsters");
-    }
-
-    /**
      * Hides the combat screen when combat ends.
      */
     public void hideCombatScreen() {
-        // Hide combat interface elements
-        System.out.println("Combat screen hidden");
+        System.out.println("Combat screen hidden, returning to game screen.");
+        showGameScreen();
     }
 
     /**
