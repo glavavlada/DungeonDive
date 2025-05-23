@@ -6,6 +6,7 @@ import java.util.List;
 
 import main.Model.element.Item;
 import main.Model.element.Pillar;
+import main.Model.util.Direction;
 import main.Model.util.HeroType;
 import main.Model.dungeon.Room;
 import main.Model.util.Point;
@@ -32,6 +33,13 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
     // private int myCurrentAttackPower;
     // private double myCurrentCritChance;
     // private double myCurrentCritMultiplier;
+
+    private double myPixelX; // Actual pixel position
+    private double myPixelY;
+    private double myMoveSpeed = 2.0; // Pixels per frame
+    private boolean myIsMoving = false;
+    private Direction myFacingDirection = Direction.SOUTH;
+    private Direction myMoveDirection = null;
 
     /**
      * Constructor for Hero.
@@ -66,6 +74,36 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
         // this.myCurrentCritChance = theType.getCritChance();
         // this.myCurrentCritMultiplier = theType.getCritMultiplier();
         // etc.
+    }
+
+    public void startMoving(Direction direction) {
+        myMoveDirection = direction;
+        myFacingDirection = direction;
+        myIsMoving = true;
+    }
+
+    public void stopMoving() {
+        myIsMoving = false;
+        myMoveDirection = null;
+    }
+
+    public void updatePosition() {
+        if (myIsMoving && myMoveDirection != null) {
+            switch (myMoveDirection) {
+                case NORTH:
+                    myPixelY -= myMoveSpeed;
+                    break;
+                case SOUTH:
+                    myPixelY += myMoveSpeed;
+                    break;
+                case EAST:
+                    myPixelX += myMoveSpeed;
+                    break;
+                case WEST:
+                    myPixelX -= myMoveSpeed;
+                    break;
+            }
+        }
     }
 
     /**
@@ -284,14 +322,19 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
     }
 
 
+    public double getPixelX() {
+        return myPixelX;
+    }
 
+    public double getPixelY() {
+        return myPixelY;
+    }
 
+    public void setPixelX(int i) {
+        myPixelX = i;
+    }
 
-
-
-
-
-
-
-
+    public void setPixelY(int i) {
+        myPixelY = i;
+    }
 }

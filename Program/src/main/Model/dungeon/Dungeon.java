@@ -8,10 +8,11 @@ import main.Model.util.PillarType;
 import main.Model.util.Point;
 import main.Model.util.RoomType;
 
-import java.util.Random;
+import java.util.*;
 
 /**
  * Represents the entire dungeon, composed of multiple rooms.
+ * Uses DFS to generate a randomized layout.
  */
 public class Dungeon {
     private final Room[][] myRooms;
@@ -38,63 +39,177 @@ public class Dungeon {
         generateLayout();
     }
 
+    /**
+     * Generates a randomized dungeon layout using Depth-First Search (DFS).
+     * Ensures connectivity and places special rooms.
+     */
     private void generateLayout() {
         Random random = new Random();
+
+        // 1. Initialize all rooms with all walls up (no doors)
         for (int y = 0; y < myHeight; y++) {
             for (int x = 0; x < myWidth; x++) {
                 myRooms[y][x] = new Room(new Point(x, y), RoomType.EMPTY);
             }
         }
 
-        myHeroSpawnPoint = new Point(0, 0);
-        getRoom(myHeroSpawnPoint).setRoomType(RoomType.ENTRANCE);
+        // 2. DFS for Maze Generation
+        Stack<Point> stack = new Stack<>();
+        boolean[][] visited = new boolean[myHeight][myWidth];
+        myHeroSpawnPoint = new Point(0, 0); // Define start
+        myExitPoint = new Point(myWidth - 1, myHeight - 1); // Define end
 
-        myExitPoint = new Point(myWidth - 1, myHeight - 1);
-        getRoom(myExitPoint).setRoomType(RoomType.EXIT);
+        Point current = myHeroSpawnPoint;
+        visited[current.getY()][current.getX()] = true;
+        stack.push(current);
 
-        int pillarCount = 0;
-        final int MAX_PILLARS = 4;
-        PillarType[] pillarTypesAvailable = PillarType.values();
+        while (!stack.isEmpty()) {
+            current = stack.peek();
+            List<Point> neighbors = getUnvisitedNeighbors(current, visited);
 
-        for (int i = 0; i < (myWidth * myHeight) / 4; i++) {
+            if (!neighbors.isEmpty()) {
+                Point next = neighbors.get(random.nextInt(neighbors.size()));
+                removeWall(current, next); // Carve path (add doors)
+                visited[next.getY()][next.getX()] = true;
+                stack.push(next);
+            } else {
+                stack.pop(); // Backtrack
+            }
+        }
+
+        // Optional: Add some loops by removing a few extra walls
+        int extraDoors = (myWidth * myHeight) / 10; // e.g., 10% extra doors
+        for (int i = 0; i < extraDoors; i++) {
             int randX = random.nextInt(myWidth);
             int randY = random.nextInt(myHeight);
-            Point currentPoint = new Point(randX, randY);
-            Room currentRoom = getRoom(currentPoint);
-
-            if (currentRoom == null || currentPoint.equals(myHeroSpawnPoint) || currentPoint.equals(myExitPoint) || currentRoom.getRoomType() != RoomType.EMPTY) {
-                continue;
-            }
-
-            int typeRoll = random.nextInt(100);
-            if (typeRoll < 30) { // Monster Room
-                currentRoom.setRoomType(RoomType.MONSTER);
-                // Example: Add a Goblin
-                // Monster monster = new Monster(MonsterType.GOBLIN, currentPoint);
-                // currentRoom.addMonster(monster);
-            } else if (typeRoll < 50 && pillarCount < MAX_PILLARS && pillarTypesAvailable.length > 0) { // Pillar Room
-                currentRoom.setPillar(new Pillar(pillarTypesAvailable[random.nextInt(pillarTypesAvailable.length)]));
-                pillarCount++;
-            } else if (typeRoll < 70) { // Treasure Room
-                currentRoom.setRoomType(RoomType.TREASURE);
-                // TODO: Add Item instances
-            } else if (typeRoll < 85) { // Trap Room
-                currentRoom.setTrap(new Trap("Floor Spikes", "Sharp spikes emerge from the floor.", 10));
+            Point roomPoint = new Point(randX, randY);
+            List<Point> allNeighbors = getAllNeighbors(roomPoint);
+            if(!allNeighbors.isEmpty()) {
+                removeWall(roomPoint, allNeighbors.get(random.nextInt(allNeighbors.size())));
             }
         }
-        this.myTotalPillars = pillarCount;
 
-        // Basic door generation
+
+        // 3. Set Start/Exit Types
+        getRoom(myHeroSpawnPoint).setRoomType(RoomType.ENTRANCE);
+        getRoom(myExitPoint).setRoomType(RoomType.EXIT);
+
+        // 4. Place Pillars (Ensure 4 are placed and reachable)
+        myTotalPillars = 0;
+        PillarType[] pillarTypes = PillarType.values();
+        List<Point> availableSpots = new ArrayList<>();
         for (int y = 0; y < myHeight; y++) {
             for (int x = 0; x < myWidth; x++) {
-                Room room = myRooms[y][x];
-                if (y > 0) room.setNorthDoor(true);
-                if (y < myHeight - 1) room.setSouthDoor(true);
-                if (x > 0) room.setWestDoor(true);
-                if (x < myWidth - 1) room.setEastDoor(true);
+                Point p = new Point(x, y);
+                // Add spots that are not start/exit
+                if (!p.equals(myHeroSpawnPoint) && !p.equals(myExitPoint)) {
+                    availableSpots.add(p);
+                }
             }
         }
-        System.out.println("Dungeon layout generated. Total Pillars to find: " + myTotalPillars);
+        Collections.shuffle(availableSpots, random); // Randomize potential spots
+
+        int pillarsToPlace = 4;
+        for (int i = 0; i < pillarsToPlace && !availableSpots.isEmpty(); i++) {
+            Point pillarPoint = availableSpots.remove(0); // Pick a random spot
+            getRoom(pillarPoint).setPillar(new Pillar(pillarTypes[i % pillarTypes.length]));
+            myTotalPillars++;
+        }
+
+        // 5. Place Other Rooms (Monsters, Traps)
+        int monsterCount = (myWidth * myHeight) / 5; // Adjust density as needed
+        int trapCount = (myWidth * myHeight) / 10;
+
+        while ((monsterCount > 0 || trapCount > 0) && !availableSpots.isEmpty()) {
+            Point spot = availableSpots.remove(0); // Pick another random spot
+            Room room = getRoom(spot);
+            // Only place if it's currently empty (not Start, Exit, or Pillar)
+            if (room.getRoomType() == RoomType.EMPTY) {
+                if (monsterCount > 0 && random.nextBoolean()) { // Alternate placing monsters/traps
+                    room.setRoomType(RoomType.MONSTER);
+                    // Add an actual monster (using constructor like in spawnBoss)
+                    room.addMonster(new Monster(
+                            MonsterType.GOBLIN.getName(),
+                            MonsterType.GOBLIN,
+                            false,
+                            MonsterType.GOBLIN.getBaseHealth(),
+                            spot));
+                    monsterCount--;
+                } else if (trapCount > 0) {
+                    room.setTrap(new Trap("Floor Spikes", "Sharp spikes emerge from the floor.", 5 + random.nextInt(10)));
+                    trapCount--;
+                }
+                // Could add Treasure rooms here too
+            }
+        }
+
+        System.out.println("Randomized Dungeon generated. Pillars: " + myTotalPillars);
+    }
+
+    /**
+     * Helper to find all *unvisited* neighbors for DFS.
+     */
+    private List<Point> getUnvisitedNeighbors(Point current, boolean[][] visited) {
+        List<Point> neighbors = new ArrayList<>();
+        int x = current.getX();
+        int y = current.getY();
+
+        // North
+        if (y > 0 && !visited[y - 1][x]) neighbors.add(new Point(x, y - 1));
+        // South
+        if (y < myHeight - 1 && !visited[y + 1][x]) neighbors.add(new Point(x, y + 1));
+        // West
+        if (x > 0 && !visited[y][x - 1]) neighbors.add(new Point(x - 1, y));
+        // East
+        if (x < myWidth - 1 && !visited[y][x + 1]) neighbors.add(new Point(x + 1, y));
+
+        return neighbors;
+    }
+
+    /**
+     * Helper to find *all* neighbors (for adding loops).
+     */
+    private List<Point> getAllNeighbors(Point current) {
+        List<Point> neighbors = new ArrayList<>();
+        int x = current.getX();
+        int y = current.getY();
+
+        if (y > 0) neighbors.add(new Point(x, y - 1));
+        if (y < myHeight - 1) neighbors.add(new Point(x, y + 1));
+        if (x > 0) neighbors.add(new Point(x - 1, y));
+        if (x < myWidth - 1) neighbors.add(new Point(x + 1, y));
+
+        return neighbors;
+    }
+
+
+    /**
+     * Helper to "remove a wall" between two adjacent rooms by setting their door flags.
+     */
+    private void removeWall(Point current, Point next) {
+        Room currentRoom = getRoom(current);
+        Room nextRoom = getRoom(next);
+
+        // Moving Right (East)
+        if (current.getX() < next.getX()) {
+            currentRoom.setEastDoor(true);
+            nextRoom.setWestDoor(true);
+        }
+        // Moving Left (West)
+        else if (current.getX() > next.getX()) {
+            currentRoom.setWestDoor(true);
+            nextRoom.setEastDoor(true);
+        }
+        // Moving Down (South)
+        else if (current.getY() < next.getY()) {
+            currentRoom.setSouthDoor(true);
+            nextRoom.setNorthDoor(true);
+        }
+        // Moving Up (North)
+        else if (current.getY() > next.getY()) {
+            currentRoom.setNorthDoor(true);
+            nextRoom.setSouthDoor(true);
+        }
     }
 
     public Room getRoom(final int x, final int y) {
