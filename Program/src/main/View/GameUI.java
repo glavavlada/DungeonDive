@@ -68,6 +68,12 @@ public class GameUI {
         heroSelection.showScreen(this);
     }
 
+    public void showHelpMenu() {
+        myGameScreen.stopGameLoop();
+        HelpScreen helpScreen = new HelpScreen(myPrimaryStage, myController);
+        helpScreen.showScreen(this);
+    }
+
     public void showPauseMenu() {
         myGameScreen.stopGameLoop();
         PauseScreen pauseScreen = new PauseScreen(myPrimaryStage, myController);
