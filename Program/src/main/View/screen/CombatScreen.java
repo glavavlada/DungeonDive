@@ -171,6 +171,7 @@ public class CombatScreen extends Screen {
             this.currentMonster = null;
         }
         updateCombatStats(); // Call the method that redraws labels
+
     }
 
     public void updateCombatStats() {
