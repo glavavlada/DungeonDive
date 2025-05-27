@@ -337,4 +337,20 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
     public void setPixelY(int i) {
         myPixelY = i;
     }
+
+    /**
+     * Gets the current health percentage for display purposes
+     * @return Health as a percentage (0.0 to 1.0)
+     */
+    public double getHealthPercentage() {
+        return Math.max(0.0, Math.min(1.0, (double) getHealth() / getMaxHealth()));
+    }
+
+    /**
+     * Gets formatted health display string
+     * @return String in format "current/max"
+     */
+    public String getHealthDisplay() {
+        return getHealth() + "/" + getMaxHealth();
+    }
 }

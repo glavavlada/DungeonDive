@@ -280,7 +280,7 @@ public class GameController {
     /**
      * Checks player's health status and handles death if necessary.
      */
-    private void checkPlayerStatus() {
+    public void checkPlayerStatus() {
         if (myGameModel.getPlayer().getHealth() <= 0) {
             System.out.println("Player has died!");
             myStateController.changeState(GameState.GAME_OVER);
@@ -825,6 +825,14 @@ public class GameController {
         System.out.println("Player: " + myGameModel.getPlayer().getName() +
                 " (HP: " + myGameModel.getPlayer().getHealth() + "/" +
                 myGameModel.getPlayer().getMaxHealth() + ")");
+    }
+
+    /**
+     * Gets reference to the GameUI for screen transitions
+     * @return The GameUI instance
+     */
+    public GameUI getGameUI() {
+        return myGameUI;
     }
 }
 

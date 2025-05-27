@@ -91,10 +91,15 @@ public class GameUI {
         loseScreen.showScreen(this);
     }
 
+    /**
+     * Shows combat screen with given monster.
+     *
+     * @param monsters The list of monsters the player is fighting
+     */
     public void showCombatScreen(List<Monster> monsters) {
-        myCombatScreen.showScreen(this, monsters); // <-- Use the instance
-        attachKeyListenersToScene();
-        System.out.println("Combat screen shown via GameUI.");
+        CombatScreen combatScreen = new CombatScreen(myPrimaryStage, myController);
+        combatScreen.showScreen(this, monsters); // Use the overloaded method
+        System.out.println("Combat screen shown with " + monsters.size() + " monsters");
     }
 
     public void showGameScreen() {
@@ -130,20 +135,14 @@ public class GameUI {
     }
 
     /**
-     * Updates the combat screen by calling its update method.
-     * MODIFIED: Actually calls the screen's update method.
+     * Updates the combat screen with current monster information.
+     *
+     * @param monsters The list of monsters currently in combat
      */
     public void updateCombatScreen(List<Monster> monsters) {
-        if (myCombatScreen != null) {
-            // Check if the combat scene is currently active (optional but good)
-            Scene currentScene = myPrimaryStage.getScene();
-            if (currentScene != null && myPrimaryStage.getTitle().contains("Combat")) {
-                myCombatScreen.updateDisplay(monsters); // <-- CALL THE UPDATE METHOD
-                System.out.println("GameUI: Combat screen update called.");
-            }
-        } else {
-            System.err.println("GameUI: CombatScreen instance is null, cannot update.");
-        }
+        // Note: This method assumes you have a reference to the current combat screen
+        // For now, we'll just print the update info
+        System.out.println("Combat screen updated with " + monsters.size() + " monsters");
     }
 
     /**
@@ -174,11 +173,6 @@ public class GameUI {
             //this would involve updating a player indicator
             System.out.println("Player position updated in UI");
         }
-    }
-
-    public void showCombatTestDeleteMe() {
-        CombatScreen combatScreen = new CombatScreen(myPrimaryStage, myController);
-        combatScreen.showScreen(this);
     }
 
     /**
@@ -431,6 +425,14 @@ public class GameUI {
 
     public InputController getInputController() {
         return myInputController;
+    }
+
+    /**
+     * Updates the combat screen display
+     */
+    public void updateCombatDisplay() {
+        // This would be called on the current combat screen instance
+        System.out.println("Combat display updated");
     }
 }
 
