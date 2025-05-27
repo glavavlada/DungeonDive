@@ -109,6 +109,7 @@ public abstract class Screen { // Changed to public if accessed from other packa
     /**
      * Sets the placements of buttons and title for the intro, win and
      * lose screens.
+     *
      * @param theTitle The title Text node.
      * @param theButtons The VBox containing buttons.
      * @param theRoot The BorderPane root layout.

@@ -280,7 +280,7 @@ public class GameController {
     /**
      * Checks player's health status and handles death if necessary.
      */
-    public void checkPlayerStatus() {
+    private void checkPlayerStatus() {
         if (myGameModel.getPlayer().getHealth() <= 0) {
             System.out.println("Player has died!");
             myStateController.changeState(GameState.GAME_OVER);
@@ -466,7 +466,9 @@ public class GameController {
         // Call the attack method with target monster as argument
         int damage = player.attack(target);
 
-        target.takeDamage(damage);
+        // takeDamage() is already called in attack(), it was causing double hits.
+        // I'll just keep it as comment for now.
+        //target.takeDamage(damage);
         System.out.println("Player attacked " + target.getName() + " for " + damage + " damage!");
 
         //check if monster is defeated
@@ -518,7 +520,7 @@ public class GameController {
 
         // Perform special attack
         int damage = player.specialAttack();
-        target.takeDamage(damage);
+
 
         target.takeDamage(damage);
         System.out.println("Player used special attack on " + target.getName() + " for " + damage + " damage!");
@@ -546,7 +548,7 @@ public class GameController {
     /**
      *handles monster attacks against player
      */
-    private void monsterAttacks() {
+    public void monsterAttacks() {
         Hero player = myGameModel.getPlayer();
         Room currentRoom = myGameModel.getDungeon().getRoom(player.getPosition());
         List<Monster> monsters = currentRoom.getMonsters();

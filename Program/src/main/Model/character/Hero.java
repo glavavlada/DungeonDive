@@ -297,7 +297,7 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
      * @return The amount of damage dealt
      */
     public int specialAttack() {
-        int baseDamage = myType.getBaseAttack() * 2;
+        int baseDamage = myType.getSpecialAttackDamage();
         int bonusDamage = myStrengthBonus + myAgilityBonus;
         int totalDamage = baseDamage + bonusDamage;
 

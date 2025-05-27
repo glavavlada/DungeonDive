@@ -95,17 +95,15 @@ public class Monster extends Character {
      * @return Health as a percentage (0.0 to 1.0)
      */
     public double getHealthPercentage() {
-        // Assuming the monster's max health is the base health from its type
-        int maxHealth = getType().getBaseHealth();
-        return Math.max(0.0, Math.min(1.0, (double) getHealth() / maxHealth));
+        // Use the stored myMaxHealth instead of type's base health
+        return Math.max(0.0, Math.min(1.0, (double) getHealth() / myMaxHealth));
     }
 
     /**
-     * Gets the display name for the combat screen
-     * @return Formatted name for display
+     * Gets formatted health display string
+     * @return String in format "current/max"
      */
-    public String getCombatDisplayName() {
-        String prefix = isElite() ? "Elite " : "";
-        return prefix + getName();
+    public String getHealthDisplay() {
+        return getHealth() + " / " + getMaxHealth();
     }
 }

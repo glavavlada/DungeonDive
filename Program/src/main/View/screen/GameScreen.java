@@ -82,11 +82,16 @@ public class GameScreen extends Screen {
         gameTitle.setFont(Font.font("Arial", FontWeight.BOLD, 18));
         topPane.setLeft(gameTitle);
 
-        // Add pause button to top-right
+        // Add pause button and help menu to top-right
+        HBox pauseAndHelpButtons = new HBox(10);
+        Button helpButton = new Button("Help/Controls");
         Button pauseButton = new Button("Pause");
+        setButtonSize(helpButton);
         setButtonSize(pauseButton);
+        helpButton.setOnAction(event -> getController().helpMenu(event, theUI));
         pauseButton.setOnAction(event -> getController().pauseGame(event, theUI));
-        topPane.setRight(pauseButton);
+        pauseAndHelpButtons.getChildren().addAll(helpButton, pauseButton);
+        topPane.setRight(pauseAndHelpButtons);
 
         // Add the topPane to the root
         root.setTop(topPane);

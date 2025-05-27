@@ -121,6 +121,12 @@ public class Controller {
         theUI.showGameScreen(); // Show game screen AFTER controllers are set up, especially input
     }
 
+    // This maybe should go in GameController, but pauseGame was here so I put
+    // this here as well (it also pauses the game). Not sure if that was the best choice.
+    public void helpMenu(ActionEvent theEvent, GameUI theUI) {
+        theUI.showHelpMenu();
+    }
+
     public void pauseGame(ActionEvent theEvent, GameUI theUI) {
         theUI.showPauseMenu();
     }

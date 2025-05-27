@@ -10,9 +10,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -22,6 +20,7 @@ import main.Model.character.Hero;
 import main.Model.character.Monster;
 import main.Model.dungeon.Room;
 import main.View.GameUI;
+import main.Controller.StateController.GameState;
 
 import java.util.List;
 
@@ -34,12 +33,19 @@ public class CombatScreen extends Screen {
     private ProgressBar monsterHealthBar;
     private Label heroHealthNumbers;
     private Text heroNameDisplay;
+    private Label monsterHealthNumbers;
     private Text monsterNameDisplay;
     private VBox combatMessages;
 
     // Sprite containers (could be ImageView or Rectangle)
     private ImageView heroSprite;
     private ImageView monsterSprite;
+    private VBox heroSide;
+    private VBox monsterSide;
+    private javafx.scene.Group heroPlatform;
+    private javafx.scene.Group monsterPlatform;
+    private javafx.scene.Node selectedNode = null; // To store the currently selected node
+    private double nudgeAmount = 1.0; // How many pixels to move per key press
 
     // Combat state
     private Hero currentHero;
@@ -112,69 +118,73 @@ public class CombatScreen extends Screen {
         HBox battleArea = new HBox();
         battleArea.setAlignment(Pos.CENTER);
         battleArea.setPadding(new Insets(20));
-        battleArea.setSpacing(120);
+        battleArea.setSpacing(210);
 
         VBox heroSide = createHeroSide();
         VBox monsterSide = createMonsterSide();
+
+        heroSide.setTranslateY(-10);
+        heroSide.setTranslateX(-30);
+        monsterSide.setTranslateY(-40); // <<< Nudge the hero 10 pixels UP
+        monsterSide.setTranslateX(-40);
 
         battleArea.getChildren().addAll(heroSide, monsterSide);
         topBattlefield.getChildren().add(battleArea);
     }
 
     private VBox createHeroSide() {
-        VBox heroSide = new VBox(15);
+        VBox heroSide = new VBox(10);
         heroSide.setAlignment(Pos.CENTER);
 
-        // Use ImageView for actual sprites or Rectangle as placeholder
         heroSprite = createHeroSprite();
 
         HBox heroInfo = new HBox(10);
         heroInfo.getStyleClass().add("combat-info-panel");
-        heroInfo.setAlignment(Pos.CENTER_LEFT);
+        heroInfo.setAlignment(Pos.CENTER_RIGHT);
 
         VBox nameSection = new VBox(3);
         heroNameDisplay = new Text(currentHero != null ? currentHero.getName() : "Hero");
         heroNameDisplay.getStyleClass().add("combat-name");
-
         Text classText = new Text(currentHero != null ? currentHero.getType().getDisplayName() : "Unknown");
         classText.getStyleClass().add("combat-subtitle");
-
         nameSection.getChildren().addAll(heroNameDisplay, classText);
 
         VBox healthSection = createHealthSection(true);
 
         heroInfo.getChildren().addAll(nameSection, healthSection);
-        heroSide.getChildren().addAll(heroSprite, heroInfo);
+
+        heroSide.getChildren().addAll(heroInfo, heroSprite);
 
         return heroSide;
     }
 
     private VBox createMonsterSide() {
-        VBox monsterSide = new VBox(15);
-        monsterSide.setAlignment(Pos.CENTER);
+        VBox monsterSide = new VBox(10);
+        monsterSide.setAlignment(Pos.CENTER_RIGHT);
 
-        // Monster info panel (top)
-        HBox monsterInfo = new HBox(10);
-        monsterInfo.getStyleClass().add("combat-info-panel");
-        monsterInfo.setAlignment(Pos.CENTER_LEFT);
-
-        VBox nameSection = new VBox(3);
-        monsterNameDisplay = new Text(currentMonster != null ? currentMonster.getName() : "Unknown Monster");
-        monsterNameDisplay.getStyleClass().add("combat-name");
-
-        Text levelText = new Text("Lv. " + (currentMonster != null && currentMonster.isElite() ? "Elite" : "Normal"));
-        levelText.getStyleClass().add("combat-subtitle");
-
-        nameSection.getChildren().addAll(monsterNameDisplay, levelText);
-
-        VBox healthSection = createHealthSection(false);
-
-        monsterInfo.getChildren().addAll(nameSection, healthSection);
-
-        // Monster sprite
         monsterSprite = createMonsterSprite();
 
+        // Monster info panel (top)
+        HBox monsterInfo = new HBox();
+        monsterInfo.getStyleClass().add("combat-info-panel");
+        monsterInfo.setAlignment(Pos.CENTER);
+
+        // Name Section (Left side of HBox)
+        VBox nameSection = new VBox(3);
+        nameSection.setAlignment(Pos.CENTER_LEFT);
+        monsterNameDisplay = new Text(currentMonster != null ? currentMonster.getName() : "Unknown Monster");
+        monsterNameDisplay.getStyleClass().add("combat-name");
+        Text levelText = new Text("Lv. " + (currentMonster != null && currentMonster.isElite() ? "Elite" : "Normal"));
+        levelText.getStyleClass().add("combat-subtitle");
+        nameSection.getChildren().addAll(monsterNameDisplay, levelText);
+
+        // Health Section (Right side of HBox)
+        VBox healthSection = createHealthSection(false);
+        monsterInfo.getChildren().addAll(nameSection, healthSection);
+
+        // Add HBox and Sprite to the main VBox
         monsterSide.getChildren().addAll(monsterInfo, monsterSprite);
+
         return monsterSide;
     }
 
@@ -241,14 +251,20 @@ public class CombatScreen extends Screen {
 
     private VBox createHealthSection(boolean isHero) {
         VBox healthSection = new VBox(3);
-        healthSection.setAlignment(Pos.CENTER_RIGHT);
+        healthSection.setAlignment(isHero ? Pos.CENTER_LEFT : Pos.CENTER_RIGHT);
 
         Label hpLabel = new Label("HP");
         hpLabel.getStyleClass().add("combat-subtitle");
 
+        // Create the ProgressBar
         ProgressBar healthBar = new ProgressBar();
+        healthBar.getStyleClass().add("progress-bar");
+
+        // *** FORCE SIZES (for debugging) ***
         healthBar.setPrefWidth(120);
+        healthBar.setMinWidth(120); // Force minimum width
         healthBar.setPrefHeight(10);
+        healthBar.setMinHeight(10); // Force minimum height
 
         if (isHero) {
             heroHealthBar = healthBar;
@@ -256,22 +272,30 @@ public class CombatScreen extends Screen {
             heroHealthNumbers.getStyleClass().add("combat-subtitle");
 
             if (currentHero != null) {
-                updateHealthBar(heroHealthBar, currentHero.getHealthPercentage());
+                double ratio = currentHero.getHealthPercentage();
                 heroHealthNumbers.setText(currentHero.getHealthDisplay());
-            }
-
-            healthSection.getChildren().addAll(hpLabel, heroHealthBar, heroHealthNumbers);
-        } else {
-            monsterHealthBar = healthBar;
-            if (currentMonster != null) {
-                updateHealthBar(monsterHealthBar, currentMonster.getHealthPercentage());
+                updateHealthBar(heroHealthBar, ratio);
             } else {
-                monsterHealthBar.setProgress(1.0);
-                updateHealthBar(monsterHealthBar, 1.0);
+                heroHealthNumbers.setText("0 / 0");
+                heroHealthBar.setProgress(0.0); // Set to 0 if no hero
             }
-            healthSection.getChildren().addAll(hpLabel, monsterHealthBar);
-        }
+            healthSection.getChildren().addAll(hpLabel, heroHealthBar, heroHealthNumbers);
 
+        } else { // Monster
+            monsterHealthBar = healthBar;
+            monsterHealthNumbers = new Label();
+            monsterHealthNumbers.getStyleClass().add("combat-subtitle");
+
+            if (currentMonster != null) {
+                double ratio = currentMonster.getHealthPercentage();
+                monsterHealthNumbers.setText(currentMonster.getHealthDisplay());
+                updateHealthBar(monsterHealthBar, ratio);
+            } else {
+                monsterHealthNumbers.setText("0 / 0");
+                monsterHealthBar.setProgress(0.0); // Set to 0 if no monster
+            }
+            healthSection.getChildren().addAll(hpLabel, monsterHealthBar, monsterHealthNumbers);
+        }
         return healthSection;
     }
 
@@ -344,25 +368,31 @@ public class CombatScreen extends Screen {
         return buttonBox;
     }
 
-    // ============================================================================
-    // MISSING METHODS - COMBAT LOGIC
-    // ============================================================================
+    // COMBAT LOGIC
 
     private void performPlayerAttack() {
         if (!playerTurn || !combatActive || currentMonster == null) return;
+        final Monster attackedMonster = currentMonster;
 
+        playerTurn = false;
+        updateTurnIndicator();
         addCombatMessage(currentHero.getName() + " uses Attack!");
 
         playAttackAnimation(() -> {
             getController().getGameController().playerAttack();
             updateCombatDisplay();
 
+            // Re-fetch monster in case it died
+            Room currentRoom = getController().getDungeon().getRoom(currentHero.getPosition());
+            List<Monster> monsters = currentRoom.getMonsters();
+            currentMonster = monsters.isEmpty() ? null : monsters.get(0);
+
             if (currentMonster != null && currentMonster.isAlive()) {
                 playerTurn = false;
                 Timeline delay = new Timeline(new KeyFrame(Duration.seconds(1.5), e -> performMonsterTurn()));
                 delay.play();
             } else {
-                endCombat(true);
+                endCombat(true, attackedMonster);
             }
         });
     }
@@ -371,18 +401,25 @@ public class CombatScreen extends Screen {
         if (!playerTurn || !combatActive || currentMonster == null) return;
 
         if (currentHero.canUseSpecialAttack()) {
+            final Monster attackedMonster = currentMonster;
+            playerTurn = false;
+            updateTurnIndicator();
             addCombatMessage(currentHero.getName() + " uses " + currentHero.getType().getSpecialAttackName() + "!");
 
             playSpecialAttackAnimation(() -> {
                 getController().getGameController().playerSpecialAttack();
                 updateCombatDisplay();
 
+                Room currentRoom = getController().getDungeon().getRoom(currentHero.getPosition());
+                List<Monster> monsters = currentRoom.getMonsters();
+                currentMonster = monsters.isEmpty() ? null : monsters.get(0);
+
                 if (currentMonster != null && currentMonster.isAlive()) {
                     playerTurn = false;
                     Timeline delay = new Timeline(new KeyFrame(Duration.seconds(1.5), e -> performMonsterTurn()));
                     delay.play();
                 } else {
-                    endCombat(true);
+                    endCombat(true, attackedMonster);
                 }
             });
         } else {
@@ -396,21 +433,21 @@ public class CombatScreen extends Screen {
         addCombatMessage(currentMonster.getName() + " attacks!");
 
         playMonsterAttackAnimation(() -> {
-            int damage = currentMonster.attack(currentHero);
-            currentHero.takeDamage(damage);
-            updateCombatDisplay();
+            getController().getGameController().monsterAttacks();
+            boolean isGameOver = getController().getGameController().getStateController().isInState(GameState.GAME_OVER);
 
-            if (!currentHero.isAlive()) {
+            if (isGameOver) {
+                // Controller handles showing GameOverScreen. We just show defeat animation.
                 endCombat(false);
-            } else {
+            } else if (combatActive) {
+                // If combat is still active, it's our turn.
                 playerTurn = true;
+                updateTurnIndicator();
             }
         });
     }
 
-    // ============================================================================
-    // MISSING METHODS - ANIMATIONS
-    // ============================================================================
+    // ANIMATIONS
 
     private void playEntranceAnimation() {
         // Hero slides in from left
@@ -447,7 +484,7 @@ public class CombatScreen extends Screen {
             FadeTransition flash = new FadeTransition(Duration.millis(100), monsterSprite);
             flash.setFromValue(1.0);
             flash.setToValue(0.3);
-            flash.setCycleCount(3);
+            flash.setCycleCount(4);
             flash.setAutoReverse(true);
             flash.setOnFinished(event -> onComplete.run());
             flash.play();
@@ -473,7 +510,7 @@ public class CombatScreen extends Screen {
             FadeTransition flash = new FadeTransition(Duration.millis(80), monsterSprite);
             flash.setFromValue(1.0);
             flash.setToValue(0.1);
-            flash.setCycleCount(5);
+            flash.setCycleCount(4);
             flash.setAutoReverse(true);
             flash.setOnFinished(event -> onComplete.run());
             flash.play();
@@ -504,9 +541,7 @@ public class CombatScreen extends Screen {
         attack.play();
     }
 
-    // ============================================================================
-    // MISSING METHODS - UI UPDATES
-    // ============================================================================
+    //  UI UPDATES
 
     public void updateCombatDisplay() {
         updateCombatStats();
@@ -525,12 +560,18 @@ public class CombatScreen extends Screen {
 
         if (currentMonster != null) {
             monsterNameDisplay.setText(currentMonster.getName());
+            if (monsterHealthNumbers != null && currentMonster.getMaxHealth() > 0) {
+                monsterHealthNumbers.setText(currentMonster.getHealth() + " / " + currentMonster.getMaxHealth());
+            } else if (monsterHealthNumbers != null) {
+                monsterHealthNumbers.setText(String.valueOf(currentMonster.getHealth()));
+            }
         }
     }
 
     private void updateHealthBars() {
         if (currentHero != null) {
             double heroHealthRatio = currentHero.getHealthPercentage();
+            heroHealthBar.setProgress(heroHealthRatio);
 
             Timeline heroHealthAnimation = new Timeline(
                     new KeyFrame(Duration.seconds(0.8),
@@ -538,11 +579,16 @@ public class CombatScreen extends Screen {
             );
             heroHealthAnimation.play();
             updateHealthBar(heroHealthBar, heroHealthRatio);
-            heroHealthNumbers.setText(currentHero.getHealthDisplay());
+            if (heroHealthNumbers != null && currentHero.getMaxHealth() > 0) { // Check if max HP exists
+                heroHealthNumbers.setText(currentHero.getHealth() + " / " + currentHero.getMaxHealth());
+            } else if (heroHealthNumbers != null) {
+                heroHealthNumbers.setText(String.valueOf(currentHero.getHealth()));
+            }
         }
 
         if (currentMonster != null) {
             double monsterHealthRatio = currentMonster.getHealthPercentage();
+            monsterHealthBar.setProgress(monsterHealthRatio);
 
             Timeline monsterHealthAnimation = new Timeline(
                     new KeyFrame(Duration.seconds(0.8),
@@ -550,6 +596,12 @@ public class CombatScreen extends Screen {
             );
             monsterHealthAnimation.play();
             updateHealthBar(monsterHealthBar, monsterHealthRatio);
+
+            if (monsterHealthNumbers != null && currentMonster.getMaxHealth() > 0) { // Check if max HP exists
+                monsterHealthNumbers.setText(currentMonster.getHealth() + " / " + currentMonster.getMaxHealth());
+            } else if (monsterHealthNumbers != null) {
+                monsterHealthNumbers.setText(String.valueOf(currentMonster.getHealth()));
+            }
         }
     }
 
@@ -567,21 +619,35 @@ public class CombatScreen extends Screen {
         }
     }
 
-    // ============================================================================
-    // MISSING METHODS - COMBAT END
-    // ============================================================================
-
+    // COMBAT END
+    /**
+     * Overloaded endCombat to handle calls that don't need a specific defeated monster.
+     * Calls the main endCombat method, passing the current monster (or null if none).
+     */
     private void endCombat(boolean victory) {
+        // For the defeat case (victory=false), we don't need a specific monster name,
+        // so passing currentMonster (which might be null or the last one) is fine.
+        endCombat(victory, currentMonster);
+    }
+
+    private void endCombat(boolean victory, Monster monsterForMessage) {
         combatActive = false;
+        playerTurn = false;
 
         if (victory) {
-            addCombatMessage(currentMonster.getName() + " was defeated!");
+            String monsterName = (monsterForMessage != null) ? monsterForMessage.getName() : "The monster";
+            addCombatMessage(monsterName + " was defeated!");
             addCombatMessage(currentHero.getName() + " wins the battle!");
 
             // Victory animation
             RotateTransition victoryRotation = new RotateTransition(Duration.seconds(1), heroSprite);
             victoryRotation.setByAngle(360);
             victoryRotation.play();
+
+            Timeline endDelay = new Timeline(new KeyFrame(Duration.seconds(3), e -> {
+                getController().resumeCurrentGame(getController().getGameController().getGameUI());
+            }));
+            endDelay.play();
 
         } else {
             addCombatMessage(currentHero.getName() + " was defeated!");
@@ -592,16 +658,6 @@ public class CombatScreen extends Screen {
             defeat.setToValue(0.3);
             defeat.play();
         }
-
-        // Return to game after delay
-        Timeline endDelay = new Timeline(new KeyFrame(Duration.seconds(3), e -> {
-            if (victory) {
-                getController().resumeCurrentGame(getController().getGameController().getGameUI());
-            } else {
-                getController().getGameController().checkPlayerStatus();
-            }
-        }));
-        endDelay.play();
     }
 
     // ============================================================================
@@ -642,62 +698,7 @@ public class CombatScreen extends Screen {
         typing.play();
     }
 
-    // ============================================================================
-    // COMPATIBILITY METHODS (for GameController integration)
-    // ============================================================================
-
-    /**
-     * Method expected by GameController for updating combat screen
-     * @param monsters List of monsters currently in combat
-     */
-    public void updateCombatScreen(List<Monster> monsters) {
-        // Update current monster reference if needed
-        if (monsters != null && !monsters.isEmpty()) {
-            currentMonster = monsters.get(0);
-            updateCombatDisplay();
-        }
-        System.out.println("Combat screen updated with " + (monsters != null ? monsters.size() : 0) + " monsters");
-    }
-
-    /**
-     * Hides the combat screen (called when combat ends)
-     */
-    public void hideCombatScreen() {
-        System.out.println("Combat screen hidden");
-        // The actual hiding is handled by screen transitions in GameController
-    }
-
-    /**
-     * Shows monster attack effect (visual feedback for monster attacks)
-     * @param monster The monster that attacked
-     * @param damage The amount of damage dealt
-     */
-    public void showMonsterAttackEffect(Monster monster, int damage) {
-        addCombatMessage(monster.getName() + " dealt " + damage + " damage!");
-
-        // Add visual effect - screen shake for powerful attacks
-        if (damage > 15) {
-            addScreenShake();
-        }
-
-        // Show floating damage number (optional visual enhancement)
-        showFloatingDamageNumber(damage, false);
-    }
-
-    /**
-     * Shows player attack effect (visual feedback for player attacks)
-     * @param damage The amount of damage dealt
-     */
-    public void showPlayerAttackEffect(int damage) {
-        addCombatMessage("Dealt " + damage + " damage!");
-
-        // Show floating damage number
-        showFloatingDamageNumber(damage, true);
-    }
-
-    // ============================================================================
-    // ENHANCED VISUAL EFFECTS (Optional but cool!)
-    // ============================================================================
+    // ENHANCED VISUAL EFFECTS
 
     /**
      * Adds a screen shake effect for powerful attacks
@@ -827,15 +828,6 @@ public class CombatScreen extends Screen {
     }
 
     /**
-     * Forces the combat to end (for emergency exits or debugging)
-     * @param victory Whether to treat it as a victory or defeat
-     */
-    public void forceCombatEnd(boolean victory) {
-        combatActive = false;
-        endCombat(victory);
-    }
-
-    /**
      * Updates the turn indicator (if you want to add visual turn indicators)
      */
     private void updateTurnIndicator() {
@@ -892,9 +884,7 @@ public class CombatScreen extends Screen {
         System.out.println("=== END RESOURCE TEST ===");
     }
 
-    // ============================================================================
-    // DEBUGGING METHODS (Remove these in production)
-    // ============================================================================
+    // DEBUGGING METHODS (Remove later)
 
     /**
      * Debug method to simulate combat scenarios
@@ -915,284 +905,86 @@ public class CombatScreen extends Screen {
         System.out.println("=== END DEBUG INFO ===");
     }
 
-    // ============================================================================
-// ARENA BACKGROUND WITH COBBLESTONE PLATFORMS
-// ============================================================================
+    // ARENA BACKGROUND WITH CUSTOM PLATFORMS
 
     /**
      * Apply arena-style background with gray gradients and round cobblestone platforms
      */
     private void applyArenaBackground(BorderPane root) {
-        // Main gray gradient background
-        root.setStyle("-fx-background-color: linear-gradient(to bottom, #D3D3D3, #A9A9A9, #696969);");
-
-        // Battlefield area with darker gray
-        topBattlefield.setStyle("-fx-background-color: linear-gradient(to bottom, #B0B0B0, #808080); " +
-                "-fx-border-color: #2F2F2F; -fx-border-width: 0 0 4 0;");
+        // Battlefield area
+        topBattlefield.setStyle("-fx-background-color: transparent;");
 
         // Create the cobblestone platforms
-        createCoblestonePlatforms();
+        createBattlePlatforms();
     }
 
     /**
-     * Create round cobblestone platforms for hero and monster
+     * Creates a Pokémon-style battle platform (flatter, elliptical).
+     * @param centerX X position of platform center
+     * @param centerY Y position of platform center
+     * @param radiusX Radius of the ellipse on the X-axis
+     * @param radiusY Radius of the ellipse on the Y-axis
+     * @return Group containing the platform graphics
      */
-    private void createCoblestonePlatforms() {
+    private javafx.scene.Group createPokemonStylePlatform(double centerX, double centerY, double radiusX, double radiusY) {
+        javafx.scene.Group platformGroup = new javafx.scene.Group();
+
+        javafx.scene.shape.Ellipse baseEllipse = new javafx.scene.shape.Ellipse(centerX, centerY, radiusX, radiusY);
+
+        // A semi-transparent, slightly glowing pad
+        baseEllipse.setFill(javafx.scene.paint.Color.rgb(150, 150, 220, 0.3)); // Light blue/purple, semi-transparent
+        baseEllipse.setStroke(javafx.scene.paint.Color.rgb(200, 200, 255, 0.7)); // Lighter stroke
+        baseEllipse.setStrokeWidth(2);
+
+        javafx.scene.effect.Bloom bloomEffect = new javafx.scene.effect.Bloom();
+        bloomEffect.setThreshold(0.6);
+        baseEllipse.setEffect(bloomEffect);
+
+        platformGroup.getChildren().add(baseEllipse);
+
+        // subtle inner pattern or texture if desired,
+        javafx.scene.shape.Ellipse innerAccent = new javafx.scene.shape.Ellipse(centerX, centerY, radiusX * 0.7, radiusY * 0.7);
+        innerAccent.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        innerAccent.setStroke(javafx.scene.paint.Color.rgb(200, 200, 255, 0.4));
+        innerAccent.setStrokeWidth(1.5);
+        innerAccent.getStrokeDashArray().addAll(5d, 5d); // Dashed line
+        platformGroup.getChildren().add(innerAccent);
+
+        return platformGroup;
+    }
+
+    /**
+     * Create battle platforms for hero and monster using the new style.
+     */
+    private void createBattlePlatforms() {
         // Remove any existing platform layers first
         topBattlefield.getChildren().removeIf(node ->
                 node.getUserData() != null && node.getUserData().equals("platform-layer"));
 
-        // Create a pane for the platforms (behind sprites but above background)
         javafx.scene.layout.Pane platformLayer = new javafx.scene.layout.Pane();
-        platformLayer.setUserData("platform-layer"); // Mark for removal if needed
-        platformLayer.setMouseTransparent(true); // Don't interfere with clicks
+        platformLayer.setUserData("platform-layer");
+        platformLayer.setMouseTransparent(true);
 
-        // Create hero platform (left side)
-        javafx.scene.Group heroPlatform = createCoblestonePlatform(180, 200, 100);
+        double heroPlatformCenterX = 160;
+        double heroPlatformCenterY = 288;
+        double heroPlatformRadiusX = 90;
+        double heroPlatformRadiusY = 45;
 
-        // Create monster platform (right side)
-        javafx.scene.Group monsterPlatform = createCoblestonePlatform(520, 200, 110);
+        heroPlatform = createPokemonStylePlatform(
+                heroPlatformCenterX, heroPlatformCenterY, heroPlatformRadiusX, heroPlatformRadiusY);
+
+
+        // Monster platform (top-rightish, or centered opposite hero)
+        double monsterPlatformCenterX = 604;
+        double monsterPlatformCenterY = 256;
+        double monsterPlatformRadiusX = 100;
+        double monsterPlatformRadiusY = 50;
+
+        monsterPlatform = createPokemonStylePlatform(
+                monsterPlatformCenterX, monsterPlatformCenterY, monsterPlatformRadiusX, monsterPlatformRadiusY);
 
         platformLayer.getChildren().addAll(heroPlatform, monsterPlatform);
-
-        // Add platform layer to battlefield (index 0 = behind other content)
-        topBattlefield.getChildren().add(0, platformLayer);
-    }
-
-    /**
-     * Create a single cobblestone platform
-     * @param centerX X position of platform center
-     * @param centerY Y position of platform center
-     * @param radius Radius of the platform
-     * @return Group containing the platform graphics
-     */
-    private javafx.scene.Group createCoblestonePlatform(double centerX, double centerY, double radius) {
-        javafx.scene.Group platform = new javafx.scene.Group();
-
-        // Base circle (darker background)
-        javafx.scene.shape.Circle base = new javafx.scene.shape.Circle(centerX, centerY, radius);
-        base.setFill(javafx.scene.paint.Color.web("#4A4A4A"));
-        base.setStroke(javafx.scene.paint.Color.web("#2F2F2F"));
-        base.setStrokeWidth(3);
-
-        // Add the base
-        platform.getChildren().add(base);
-
-        // Create cobblestone texture with multiple small circles
-        java.util.Random random = new java.util.Random();
-
-        // Generate cobblestone pieces
-        for (int i = 0; i < 50; i++) {
-            // Random position within the platform circle
-            double angle = random.nextDouble() * 2 * Math.PI;
-            double distance = random.nextDouble() * (radius - 15); // Stay within bounds
-
-            double stoneX = centerX + Math.cos(angle) * distance;
-            double stoneY = centerY + Math.sin(angle) * distance;
-
-            // Random stone size
-            double stoneRadius = 4 + random.nextDouble() * 8;
-
-            // Create cobblestone piece
-            javafx.scene.shape.Circle cobblestone = new javafx.scene.shape.Circle(stoneX, stoneY, stoneRadius);
-
-            // Vary the gray colors for realistic cobblestone look
-            javafx.scene.paint.Color[] stoneColors = {
-                    javafx.scene.paint.Color.web("#8B8B8B"),
-                    javafx.scene.paint.Color.web("#A9A9A9"),
-                    javafx.scene.paint.Color.web("#696969"),
-                    javafx.scene.paint.Color.web("#778899"),
-                    javafx.scene.paint.Color.web("#708090")
-            };
-
-            cobblestone.setFill(stoneColors[random.nextInt(stoneColors.length)]);
-            cobblestone.setStroke(javafx.scene.paint.Color.web("#2F2F2F"));
-            cobblestone.setStrokeWidth(0.5);
-
-            // Add 3D effect with small shadow
-            javafx.scene.effect.DropShadow stoneShadow = new javafx.scene.effect.DropShadow();
-            stoneShadow.setRadius(2);
-            stoneShadow.setOffsetX(1);
-            stoneShadow.setOffsetY(1);
-            stoneShadow.setColor(javafx.scene.paint.Color.web("#2F2F2F"));
-            cobblestone.setEffect(stoneShadow);
-
-            platform.getChildren().add(cobblestone);
-        }
-
-        // Add platform shadow/depth effect
-        javafx.scene.effect.DropShadow platformShadow = new javafx.scene.effect.DropShadow();
-        platformShadow.setRadius(10);
-        platformShadow.setOffsetX(3);
-        platformShadow.setOffsetY(3);
-        platformShadow.setColor(javafx.scene.paint.Color.web("#1F1F1F"));
-        platform.setEffect(platformShadow);
-
-        return platform;
-    }
-
-    /**
-     * Enhanced version with animated cobblestone platforms
-     */
-    private void createAnimatedCoblestonePlatforms() {
-        // Create platforms normally first
-        createCoblestonePlatforms();
-
-        // Add subtle pulsing animation when combat starts
-        javafx.scene.layout.Pane platformLayer = (javafx.scene.layout.Pane) topBattlefield.getChildren()
-                .filtered(node -> node.getUserData() != null && node.getUserData().equals("platform-layer"))
-                .get(0);
-
-        if (platformLayer != null) {
-            // Subtle glow animation
-            Timeline glowAnimation = new Timeline(
-                    new KeyFrame(Duration.seconds(0),
-                            new KeyValue(platformLayer.opacityProperty(), 0.8)),
-                    new KeyFrame(Duration.seconds(2),
-                            new KeyValue(platformLayer.opacityProperty(), 1.0)),
-                    new KeyFrame(Duration.seconds(4),
-                            new KeyValue(platformLayer.opacityProperty(), 0.8))
-            );
-
-            glowAnimation.setCycleCount(Timeline.INDEFINITE);
-            glowAnimation.play();
-        }
-    }
-
-    /**
-     * Alternative: Hexagonal cobblestone platforms
-     */
-    private javafx.scene.Group createHexagonalPlatform(double centerX, double centerY, double radius) {
-        javafx.scene.Group platform = new javafx.scene.Group();
-
-        // Create hexagon points
-        double[] hexX = new double[6];
-        double[] hexY = new double[6];
-
-        for (int i = 0; i < 6; i++) {
-            double angle = i * Math.PI / 3; // 60 degrees each
-            hexX[i] = centerX + radius * Math.cos(angle);
-            hexY[i] = centerY + radius * Math.sin(angle);
-        }
-
-        // Create hexagonal base
-        javafx.scene.shape.Polygon hexBase = new javafx.scene.shape.Polygon();
-        for (int i = 0; i < 6; i++) {
-            hexBase.getPoints().addAll(hexX[i], hexY[i]);
-        }
-
-        hexBase.setFill(javafx.scene.paint.Color.web("#4A4A4A"));
-        hexBase.setStroke(javafx.scene.paint.Color.web("#2F2F2F"));
-        hexBase.setStrokeWidth(3);
-
-        platform.getChildren().add(hexBase);
-
-        // Add cobblestone texture within hexagon
-        java.util.Random random = new java.util.Random();
-
-        for (int i = 0; i < 40; i++) {
-            // Generate point within hexagon
-            double stoneX, stoneY;
-            do {
-                stoneX = centerX + (random.nextDouble() - 0.5) * radius * 1.5;
-                stoneY = centerY + (random.nextDouble() - 0.5) * radius * 1.5;
-            } while (!isPointInHexagon(stoneX, stoneY, centerX, centerY, radius));
-
-            double stoneRadius = 3 + random.nextDouble() * 6;
-
-            javafx.scene.shape.Circle cobblestone = new javafx.scene.shape.Circle(stoneX, stoneY, stoneRadius);
-
-            javafx.scene.paint.Color[] stoneColors = {
-                    javafx.scene.paint.Color.web("#8B8B8B"),
-                    javafx.scene.paint.Color.web("#A9A9A9"),
-                    javafx.scene.paint.Color.web("#696969")
-            };
-
-            cobblestone.setFill(stoneColors[random.nextInt(stoneColors.length)]);
-            cobblestone.setStroke(javafx.scene.paint.Color.web("#2F2F2F"));
-            cobblestone.setStrokeWidth(0.5);
-
-            platform.getChildren().add(cobblestone);
-        }
-
-        return platform;
-    }
-
-    /**
-     * Helper method to check if point is within hexagon
-     */
-    private boolean isPointInHexagon(double px, double py, double centerX, double centerY, double radius) {
-        double dx = Math.abs(px - centerX);
-        double dy = Math.abs(py - centerY);
-
-        if (dx > radius * 0.866) return false; // 0.866 = sqrt(3)/2
-        if (dy > radius) return false;
-        if (dx + dy * 0.577 > radius) return false; // 0.577 = 1/sqrt(3)
-
-        return true;
-    }
-
-    /**
-     * Platform that reacts to combat events
-     */
-    private void createReactivePlatforms() {
-        createCoblestonePlatforms();
-
-        // Store reference to platform layer for effects
-        javafx.scene.layout.Pane platformLayer = (javafx.scene.layout.Pane) topBattlefield.getChildren()
-                .filtered(node -> node.getUserData() != null && node.getUserData().equals("platform-layer"))
-                .get(0);
-
-        if (platformLayer != null && platformLayer.getChildren().size() >= 2) {
-            javafx.scene.Group heroPlatform = (javafx.scene.Group) platformLayer.getChildren().get(0);
-            javafx.scene.Group monsterPlatform = (javafx.scene.Group) platformLayer.getChildren().get(1);
-
-            // Store references for combat effects
-            heroPlatform.setUserData("hero-platform");
-            monsterPlatform.setUserData("monster-platform");
-        }
-    }
-
-    /**
-     * Flash platform when character attacks or takes damage
-     */
-    public void flashPlatform(boolean isHero, javafx.scene.paint.Color flashColor) {
-        javafx.scene.layout.Pane platformLayer = (javafx.scene.layout.Pane) topBattlefield.getChildren()
-                .filtered(node -> node.getUserData() != null && node.getUserData().equals("platform-layer"))
-                .get(0);
-
-        if (platformLayer != null) {
-            javafx.scene.Group foundPlatform = null;
-
-            for (javafx.scene.Node node : platformLayer.getChildren()) {
-                if (node instanceof javafx.scene.Group) {
-                    javafx.scene.Group platform = (javafx.scene.Group) node;
-                    String userData = (String) platform.getUserData();
-                    if ((isHero && "hero-platform".equals(userData)) ||
-                            (!isHero && "monster-platform".equals(userData))) {
-                        foundPlatform = platform;
-                        break;
-                    }
-                }
-            }
-
-            final javafx.scene.Group targetPlatformForEffect = foundPlatform;
-
-            if (targetPlatformForEffect != null) {
-                // Flash effect
-                javafx.scene.effect.ColorAdjust colorAdjust = new javafx.scene.effect.ColorAdjust();
-                colorAdjust.setHue(flashColor.getHue());
-                colorAdjust.setSaturation(0.5);
-                colorAdjust.setBrightness(0.3);
-
-                targetPlatformForEffect.setEffect(colorAdjust);
-
-                // Remove effect after flash
-                Timeline flashTimeline = new Timeline(
-                        new KeyFrame(Duration.millis(200), e -> targetPlatformForEffect.setEffect(null))
-                );
-                flashTimeline.play();
-            }
-        }
-    }
+        // Ensure platforms are drawn but don't force VBox height
+        platformLayer.setPrefHeight(350); // Match battlefield height
+        topBattlefield.getChildren().add(0, platformLayer);    }
 }

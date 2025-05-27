@@ -68,6 +68,12 @@ public class GameUI {
         heroSelection.showScreen(this);
     }
 
+    public void showHelpMenu() {
+        myGameScreen.stopGameLoop();
+        HelpScreen helpScreen = new HelpScreen(myPrimaryStage, myController);
+        helpScreen.showScreen(this);
+    }
+
     public void showPauseMenu() {
         myGameScreen.stopGameLoop();
         PauseScreen pauseScreen = new PauseScreen(myPrimaryStage, myController);
@@ -101,6 +107,17 @@ public class GameUI {
         combatScreen.showScreen(this, monsters); // Use the overloaded method
         System.out.println("Combat screen shown with " + monsters.size() + " monsters");
     }
+
+//    /**
+//     * Shows combat screen with given monster.
+//     *
+//     * @param monsters The list of monsters the player is fighting
+//     */
+//    public void showCombatScreen(List<Monster> monsters) {
+//        CombatScreen combatScreen = new CombatScreen(myPrimaryStage, myController);
+//        combatScreen.showScreen(this, monsters); // Use the overloaded method
+//        System.out.println("Combat screen shown with " + monsters.size() + " monsters");
+//    }
 
     public void showGameScreen() {
         myGameScreen.showScreen(this);
