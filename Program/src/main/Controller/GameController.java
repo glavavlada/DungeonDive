@@ -548,7 +548,7 @@ public class GameController {
     /**
      *handles monster attacks against player
      */
-    private void monsterAttacks() {
+    public void monsterAttacks() {
         Hero player = myGameModel.getPlayer();
         Room currentRoom = myGameModel.getDungeon().getRoom(player.getPosition());
         List<Monster> monsters = currentRoom.getMonsters();
@@ -827,6 +827,14 @@ public class GameController {
         System.out.println("Player: " + myGameModel.getPlayer().getName() +
                 " (HP: " + myGameModel.getPlayer().getHealth() + "/" +
                 myGameModel.getPlayer().getMaxHealth() + ")");
+    }
+
+    /**
+     * Gets reference to the GameUI for screen transitions
+     * @return The GameUI instance
+     */
+    public GameUI getGameUI() {
+        return myGameUI;
     }
 }
 

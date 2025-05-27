@@ -89,4 +89,21 @@ public class Monster extends Character {
     public int getMaxHealth() {
         return myMaxHealth;
     }
+
+    /**
+     * Gets the current health percentage for display purposes
+     * @return Health as a percentage (0.0 to 1.0)
+     */
+    public double getHealthPercentage() {
+        // Use the stored myMaxHealth instead of type's base health
+        return Math.max(0.0, Math.min(1.0, (double) getHealth() / myMaxHealth));
+    }
+
+    /**
+     * Gets formatted health display string
+     * @return String in format "current/max"
+     */
+    public String getHealthDisplay() {
+        return getHealth() + " / " + getMaxHealth();
+    }
 }

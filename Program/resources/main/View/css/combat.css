@@ -1,0 +1,154 @@
+/* ============================================================================ */
+/* BASIC SETUP & BACKGROUND                                                     */
+/* ============================================================================ */
+.combat-root {
+    -fx-background-color: #000000;
+}
+
+.battlefield {
+    -fx-background-image: url("/sprites/backgrounds/combat_background.png");
+    -fx-background-size: 100% 100%;
+    -fx-background-position: center center;
+    -fx-background-repeat: no-repeat;
+}
+
+/* ============================================================================ */
+/* BOTTOM INTERFACE (The Main Text Box)                                         */
+/* ============================================================================ */
+.bottom-interface {
+    -fx-background-color: #F8F8F8; /* Very light gray/white */
+    -fx-border-color: #00008B; /* Dark Blue */
+    -fx-border-width: 5px 6px 6px 5px; /* Thicker bottom/right for pseudo-3D */
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 10px; /* Padding inside the blue border */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 8, 0.2, 2, 3);
+}
+
+/* ============================================================================ */
+/* COMBAT MESSAGE AREA (Inner Box)                                              */
+/* ============================================================================ */
+.combat-message-area {
+    -fx-background-color: #FFFFFF; /* White inner box */
+    -fx-border-color: #4682B4; /* Steel Blue border */
+    -fx-border-width: 3px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 10px;
+    -fx-pref-height: 120px; /* Ensure consistent height */
+    -fx-margin-bottom: 15px; /* Space between messages and buttons */
+}
+
+/* Make ScrollPane holding messages transparent */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+/* --- Combat Messages (Text) --- */
+.combat-message {
+    -fx-text-fill: #1E1E1E; /* Dark Gray / Black text */
+    -fx-font-family: "Consolas", "Courier New", monospace; /* Pixel-friendly font */
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-wrap-text: true;
+}
+
+/* ============================================================================ */
+/* BUTTONS                                                                      */
+/* ============================================================================ */
+.pokemon-style-buttons {
+    -fx-alignment: center;
+    -fx-spacing: 20px;
+}
+
+.combat-button {
+    -fx-background-color: #E8E8E8; /* Light gray base */
+    -fx-text-fill: #333333; /* Dark text */
+    -fx-font-family: "Arial", sans-serif;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-border-color: #666666; /* Medium Gray border */
+    -fx-border-width: 1px 2px 2px 1px; /* Pseudo-3D border */
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 10px 20px;
+    -fx-min-width: 100px; /* Give buttons some width */
+    -fx-cursor: hand; /* Show hand cursor on hover */
+}
+
+.combat-button:hover {
+    -fx-background-color: #FFFFFF; /* White on hover */
+    -fx-border-color: #000000;
+}
+
+.combat-button:pressed {
+    -fx-background-color: #D0D0D0; /* Darker when pressed */
+    -fx-border-width: 2px 1px 1px 2px; /* Invert border for pressed effect */
+}
+
+/* --- Specific Button Colors --- */
+.attack-button { -fx-background-color: #FF7F7F; } /* Lighter Red */
+.attack-button:hover { -fx-background-color: #FF5555; }
+.special-button { -fx-background-color: #BF7FFF; } /* Lighter Purple */
+.special-button:hover { -fx-background-color: #AA55FF; }
+.item-button { -fx-background-color: #7FFF7F; } /* Lighter Green */
+.item-button:hover { -fx-background-color: #55FF55; }
+.run-button { -fx-background-color: #FFFF7F; } /* Lighter Yellow */
+.run-button:hover { -fx-background-color: #FFFF55; }
+
+/* ============================================================================ */
+/* INFO & HEALTH BARS                                                           */
+/* ============================================================================ */
+.combat-info-panel {
+    -fx-background-color: rgba(245, 245, 245, 0.85); /* Slightly transparent white */
+    -fx-border-color: #555555;
+    -fx-border-width: 3px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 8px 12px;
+    -fx-effect: dropshadow(two-pass-box, rgba(0,0,0,0.3), 5, 0.1, 1, 1);
+}
+
+.combat-name {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-fill: #111111;
+}
+
+.combat-subtitle {
+    -fx-font-size: 12px;
+    -fx-font-style: italic;
+    -fx-fill: #333333;
+}
+
+/* Health Bar Styling */
+.progress-bar {
+    -fx-background-color: #FFFFFF; /* White background */
+    -fx-border-color: #444444;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+    -fx-padding: 1px; /* Small padding to show border */
+    -fx-pref-height: 12px; /* Thinner health bar */
+}
+
+.progress-bar .bar {
+    -fx-background-insets: 0;
+    -fx-padding: 0; /* No padding on the bar itself */
+    -fx-border-radius: 4px; /* Slightly less than parent */
+    -fx-background-radius: 4px;
+}
+
+.health-bar-green .bar {
+    -fx-background-color: #00FF00; /* Bright Green */
+}
+.health-bar-orange .bar {
+    -fx-background-color: #FFA500; /* Bright Orange */
+}
+.health-bar-red .bar {
+    -fx-background-color: #FF0000; /* Bright Red */
+}
