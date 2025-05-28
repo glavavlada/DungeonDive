@@ -68,10 +68,10 @@ public abstract class Item extends DungeonElement {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Item item = (Item) o;
+    public boolean equals(final Object theO) {
+        if (this == theO) return true;
+        if (theO == null || getClass() != theO.getClass()) return false;
+        Item item = (Item) theO;
         return Objects.equals(myName, item.myName) &&
                 Objects.equals(myDescription, item.myDescription);
     }

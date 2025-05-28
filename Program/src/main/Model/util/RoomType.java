@@ -16,9 +16,9 @@ public enum RoomType {
     private final String myDisplayName;
     private final String myDescription;
 
-    RoomType(String displayName, String description) {
-        this.myDisplayName = displayName;
-        this.myDescription = description;
+    RoomType(final String theDisplayName, final String theDescription) {
+        this.myDisplayName = theDisplayName;
+        this.myDescription = theDescription;
     }
 
     public String getDisplayName() {

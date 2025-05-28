@@ -4,54 +4,54 @@ import main.Model.util.Point;
 import main.Model.util.Direction;
 
 public abstract class Character {
-    private int health;
-    private Point position;
+    private int myHealth;
+    private Point myPosition;
 
-    public Character(int health, Point position) {
-        this.health = health;
-        this.position = position;
+    public Character(final int theHealth, final Point thePosition) {
+        this.myHealth = theHealth;
+        this.myPosition = thePosition;
     }
 
-    public abstract int attack(Character target);
+    public abstract int attack(final Character theTarget);
 
-    public void takeDamage(int damage) {
-        this.health = Math.max(0, this.health - damage);
+    public void takeDamage(final int theDamage) {
+        this.myHealth = Math.max(0, this.myHealth - theDamage);
     }
 
     public boolean isAlive() {
-        return health > 0;
+        return myHealth > 0;
     }
 
-    public void move(Direction direction) {
-        switch (direction) {
+    public void move(final Direction theDirection) {
+        switch (theDirection) {
             case NORTH:
-                position = new Point(position.getX(), position.getY() - 1);
+                myPosition = new Point(myPosition.getX(), myPosition.getY() - 1);
                 break;
             case SOUTH:
-                position = new Point(position.getX(), position.getY() + 1);
+                myPosition = new Point(myPosition.getX(), myPosition.getY() + 1);
                 break;
             case EAST:
-                position = new Point(position.getX() + 1, position.getY());
+                myPosition = new Point(myPosition.getX() + 1, myPosition.getY());
                 break;
             case WEST:
-                position = new Point(position.getX() - 1, position.getY());
+                myPosition = new Point(myPosition.getX() - 1, myPosition.getY());
                 break;
         }
     }
 
     public int getHealth() {
-        return health;
+        return myHealth;
     }
 
     public Point getPosition() {
-        return position;
+        return myPosition;
     }
 
-    public void setHealth(int health) {
-        this.health = health;
+    public void setHealth(final int theHealth) {
+        this.myHealth = theHealth;
     }
 
-    public void setPosition(Point position) {
-        this.position = position;
+    public void setPosition(final Point thePosition) {
+        this.myPosition = thePosition;
     }
 }

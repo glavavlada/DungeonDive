@@ -23,7 +23,7 @@ public class GameController {
     private final GameUI myGameUI;
     private final StateController myStateController;
 
-    private int selectedInventoryIndex = 0;
+    private int mySelectedInventoryIndex = 0;
 
     /**
      * Constructor for GameController.
@@ -32,7 +32,8 @@ public class GameController {
      * @param theGameUI  game UI displaying game state
      * @param theStateController state controller tracking game state
      */
-    public GameController(Model theGameModel, GameUI theGameUI, StateController theStateController) {
+    public GameController(final Model theGameModel, final GameUI theGameUI,
+                          final StateController theStateController) {
         if (theGameModel == null) {
             throw new IllegalArgumentException("Game model cannot be null for GameController.");
         }
@@ -49,13 +50,13 @@ public class GameController {
         System.out.println("GameController initialized with model, UI, and state controller");
     }
 
-    public void startPlayerMovement(Direction direction) {
+    public void startPlayerMovement(final Direction theDirection) {
         if (!myStateController.isInState(GameState.EXPLORING)) {
             return;
         }
 
         Hero player = myGameModel.getPlayer();
-        player.startMoving(direction);
+        player.startMoving(theDirection);
     }
 
     public void stopPlayerMovement() {
@@ -189,57 +190,57 @@ public class GameController {
     /**
      * Handles room entry logic.
      *
-     * @param room The room being entered
+     * @param theRoom The room being entered
      */
-    private void enterRoom(Room room) {
+    private void enterRoom(final Room theRoom) {
         // Mark room as visited
-        room.setVisited(true);
+        theRoom.setVisited(true);
 
         // Check for monsters
-        if (!room.getMonsters().isEmpty()) {
+        if (!theRoom.getMonsters().isEmpty()) {
             // Enter combat mode
             myStateController.changeState(GameState.COMBAT);
-            myGameUI.showCombatScreen(room.getMonsters());
-            System.out.println("Entered combat with " + room.getMonsters().size() + " monsters");
+            myGameUI.showCombatScreen(theRoom.getMonsters());
+            System.out.println("Entered combat with " + theRoom.getMonsters().size() + " monsters");
             return;
         }
 
         // Check for chest
-        if (room.hasChest()) {
+        if (theRoom.hasChest()) {
             System.out.println("Room contains a chest that can be opened with 'E'");
             myGameUI.showChestPrompt();
         }
 
         // Check for pillar
-        if (room.hasPillar()) {
+        if (theRoom.hasPillar()) {
             System.out.println("Room contains a pillar of OO!");
-            myGameUI.showPillarFound(room.getPillar());
+            myGameUI.showPillarFound(theRoom.getPillar());
         }
 
         // Check for trap
-        if (room.hasTrap()) {
-            activateTrap(room);
+        if (theRoom.hasTrap()) {
+            activateTrap(theRoom);
         }
 
         // Update room description in UI
-        myGameUI.updateRoomDescription(room);
+        myGameUI.updateRoomDescription(theRoom);
     }
 
     /**
      * Activates a trap in the room and applies its effects.
      *
-     * @param room The room containing the trap
+     * @param theRoom The room containing the trap
      */
-    private void activateTrap(Room room) {
+    private void activateTrap(final Room theRoom) {
         Hero player = myGameModel.getPlayer();
-        int damage = room.getTrap().getDamage();
+        int damage = theRoom.getTrap().getDamage();
 
         // Apply trap damage to player
         player.takeDamage(damage);
         System.out.println("Player triggered a trap and took " + damage + " damage!");
 
         // Update UI to show trap effect
-        myGameUI.showTrapEffect(room.getTrap());
+        myGameUI.showTrapEffect(theRoom.getTrap());
 
         // Check if player died from trap
         checkPlayerStatus();
@@ -248,14 +249,15 @@ public class GameController {
     /**
      *activates pillar in room
      *
-     * @param room The room containing the pillar
+     * @param theRoom The room containing the pillar
      */
-    private void activatePillar(Room room) {
-        if (room.hasPillar() && !room.getPillar().isActivated()) {
-            Pillar pillar = room.getPillar();
+    private void activatePillar(final Room theRoom) {
+        if (theRoom.hasPillar() && !theRoom.getPillar().isActivated()) {
+            Pillar pillar = theRoom.getPillar();
             boolean activated = myGameModel.getPlayer().activatePillar(pillar);
 
             if (activated) {
+                myGameModel.getPlayer().setPillarsActivated(myGameModel.getPlayer().getPillarsActivated() + 1);
                 //update UI to show pillar activation and stat changes
                 myGameUI.showPillarActivated(pillar);
                 myGameUI.updatePlayerStats();
@@ -322,10 +324,10 @@ public class GameController {
     /**
      * Collects all items from the current room.
      *
-     * @param room The room containing items
+     * @param theRoom The room containing items
      */
-    private void collectItems(Room room) {
-        List<Item> items = room.getItems();
+    private void collectItems(final Room theRoom) {
+        List<Item> items = theRoom.getItems();
         if (!items.isEmpty()) {
             for (Item item : items) {
                 myGameModel.getPlayer().addItem(item);
@@ -333,7 +335,7 @@ public class GameController {
             }
 
             // Clear items from room
-            room.clearItems();
+            theRoom.clearItems();
 
             // Update UI
             myGameUI.updateInventory();
@@ -345,7 +347,7 @@ public class GameController {
      * Opens the player's inventory.
      */
     public void openInventory() {
-        selectedInventoryIndex = 0; // Reset selection to first item
+        mySelectedInventoryIndex = 0; // Reset selection to first item
         myStateController.changeState(GameState.INVENTORY);
         myGameUI.showInventoryScreen();
         System.out.println("Opened inventory");
@@ -379,13 +381,13 @@ public class GameController {
             return;
         }
 
-        selectedInventoryIndex--;
-        if (selectedInventoryIndex < 0) {
-            selectedInventoryIndex = inventory.size() - 1; // Wrap to bottom
+        mySelectedInventoryIndex--;
+        if (mySelectedInventoryIndex < 0) {
+            mySelectedInventoryIndex = inventory.size() - 1; // Wrap to bottom
         }
 
-        myGameUI.updateInventorySelection(selectedInventoryIndex);
-        System.out.println("Selected inventory item: " + inventory.get(selectedInventoryIndex).getName());
+        myGameUI.updateInventorySelection(mySelectedInventoryIndex);
+        System.out.println("Selected inventory item: " + inventory.get(mySelectedInventoryIndex).getName());
     }
 
     /**
@@ -401,13 +403,13 @@ public class GameController {
             return;
         }
 
-        selectedInventoryIndex++;
-        if (selectedInventoryIndex >= inventory.size()) {
-            selectedInventoryIndex = 0; // Wrap to top
+        mySelectedInventoryIndex++;
+        if (mySelectedInventoryIndex >= inventory.size()) {
+            mySelectedInventoryIndex = 0; // Wrap to top
         }
 
-        myGameUI.updateInventorySelection(selectedInventoryIndex);
-        System.out.println("Selected inventory item: " + inventory.get(selectedInventoryIndex).getName());
+        myGameUI.updateInventorySelection(mySelectedInventoryIndex);
+        System.out.println("Selected inventory item: " + inventory.get(mySelectedInventoryIndex).getName());
     }
 
     /**
@@ -419,12 +421,12 @@ public class GameController {
         }
 
         List<Item> inventory = myGameModel.getPlayer().getInventory();
-        if (inventory.isEmpty() || selectedInventoryIndex >= inventory.size()) {
+        if (inventory.isEmpty() || mySelectedInventoryIndex >= inventory.size()) {
             System.out.println("No item selected or inventory is empty");
             return;
         }
 
-        Item selectedItem = inventory.get(selectedInventoryIndex);
+        Item selectedItem = inventory.get(mySelectedInventoryIndex);
 
         // Call the void useItem method
         myGameModel.getPlayer().useItem(selectedItem);
@@ -690,11 +692,11 @@ public class GameController {
     /**
      * Loads saved game state
      *
-     * @param saveId ID of save to load
+     * @param theSaveId ID of save to load
      * @return True if game was loaded successfully
      */
-    public boolean loadGame(String saveId) {
-        boolean loaded = myGameModel.loadGame(saveId);
+    public boolean loadGame(final String theSaveId) {
+        boolean loaded = myGameModel.loadGame(theSaveId);
 
         if (loaded) {
             // Update state based on loaded game
@@ -803,7 +805,7 @@ public class GameController {
 
         for (int i = 0; i < inventory.size(); i++) {
             Item item = inventory.get(i);
-            description.append(i == selectedInventoryIndex ? "→ " : "  ");
+            description.append(i == mySelectedInventoryIndex ? "→ " : "  ");
             description.append(item.getName()).append(" - ").append(item.getDescription()).append("\n");
         }
 

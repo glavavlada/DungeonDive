@@ -12,9 +12,9 @@ public enum PillarType {
     private final String myDisplayName;
     private final String myDescription;
 
-    PillarType(String displayName, String description) {
-        this.myDisplayName = displayName;
-        this.myDescription = description;
+    PillarType(final String theDisplayName, final String theDescription) {
+        this.myDisplayName = theDisplayName;
+        this.myDescription = theDescription;
     }
 
     public String getDisplayName() {

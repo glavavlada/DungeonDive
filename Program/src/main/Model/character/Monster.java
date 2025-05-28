@@ -9,46 +9,47 @@ import main.Model.util.Point;
  * Represents an enemy in the game.
  */
 public class Monster extends Character {
-    private boolean isElite;
-    private String name;
-    private MonsterType type;
-    private ArrayList<Item> rewards;
+    private boolean myIsElite;
+    private String myName;
+    private MonsterType myType;
+    private ArrayList<Item> myRewards;
     private final int myMaxHealth;
 
     /**
      * Constructor for Monster.
-     * @param name The monster's name
-     * @param type The monster's type
-     * @param isElite Whether this is an elite monster
-     * @param health Initial health points
-     * @param position Starting position
+     * @param theName The monster's name
+     * @param theType The monster's type
+     * @param theIsElite Whether this is an elite monster
+     * @param theHealth Initial health points
+     * @param thePosition Starting position
      */
-    public Monster(String name, MonsterType type, boolean isElite, int health, Point position) {
-        super(health, position);
-        this.myMaxHealth = health;
-        this.name = name;
-        this.type = type;
-        this.isElite = isElite;
-        this.rewards = new ArrayList<>();
+    public Monster(final String theName, final MonsterType theType, final boolean theIsElite,
+                   final int theHealth, final Point thePosition) {
+        super(theHealth, thePosition);
+        this.myMaxHealth = theHealth;
+        this.myName = theName;
+        this.myType = theType;
+        this.myIsElite = theIsElite;
+        this.myRewards = new ArrayList<>();
     }
 
     /**
      * Attack implementation for Monster.
-     * @param target The character to attack
+     * @param theTarget The character to attack
      * @return The damage dealt
      */
     @Override
-    public int attack(Character target) {
+    public int attack(final Character theTarget) {
         // Use base damage from MonsterType
-        int baseDamage = this.type.getBaseAttack(); // <-- Use MonsterType for base damage
+        int baseDamage = this.myType.getBaseAttack(); // <-- Use MonsterType for base damage
 
         // Elite monsters deal more damage
-        if (isElite) {
+        if (myIsElite) {
             baseDamage *= 1.5; // Example: 50% increase
         }
 
-        System.out.println(getName() + " attacks " + target.getClass().getSimpleName() + " for " + baseDamage + " damage!");
-        target.takeDamage(baseDamage); // Apply the damage
+        System.out.println(getName() + " attacks " + theTarget.getClass().getSimpleName() + " for " + baseDamage + " damage!");
+        theTarget.takeDamage(baseDamage); // Apply the damage
         return baseDamage;
     }
 
@@ -58,32 +59,32 @@ public class Monster extends Character {
      * @return List of items as rewards
      */
     public ArrayList<Item> getRewardOnDefeat() {
-        return rewards;
+        return myRewards;
     }
 
     /**
      * Add a reward item to this monster's drop list.
-     * @param item The item to add as reward
+     * @param theItem The item to add as reward
      */
-    public void addReward(Item item) {
-        rewards.add(item);
+    public void addReward(final Item theItem) {
+        myRewards.add(theItem);
     }
 
     // Getters and setters
     public boolean isElite() {
-        return isElite;
+        return myIsElite;
     }
 
-    public void setElite(boolean isElite) {
-        this.isElite = isElite;
+    public void setElite(final boolean theIsElite) {
+        this.myIsElite = theIsElite;
     }
 
     public String getName() {
-        return name;
+        return myName;
     }
 
     public MonsterType getType() {
-        return type;
+        return myType;
     }
 
     public int getMaxHealth() {

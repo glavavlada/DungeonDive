@@ -21,7 +21,7 @@ import java.sql.Statement;
  * @version 5/13/2025
  */
 public class Database {
-    private Connection connection;
+    private Connection myConnection;
     private static final String DB_NAME = "dungeondive.db"; // In the root of the project
 
     /**
@@ -32,7 +32,7 @@ public class Database {
             // Load SQLite JDBC driver
             Class.forName("org.sqlite.JDBC");
             // Create connection to database (will create the file if it doesn't exist)
-            connection = DriverManager.getConnection("jdbc:sqlite:" + DB_NAME);
+            myConnection = DriverManager.getConnection("jdbc:sqlite:" + DB_NAME);
             System.out.println("Database connection established to " + DB_NAME);
             initializeTables();
             populateInitialData();
@@ -49,7 +49,7 @@ public class Database {
      * Creates necessary tables if they do not already exist.
      */
     private void initializeTables() throws SQLException {
-        try (Statement statement = connection.createStatement()) {
+        try (Statement statement = myConnection.createStatement()) {
             System.out.println("Attempting to create table: character_types");
             statement.execute(
                     "CREATE TABLE IF NOT EXISTS character_types (" +
@@ -220,7 +220,7 @@ public class Database {
         if (isTableEmpty("character_types")) {
             System.out.println("Populating character_types...");
             String sql = "INSERT INTO character_types (name, base_health, base_attack, special_attack_name, special_attack_damage, crit_chance, crit_multiplier, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            try (PreparedStatement pstmt = myConnection.prepareStatement(sql)) {
                 for (HeroType type : HeroType.values()) {
                     pstmt.setString(1, type.getDisplayName());
                     pstmt.setInt(2, type.getBaseHealth());
@@ -239,7 +239,7 @@ public class Database {
         if (isTableEmpty("monster_types")) {
             System.out.println("Populating monster_types...");
             String sql = "INSERT INTO monster_types (name, health, attack, special_attack_name, crit_chance, crit_multiplier, gold_reward, is_elite, is_boss, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            try (PreparedStatement pstmt = myConnection.prepareStatement(sql)) {
                 for (MonsterType type : MonsterType.values()) {
                     pstmt.setString(1, type.getName());
                     pstmt.setInt(2, type.getBaseHealth());
@@ -269,7 +269,7 @@ public class Database {
         if (isTableEmpty("room_types")) {
             System.out.println("Populating room_types...");
             String sql = "INSERT INTO room_types (name, description) VALUES (?, ?)";
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            try (PreparedStatement pstmt = myConnection.prepareStatement(sql)) {
                 for (RoomType type : RoomType.values()) {
                     pstmt.setString(1, type.getDisplayName());
                     pstmt.setString(2, type.getDescription());
@@ -281,9 +281,9 @@ public class Database {
         System.out.println("Initial game data population check complete.");
     }
 
-    private boolean isTableEmpty(String tableName) throws SQLException {
-        String sql = "SELECT COUNT(*) as count FROM " + tableName;
-        try (Statement stmt = connection.createStatement();
+    private boolean isTableEmpty(final String theTableName) throws SQLException {
+        String sql = "SELECT COUNT(*) as count FROM " + theTableName;
+        try (Statement stmt = myConnection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
             if (rs.next()) {
                 return rs.getInt("count") == 0;
@@ -292,28 +292,28 @@ public class Database {
         return true;
     }
 
-    public void executeUpdate(String sql) {
-        try (Statement stmt = connection.createStatement()) {
-            stmt.executeUpdate(sql);
+    public void executeUpdate(final String theSql) {
+        try (Statement stmt = myConnection.createStatement()) {
+            stmt.executeUpdate(theSql);
         } catch (SQLException e) {
-            System.err.println("Error executing update: " + e.getMessage() + " (SQL: " + sql + ")");
+            System.err.println("Error executing update: " + e.getMessage() + " (SQL: " + theSql + ")");
         }
     }
 
-    public ResultSet executeQuery(String sql) {
+    public ResultSet executeQuery(final String theSql) {
         try {
-            Statement stmt = connection.createStatement();
-            return stmt.executeQuery(sql);
+            Statement stmt = myConnection.createStatement();
+            return stmt.executeQuery(theSql);
         } catch (SQLException e) {
-            System.err.println("Error executing query: " + e.getMessage() + " (SQL: " + sql + ")");
+            System.err.println("Error executing query: " + e.getMessage() + " (SQL: " + theSql + ")");
         }
         return null;
     }
 
     public void closeConnection() {
         try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
+            if (myConnection != null && !myConnection.isClosed()) {
+                myConnection.close();
                 System.out.println("Database connection closed successfully");
             }
         } catch (SQLException e) {

@@ -1,10 +1,7 @@
 package main.Controller;
 
-import main.Model.Model;
-import main.View.GameUI;
-
 public class StateController {
-    private GameState currentState;
+    private GameState myCurrentState;
 
     public enum GameState {
         EXPLORING,
@@ -20,19 +17,19 @@ public class StateController {
      *constructor initializes game state to exploring
      */
     public StateController() {
-        this.currentState = GameState.EXPLORING;
+        this.myCurrentState = GameState.EXPLORING;
         System.out.println("StateController initialized with EXPLORING state");
     }
 
     /**
      * Changes current game state
      *
-     * @param newState new state to change to
+     * @param theNewState new state to change to
      */
-    public void changeState(GameState newState) {
-        if (newState != currentState) {
-            System.out.println("Game state changing from " + currentState + " to " + newState);
-            this.currentState = newState;
+    public void changeState(final GameState theNewState) {
+        if (theNewState != myCurrentState) {
+            System.out.println("Game state changing from " + myCurrentState + " to " + theNewState);
+            this.myCurrentState = theNewState;
         }
     }
 
@@ -41,21 +38,21 @@ public class StateController {
      * @return current game state
      */
     public GameState getCurrentState() {
-        return currentState;
+        return myCurrentState;
     }
 
     /**
      * checks if game is currently in specified state.
      *
-     * @param state state to check against
+     * @param theState state to check against
      * @return True if current state matches specified state
      */
-    public boolean isInState(GameState state) {
-        return currentState == state;
+    public boolean isInState(final GameState theState) {
+        return myCurrentState == theState;
     }
 
     public boolean isInCombat() {
-        return currentState == GameState.COMBAT;
+        return myCurrentState == GameState.COMBAT;
     }
 
 }

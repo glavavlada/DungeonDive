@@ -100,12 +100,12 @@ public class GameUI {
     /**
      * Shows combat screen with given monster.
      *
-     * @param monsters The list of monsters the player is fighting
+     * @param theMonsters The list of monsters the player is fighting
      */
-    public void showCombatScreen(List<Monster> monsters) {
+    public void showCombatScreen(final List<Monster> theMonsters) {
         CombatScreen combatScreen = new CombatScreen(myPrimaryStage, myController);
-        combatScreen.showScreen(this, monsters); // Use the overloaded method
-        System.out.println("Combat screen shown with " + monsters.size() + " monsters");
+        combatScreen.showScreen(this, theMonsters); // Use the overloaded method
+        System.out.println("Combat screen shown with " + theMonsters.size() + " monsters");
     }
 
 //    /**
@@ -137,8 +137,8 @@ public class GameUI {
         return myGameScreen;
     }
 
-    public void setGameScreen(GameScreen gameScreen) {
-        this.myGameScreen = gameScreen;
+    public void setGameScreen(final GameScreen theGameScreen) {
+        this.myGameScreen = theGameScreen;
     }
 
     /**
@@ -146,7 +146,7 @@ public class GameUI {
      * This method should be called after a scene that requires input (like GameScreen) is set on the stage.
      * @param theInputController The input controller for game actions.
      */
-    public void setInputController(InputController theInputController) {
+    public void setInputController(final InputController theInputController) {
         this.myInputController = theInputController;
         attachKeyListenersToScene(); // Attempt to attach listeners immediately
     }
@@ -154,12 +154,12 @@ public class GameUI {
     /**
      * Updates the combat screen with current monster information.
      *
-     * @param monsters The list of monsters currently in combat
+     * @param theMonsters The list of monsters currently in combat
      */
-    public void updateCombatScreen(List<Monster> monsters) {
+    public void updateCombatScreen(final List<Monster> theMonsters) {
         // Note: This method assumes you have a reference to the current combat screen
         // For now, we'll just print the update info
-        System.out.println("Combat screen updated with " + monsters.size() + " monsters");
+        System.out.println("Combat screen updated with " + theMonsters.size() + " monsters");
     }
 
     /**
@@ -227,12 +227,12 @@ public class GameUI {
     /**
      * Shows the contents of a chest after opening it.
      *
-     * @param items The items found in the chest
+     * @param theItems The items found in the chest
      */
-    public void showChestContents(List<Item> items) {
+    public void showChestContents(final List<Item> theItems) {
         // Display the items found in the chest
         StringBuilder message = new StringBuilder("Found in chest: ");
-        for (Item item : items) {
+        for (Item item : theItems) {
             message.append(item.getName()).append(", ");
         }
         System.out.println(message.toString());
@@ -241,12 +241,12 @@ public class GameUI {
     /**
      * Shows a message when items are collected from the ground.
      *
-     * @param items The items that were collected
+     * @param theItems The items that were collected
      */
-    public void showItemCollectionMessage(List<Item> items) {
+    public void showItemCollectionMessage(final List<Item> theItems) {
         // Display a message about collected items
         StringBuilder message = new StringBuilder("Collected items: ");
-        for (Item item : items) {
+        for (Item item : theItems) {
             message.append(item.getName()).append(", ");
         }
         System.out.println(message.toString());
@@ -281,21 +281,21 @@ public class GameUI {
     /**
      * Updates the selected item in the inventory.
      *
-     * @param selectedIndex The index of the selected item
+     * @param theSelectedIndex The index of the selected item
      */
-    public void updateInventorySelection(int selectedIndex) {
+    public void updateInventorySelection(final int theSelectedIndex) {
         // Highlight the selected inventory item
-        System.out.println("Inventory selection updated to index " + selectedIndex);
+        System.out.println("Inventory selection updated to index " + theSelectedIndex);
     }
 
     /**
      * Shows a message when a pillar is found.
      *
-     * @param pillar The pillar that was found
+     * @param thePillar The pillar that was found
      */
-    public void showPillarFound(Pillar pillar) {
+    public void showPillarFound(final Pillar thePillar) {
         // Display a message about finding a pillar
-        System.out.println("Pillar found: " + pillar.getType().getDisplayName());
+        System.out.println("Pillar found: " + thePillar.getType().getDisplayName());
     }
 
     /**
@@ -309,11 +309,11 @@ public class GameUI {
     /**
      * Shows the effect of a trap when triggered.
      *
-     * @param trap The trap that was triggered
+     * @param theTrap The trap that was triggered
      */
-    public void showTrapEffect(Trap trap) {
+    public void showTrapEffect(final Trap theTrap) {
         // Display visual effects for the trap
-        System.out.println("Trap effect shown: " + trap.getName());
+        System.out.println("Trap effect shown: " + theTrap.getName());
     }
 
     /**
@@ -375,22 +375,22 @@ public class GameUI {
     /**
      * Updates the room description display.
      *
-     * @param room The room to describe
+     * @param theRoom The room to describe
      */
-    public void updateRoomDescription(Room room) {
+    public void updateRoomDescription(final Room theRoom) {
         // Update the room description text
-        System.out.println("Room description updated for room at " + room.getPosition());
+        System.out.println("Room description updated for room at " + theRoom.getPosition());
     }
 
     /**
      * Shows a monster attack effect.
      *
-     * @param monster The monster that attacked
-     * @param damage The amount of damage dealt
+     * @param theMonster The monster that attacked
+     * @param theDamage The amount of damage dealt
      */
-    public void showMonsterAttackEffect(Monster monster, int damage) {
+    public void showMonsterAttackEffect(final Monster theMonster, final int theDamage) {
         // Display visual effects for monster attack
-        System.out.println(monster.getName() + " attacked for " + damage + " damage!");
+        System.out.println(theMonster.getName() + " attacked for " + theDamage + " damage!");
     }
 
     /**
@@ -404,12 +404,12 @@ public class GameUI {
     /**
      *shows message when a pillar is activated
      *
-     * @param pillar pillar that was activated
+     * @param thePillar pillar that was activated
      */
-    public void showPillarActivated(Pillar pillar) {
+    public void showPillarActivated(final Pillar thePillar) {
         //display message about activating pillar and stat bonus
-        System.out.println("Pillar of " + pillar.getType().getDisplayName() +
-                " activated! " + pillar.getType().getDescription());
+        System.out.println("Pillar of " + thePillar.getType().getDisplayName() +
+                " activated! " + thePillar.getType().getDescription());
 
         // This would involve showing special effect
     }

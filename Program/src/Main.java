@@ -18,7 +18,7 @@ public class Main extends Application {
      *
      * @param theArgs command line argument.
      */
-    public static void main(String[] theArgs) {
+    public static void main(final String[] theArgs) {
         launch(theArgs);
     }
 
@@ -29,7 +29,7 @@ public class Main extends Application {
      * @param thePrimaryStage the top-level container for JavaFX.
      */
     @Override
-    public void start(Stage thePrimaryStage) {
+    public void start(final Stage thePrimaryStage) {
         // 1. Create the single Controller instance
         Controller mainController = new Controller();
 

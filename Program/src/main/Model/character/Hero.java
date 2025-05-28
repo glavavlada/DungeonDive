@@ -8,7 +8,6 @@ import main.Model.element.Item;
 import main.Model.element.Pillar;
 import main.Model.util.Direction;
 import main.Model.util.HeroType;
-import main.Model.dungeon.Room;
 import main.Model.util.Point;
 
 /**
@@ -76,9 +75,9 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
         // etc.
     }
 
-    public void startMoving(Direction direction) {
-        myMoveDirection = direction;
-        myFacingDirection = direction;
+    public void startMoving(final Direction theDirection) {
+        myMoveDirection = theDirection;
+        myFacingDirection = theDirection;
         myIsMoving = true;
     }
 
@@ -202,7 +201,7 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
      * @param theHealth The new health value.
      */
     @Override
-    public void setHealth(int theHealth) {
+    public void setHealth(final int theHealth) {
         super.setHealth(Math.min(theHealth, this.myMaxHealth));
     }
 
@@ -220,31 +219,31 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
         this.myPillarsActivated = Math.max(0, thePillarsActivated);
     }
 
-    public void addGold(final int amount) {
-        if (amount > 0) {
-            this.myGold += amount;
-            System.out.println(myName + " gained " + amount + " gold. Total: " + myGold);
+    public void addGold(final int theAmount) {
+        if (theAmount > 0) {
+            this.myGold += theAmount;
+            System.out.println(myName + " gained " + theAmount + " gold. Total: " + myGold);
         }
     }
 
-    public boolean spendGold(final int amount) {
-        if (amount > 0 && this.myGold >= amount) {
-            this.myGold -= amount;
-            System.out.println(myName + " spent " + amount + " gold. Remaining: " + myGold);
+    public boolean spendGold(final int theAmount) {
+        if (theAmount > 0 && this.myGold >= theAmount) {
+            this.myGold -= theAmount;
+            System.out.println(myName + " spent " + theAmount + " gold. Remaining: " + myGold);
             return true;
         }
-        System.out.println(myName + " does not have enough gold to spend " + amount + ".");
+        System.out.println(myName + " does not have enough gold to spend " + theAmount + ".");
         return false;
     }
 
     /**
      * Overrides Character's takeDamage to provide hero-specific feedback or effects.
-     * @param damageAmount The amount of damage to take.
+     * @param theDamageAmount The amount of damage to take.
      */
     @Override
-    public void takeDamage(int damageAmount) {
-        super.takeDamage(damageAmount); // Calls Character's takeDamage logic
-        System.out.println(myName + " takes " + damageAmount + " damage. Current health: " + getHealth() + "/" + myMaxHealth);
+    public void takeDamage(final int theDamageAmount) {
+        super.takeDamage(theDamageAmount); // Calls Character's takeDamage logic
+        System.out.println(myName + " takes " + theDamageAmount + " damage. Current health: " + getHealth() + "/" + myMaxHealth);
         if (!isAlive()) {
             System.out.println(myName + " has been defeated!");
             // Game over logic would typically be handled by a GameController observing this state.
@@ -254,26 +253,26 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
     /**
      *add item to hero's inventory
      *
-     * @param item item to add
+     * @param theItem item to add
      * @return true if item was added successfully, false otherwise
      */
-    public boolean addItem(Item item) {
-        return pickupItem(item); // Use existing pickupItem method
+    public boolean addItem(final Item theItem) {
+        return pickupItem(theItem); // Use existing pickupItem method
     }
 
     /**
      * Activates a pillar and receives its stat bonus.
      *
-     * @param pillar The pillar to activate
+     * @param thePillar The pillar to activate
      * @return true if the pillar was successfully activated
      */
-    public boolean activatePillar(Pillar pillar) {
-        if (pillar == null || pillar.isActivated()) {
+    public boolean activatePillar(final Pillar thePillar) {
+        if (thePillar == null || thePillar.isActivated()) {
             return false;
         }
 
         // Mark the pillar as activated - pass this hero as the parameter
-        pillar.activate(this);
+        thePillar.activate(this);
 
         return true;
     }

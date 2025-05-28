@@ -34,7 +34,7 @@ public class InventoryScreen extends Screen {
      *
      * @param theUI The GameUI instance, used for managing screen transitions and UI updates.
      */
-    public void showScreen(GameUI theUI) {
+    public void showScreen(final GameUI theUI) {
 
         VBox items = new VBox(10);
         Scene inventoryScene = new Scene(items, 150, 400);
@@ -52,6 +52,7 @@ public class InventoryScreen extends Screen {
         Label inventoryDescription = new Label(MY_CONTROLLER.getGameController().getInventoryDescription());
 
         closeInventoryButton.setOnAction(event -> MY_CONTROLLER.getGameController().closeInventory());
+        myInventoryStage.setOnCloseRequest(event -> MY_CONTROLLER.getGameController().closeInventory());
         useSelectedItemButton.setOnAction(event -> MY_CONTROLLER.getGameController().useSelectedItem());
         scrollUpButton.setOnAction(event -> MY_CONTROLLER.getGameController().scrollInventoryUp());
         scrollDownButton.setOnAction(event -> MY_CONTROLLER.getGameController().scrollInventoryDown());

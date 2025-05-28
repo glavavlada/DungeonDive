@@ -91,10 +91,10 @@ public class Pillar extends DungeonElement {
     }
 
     @Override
-    public void interact(final Hero hero) {
-        if (hero != null) {
-            System.out.println(hero.getName() + " approaches the Pillar of " + myType.getDisplayName() + ".");
-            activate(hero);
+    public void interact(final Hero theHero) {
+        if (theHero != null) {
+            System.out.println(theHero.getName() + " approaches the Pillar of " + myType.getDisplayName() + ".");
+            activate(theHero);
         }
     }
 
@@ -104,10 +104,10 @@ public class Pillar extends DungeonElement {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Pillar pillar = (Pillar) o;
+    public boolean equals(final Object theO) {
+        if (this == theO) return true;
+        if (theO == null || getClass() != theO.getClass()) return false;
+        Pillar pillar = (Pillar) theO;
         return myIsActivated == pillar.myIsActivated && myType == pillar.myType;
     }
 
