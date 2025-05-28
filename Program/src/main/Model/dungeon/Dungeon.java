@@ -149,19 +149,19 @@ public class Dungeon {
     /**
      * Helper to find all *unvisited* neighbors for DFS.
      */
-    private List<Point> getUnvisitedNeighbors(Point current, boolean[][] visited) {
+    private List<Point> getUnvisitedNeighbors(final Point theCurrent, final boolean[][] theVisited) {
         List<Point> neighbors = new ArrayList<>();
-        int x = current.getX();
-        int y = current.getY();
+        int x = theCurrent.getX();
+        int y = theCurrent.getY();
 
         // North
-        if (y > 0 && !visited[y - 1][x]) neighbors.add(new Point(x, y - 1));
+        if (y > 0 && !theVisited[y - 1][x]) neighbors.add(new Point(x, y - 1));
         // South
-        if (y < myHeight - 1 && !visited[y + 1][x]) neighbors.add(new Point(x, y + 1));
+        if (y < myHeight - 1 && !theVisited[y + 1][x]) neighbors.add(new Point(x, y + 1));
         // West
-        if (x > 0 && !visited[y][x - 1]) neighbors.add(new Point(x - 1, y));
+        if (x > 0 && !theVisited[y][x - 1]) neighbors.add(new Point(x - 1, y));
         // East
-        if (x < myWidth - 1 && !visited[y][x + 1]) neighbors.add(new Point(x + 1, y));
+        if (x < myWidth - 1 && !theVisited[y][x + 1]) neighbors.add(new Point(x + 1, y));
 
         return neighbors;
     }
@@ -169,10 +169,10 @@ public class Dungeon {
     /**
      * Helper to find *all* neighbors (for adding loops).
      */
-    private List<Point> getAllNeighbors(Point current) {
+    private List<Point> getAllNeighbors(final Point theCurrent) {
         List<Point> neighbors = new ArrayList<>();
-        int x = current.getX();
-        int y = current.getY();
+        int x = theCurrent.getX();
+        int y = theCurrent.getY();
 
         if (y > 0) neighbors.add(new Point(x, y - 1));
         if (y < myHeight - 1) neighbors.add(new Point(x, y + 1));
@@ -186,35 +186,35 @@ public class Dungeon {
     /**
      * Helper to "remove a wall" between two adjacent rooms by setting their door flags.
      */
-    private void removeWall(Point current, Point next) {
-        Room currentRoom = getRoom(current);
-        Room nextRoom = getRoom(next);
+    private void removeWall(final Point theCurrent, final Point theNext) {
+        Room currentRoom = getRoom(theCurrent);
+        Room nextRoom = getRoom(theNext);
 
         // Moving Right (East)
-        if (current.getX() < next.getX()) {
+        if (theCurrent.getX() < theNext.getX()) {
             currentRoom.setEastDoor(true);
             nextRoom.setWestDoor(true);
         }
         // Moving Left (West)
-        else if (current.getX() > next.getX()) {
+        else if (theCurrent.getX() > theNext.getX()) {
             currentRoom.setWestDoor(true);
             nextRoom.setEastDoor(true);
         }
         // Moving Down (South)
-        else if (current.getY() < next.getY()) {
+        else if (theCurrent.getY() < theNext.getY()) {
             currentRoom.setSouthDoor(true);
             nextRoom.setNorthDoor(true);
         }
         // Moving Up (North)
-        else if (current.getY() > next.getY()) {
+        else if (theCurrent.getY() > theNext.getY()) {
             currentRoom.setNorthDoor(true);
             nextRoom.setSouthDoor(true);
         }
     }
 
-    public Room getRoom(final int x, final int y) {
-        if (x >= 0 && x < myWidth && y >= 0 && y < myHeight) {
-            return myRooms[y][x];
+    public Room getRoom(final int theX, final int theY) {
+        if (theX >= 0 && theX < myWidth && theY >= 0 && theY < myHeight) {
+            return myRooms[theY][theX];
         }
         return null;
     }
@@ -297,12 +297,12 @@ public class Dungeon {
         return myDifficulty;
     }
 
-    public String getMapString(final Point heroCurrentPosition) {
+    public String getMapString(final Point theHeroCurrentPosition) {
         StringBuilder sb = new StringBuilder();
         for (int y = 0; y < myHeight; y++) {
             for (int x = 0; x < myWidth; x++) {
                 Room room = myRooms[y][x];
-                if (room.getPosition().equals(heroCurrentPosition)) {
+                if (room.getPosition().equals(theHeroCurrentPosition)) {
                     sb.append("[H]");
                 } else if (room.isVisited()) {
                     switch (room.getRoomType()) {

@@ -31,19 +31,19 @@ public enum MonsterType {
     private final boolean myIsBoss;
 
 
-    MonsterType(String name, String description, int baseHealth, int baseAttack,
-                String specialAttackName, double critChance, double critMultiplier,
-                int goldReward, boolean isElite, boolean isBoss) {
-        this.myName = name;
-        this.myDescription = description;
-        this.myBaseHealth = baseHealth;
-        this.myBaseAttack = baseAttack;
-        this.mySpecialAttackName = specialAttackName;
-        this.myCritChance = critChance;
-        this.myCritMultiplier = critMultiplier;
-        this.myGoldReward = goldReward;
-        this.myIsElite = isElite;
-        this.myIsBoss = isBoss;
+    MonsterType(final String theName, final String theDescription, final int theBaseHealth, final int theBaseAttack,
+                final String theSpecialAttackName, final double theCritChance, final double theCritMultiplier,
+                final int theGoldReward, final boolean theIsElite, final boolean theIsBoss) {
+        this.myName = theName;
+        this.myDescription = theDescription;
+        this.myBaseHealth = theBaseHealth;
+        this.myBaseAttack = theBaseAttack;
+        this.mySpecialAttackName = theSpecialAttackName;
+        this.myCritChance = theCritChance;
+        this.myCritMultiplier = theCritMultiplier;
+        this.myGoldReward = theGoldReward;
+        this.myIsElite = theIsElite;
+        this.myIsBoss = theIsBoss;
     }
 
     public String getName() {

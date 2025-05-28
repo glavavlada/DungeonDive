@@ -6,30 +6,30 @@ import main.Model.character.Hero;
  * Represents a health potion that restores health to a hero.
  */
 public class HealthPotion extends Item {
-    private final int healingAmount;
+    private final int myHealingAmount;
 
     /**
      * Constructor for HealthPotion.
      *
-     * @param name The name of the potion.
-     * @param description The description of the potion.
-     * @param healingAmount The amount of health this potion restores.
+     * @param theName The name of the potion.
+     * @param theDescription The description of the potion.
+     * @param theHealingAmount The amount of health this potion restores.
      */
-    public HealthPotion(String name, String description, int healingAmount) {
-        super(name, description); // Call the constructor of the parent Item class
-        this.healingAmount = healingAmount;
+    public HealthPotion(final String theName, final String theDescription, final int theHealingAmount) {
+        super(theName, theDescription); // Call the constructor of the parent Item class
+        this.myHealingAmount = theHealingAmount;
     }
 
     /**
      * Uses the health potion on the hero, restoring health.
      *
-     * @param hero The hero using the potion.
+     * @param theHero The hero using the potion.
      */
     @Override
-    public void use(Hero hero) {
-        if (hero != null && hero.isAlive()) {
-            hero.setHealth(Math.min(hero.getMaxHealth(), hero.getHealth() + this.healingAmount)); // Assuming Hero has getMaxHealth()
-            System.out.println(hero.getName() + " used " + getName() + " and restored " + this.healingAmount + " health.");
+    public void use(final Hero theHero) {
+        if (theHero != null && theHero.isAlive()) {
+            theHero.setHealth(Math.min(theHero.getMaxHealth(), theHero.getHealth() + this.myHealingAmount)); // Assuming Hero has getMaxHealth()
+            System.out.println(theHero.getName() + " used " + getName() + " and restored " + this.myHealingAmount + " health.");
         }
     }
 
@@ -39,7 +39,7 @@ public class HealthPotion extends Item {
      * @return The healing amount.
      */
     public int getHealingAmount() {
-        return healingAmount;
+        return myHealingAmount;
     }
 
     /**

@@ -61,7 +61,6 @@
 /* ============================================================================ */
 /* BUTTONS                                                                      */
 /* ============================================================================ */
-/* Container for buttons - adjust if you want a 2x2 grid later */
 .pokemon-style-buttons {
     -fx-alignment: center;
     -fx-spacing: 20px;
@@ -92,9 +91,7 @@
     -fx-border-width: 2px 1px 1px 2px; /* Invert border for pressed effect */
 }
 
-/* --- Specific Button Colors (Optional, uses -fx-base) --- */
-/* For these to work well, you might need a more complex background definition */
-/* or just set -fx-background-color directly */
+/* --- Specific Button Colors --- */
 .attack-button { -fx-background-color: #FF7F7F; } /* Lighter Red */
 .attack-button:hover { -fx-background-color: #FF5555; }
 .special-button { -fx-background-color: #BF7FFF; } /* Lighter Purple */

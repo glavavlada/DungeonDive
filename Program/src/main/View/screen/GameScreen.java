@@ -91,6 +91,7 @@ public class GameScreen extends Screen {
         helpButton.setOnAction(event -> getController().helpMenu(event, theUI));
         pauseButton.setOnAction(event -> getController().pauseGame(event, theUI));
         pauseAndHelpButtons.getChildren().addAll(helpButton, pauseButton);
+        pauseAndHelpButtons.setPadding(new Insets(0, 0, 10, 0));
         topPane.setRight(pauseAndHelpButtons);
 
         // Add the topPane to the root
@@ -319,19 +320,19 @@ public class GameScreen extends Screen {
     /**
      * Gets a symbol representation for a room type.
      */
-    private String getRoomSymbol(Room room) {
-        switch (room.getRoomType()) {
+    private String getRoomSymbol(final Room theRoom) {
+        switch (theRoom.getRoomType()) {
             case ENTRANCE: return "E";
             case EXIT: return "X";
             case BOSS: return "B";
             case PILLAR:
-                return room.getPillar() != null && room.getPillar().isActivated() ? "✓" : "P";
+                return theRoom.getPillar() != null && theRoom.getPillar().isActivated() ? "✓" : "P";
             case MONSTER:
-                return room.getMonsters().isEmpty() ? " " : "M";
+                return theRoom.getMonsters().isEmpty() ? " " : "M";
             case TREASURE:
-                return room.getItems().isEmpty() ? " " : "$";
+                return theRoom.getItems().isEmpty() ? " " : "$";
             case TRAP:
-                return room.getTrap() != null && room.getTrap().isSprung() ? " " : "!";
+                return theRoom.getTrap() != null && theRoom.getTrap().isSprung() ? " " : "!";
             case EMPTY:
             default:
                 return " ";
@@ -340,11 +341,11 @@ public class GameScreen extends Screen {
 
     /**
      * Adds a message to the game's message log area.
-     * @param message The message string to add.
+     * @param theMessage The message string to add.
      */
-    public void addGameMessage(String message) {
+    public void addGameMessage(final String theMessage) {
         if (myMessagesArea != null) {
-            Label messageLabel = new Label(message);
+            Label messageLabel = new Label(theMessage);
             myMessagesArea.getChildren().add(messageLabel);
         }
     }

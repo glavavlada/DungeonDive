@@ -72,11 +72,11 @@ public class Trap extends DungeonElement {
     /**
      * Defines interaction with the trap. Typically, stepping on its tile triggers it.
      *
-     * @param hero The hero interacting with (triggering) the trap.
+     * @param theHero The hero interacting with (triggering) the trap.
      */
     @Override
-    public void interact(final Hero hero) {
-        trigger(hero);
+    public void interact(final Hero theHero) {
+        trigger(theHero);
     }
 
     @Override
@@ -85,10 +85,10 @@ public class Trap extends DungeonElement {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Trap trap = (Trap) o;
+    public boolean equals(final Object theO) {
+        if (this == theO) return true;
+        if (theO == null || getClass() != theO.getClass()) return false;
+        Trap trap = (Trap) theO;
         return myDamageAmount == trap.myDamageAmount &&
                 myIsSprung == trap.myIsSprung &&
                 Objects.equals(myName, trap.myName) &&

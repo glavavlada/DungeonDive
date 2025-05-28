@@ -18,16 +18,17 @@ public enum HeroType {
     private final double myCritChance;          // ex: 0.05 for 5%
     private final double myCritMultiplier;
 
-    HeroType(String displayName, String description, int baseHealth, int baseAttack,
-             String specialAttackName, int specialAttackDamage, double critChance, double critMultiplier) {
-        this.myDisplayName = displayName;
-        this.myDescription = description;
-        this.myBaseHealth = baseHealth;
-        this.myBaseAttack = baseAttack;
-        this.mySpecialAttackName = specialAttackName;
-        this.mySpecialAttackDamage = specialAttackDamage;
-        this.myCritChance = critChance;
-        this.myCritMultiplier = critMultiplier;
+    HeroType(final String theDisplayName, final String theDescription, final int theBaseHealth,
+             final int theBaseAttack, final String theSpecialAttackName, final int theSpecialAttackDamage,
+             final double theCritChance, final double theCritMultiplier) {
+        this.myDisplayName = theDisplayName;
+        this.myDescription = theDescription;
+        this.myBaseHealth = theBaseHealth;
+        this.myBaseAttack = theBaseAttack;
+        this.mySpecialAttackName = theSpecialAttackName;
+        this.mySpecialAttackDamage = theSpecialAttackDamage;
+        this.myCritChance = theCritChance;
+        this.myCritMultiplier = theCritMultiplier;
     }
 
     public String getDisplayName() {

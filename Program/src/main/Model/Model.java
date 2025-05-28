@@ -83,19 +83,19 @@ public class Model {
 
     // --- Save and Load Game (Placeholders) ---
 
-    public boolean saveGame(String saveSlotName) {
+    public boolean saveGame(final String theSaveSlotName) {
         if (myPlayer == null || myDungeon == null) {
             System.err.println("Cannot save game: Player or Dungeon not initialized.");
             return false;
         }
         // TODO: Implement saving logic using myDatabase
-        System.out.println("Saving game to slot: " + saveSlotName + " (Not yet implemented)");
+        System.out.println("Saving game to slot: " + theSaveSlotName + " (Not yet implemented)");
         return false;
     }
 
-    public boolean loadGame(String saveSlotName) {
+    public boolean loadGame(final String theSaveSlotName) {
         // TODO: Implement loading logic using myDatabase
-        System.out.println("Loading game from slot: " + saveSlotName + " (Not yet implemented)");
+        System.out.println("Loading game from slot: " + theSaveSlotName + " (Not yet implemented)");
         // This method should reconstruct myPlayer and myDungeon from database data
         // and then potentially call a method to update the UI.
         return false;
