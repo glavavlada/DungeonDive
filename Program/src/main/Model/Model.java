@@ -1,6 +1,7 @@
 package main.Model;
 
 import main.Model.character.Hero;
+import main.Model.character.HeroFactory;
 import main.Model.dungeon.Dungeon;
 import main.Model.util.HeroType;
 import main.Model.util.Point;
@@ -19,6 +20,7 @@ public class Model {
     private Hero myPlayer;
     private Dungeon myDungeon;
     private final Database myDatabase;
+    private final HeroFactory myHeroFactory;
 
     private static final int DEFAULT_DUNGEON_WIDTH = 10;
     private static final int DEFAULT_DUNGEON_HEIGHT = 10;
@@ -30,6 +32,7 @@ public class Model {
      */
     public Model() {
         this.myDatabase = new Database();
+        this.myHeroFactory = new HeroFactory();
     }
 
     /**
@@ -40,7 +43,7 @@ public class Model {
      */
     public void initializeNewGame(final HeroType theHeroType, final String theHeroName) {
         Point startPosition = new Point(0, 0); // Default, will be overridden by dungeon spawn
-        this.myPlayer = new Hero(theHeroName, theHeroType, startPosition);
+        this.myPlayer = myHeroFactory.getHero(theHeroName, theHeroType, startPosition);
 
         this.myDungeon = new Dungeon(DEFAULT_DUNGEON_WIDTH, DEFAULT_DUNGEON_HEIGHT, DEFAULT_DIFFICULTY);
 

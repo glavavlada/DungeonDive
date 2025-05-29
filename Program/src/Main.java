@@ -1,4 +1,5 @@
 import main.Controller.Controller; // Import Controller
+import main.Model.Database;
 import main.View.util.UIConstants;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -32,6 +33,9 @@ public class Main extends Application {
     public void start(final Stage thePrimaryStage) {
         // 1. Create the single Controller instance
         Controller mainController = new Controller();
+
+        Database database = new Database();
+        database.closeConnection();
 
         // 2. Create UIConstants, passing the stage and the controller
         //    UIConstants will, in turn, create GameUI and pass the controller to it.

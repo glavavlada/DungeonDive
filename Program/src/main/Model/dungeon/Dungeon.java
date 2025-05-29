@@ -1,6 +1,7 @@
 package main.Model.dungeon;
 
 import main.Model.character.Monster;
+import main.Model.character.MonsterFactory;
 import main.Model.element.Pillar;
 import main.Model.element.Trap;
 import main.Model.util.MonsterType;
@@ -8,6 +9,7 @@ import main.Model.util.PillarType;
 import main.Model.util.Point;
 import main.Model.util.RoomType;
 
+import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -24,6 +26,7 @@ public class Dungeon {
     private int myActivatedPillars; // This should be updated by GameController based on Pillar activation
     private boolean myBossSpawned;
     private String myDifficulty;
+    private final MonsterFactory myMonsterFactory;
 
     public Dungeon(final int theWidth, final int theHeight, final String theDifficulty) {
         if (theWidth <= 0 || theHeight <= 0) {
@@ -36,6 +39,7 @@ public class Dungeon {
         this.myTotalPillars = 0;
         this.myActivatedPillars = 0;
         this.myBossSpawned = false;
+        this.myMonsterFactory = new MonsterFactory();
         generateLayout();
     }
 
@@ -128,12 +132,12 @@ public class Dungeon {
                 if (monsterCount > 0 && random.nextBoolean()) { // Alternate placing monsters/traps
                     room.setRoomType(RoomType.MONSTER);
                     // Add an actual monster (using constructor like in spawnBoss)
-                    room.addMonster(new Monster(
-                            MonsterType.GOBLIN.getName(),
-                            MonsterType.GOBLIN,
-                            false,
-                            MonsterType.GOBLIN.getBaseHealth(),
-                            spot));
+                    // Not sure if try catch is the best here, but it gets rid of SQL error.
+                    try {
+                        room.addMonster(myMonsterFactory.getMonster(MonsterType.GOBLIN, spot));
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
                     monsterCount--;
                 } else if (trapCount > 0) {
                     room.setTrap(new Trap("Floor Spikes", "Sharp spikes emerge from the floor.", 5 + random.nextInt(10)));
@@ -278,16 +282,17 @@ public class Dungeon {
 
             // Assuming MonsterType.GIANT is defined as a boss type
             MonsterType bossType = MonsterType.GIANT;
-            Monster boss = new Monster(
-                    bossType.getName(),
-                    bossType,
-                    bossType.isElite(), // Or specific logic for boss elite status
-                    bossType.getBaseHealth(),
-                    bossRoom.getPosition()
-            );
-            bossRoom.addMonster(boss);
-            this.myBossSpawned = true;
-            System.out.println("All pillars activated! The " + boss.getName() + " has appeared in the " + bossRoom.getRoomType().getDisplayName() + " room!");
+            // Not sure if try catch are the best things here but gets rid of SQL error.
+            try {
+                Monster boss = myMonsterFactory.getMonster(bossType, bossRoom.getPosition());
+                bossRoom.addMonster(boss);
+                this.myBossSpawned = true;
+                System.out.println("All pillars activated! The " + boss.getName() + " has appeared in the " + bossRoom.getRoomType().getDisplayName() + " room!");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+
         } else {
             System.err.println("Error: Could not find designated boss room at " + myExitPoint + " to spawn boss.");
         }

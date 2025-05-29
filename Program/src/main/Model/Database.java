@@ -36,6 +36,7 @@ public class Database {
             System.out.println("Database connection established to " + DB_NAME);
             initializeTables();
             populateInitialData();
+            System.out.println("Database file is at: " + new java.io.File("dungeondive.db").getAbsolutePath());
         } catch (ClassNotFoundException e) {
             System.err.println("SQLite JDBC Driver not found: " + e.getMessage());
             e.printStackTrace(); // For more detailed error info
