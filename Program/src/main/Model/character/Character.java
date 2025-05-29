@@ -8,14 +8,14 @@ public abstract class Character {
     private Point myPosition;
 
     public Character(final int theHealth, final Point thePosition) {
-        this.myHealth = theHealth;
-        this.myPosition = thePosition;
+        myHealth = theHealth;
+        myPosition = thePosition;
     }
 
     public abstract int attack(final Character theTarget);
 
     public void takeDamage(final int theDamage) {
-        this.myHealth = Math.max(0, this.myHealth - theDamage);
+        myHealth = Math.max(0, myHealth - theDamage);
     }
 
     public boolean isAlive() {
@@ -48,10 +48,10 @@ public abstract class Character {
     }
 
     public void setHealth(final int theHealth) {
-        this.myHealth = theHealth;
+        myHealth = theHealth;
     }
 
     public void setPosition(final Point thePosition) {
-        this.myPosition = thePosition;
+        myPosition = thePosition;
     }
 }
