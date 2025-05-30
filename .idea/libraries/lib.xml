@@ -1,0 +1,21 @@
+<component name="libraryTable">
+  <library name="lib">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/javafx-sdk-21.0.7/lib" />
+      <root url="file://$PROJECT_DIR$/javafx-sdk-21.0.7/lib" />
+      <root url="jar://$PROJECT_DIR$/sqlite/sqlite-tools-win32-x86-3420000/sqlite-jdbc-3.49.1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/javafx-sdk-21.0.7/src.zip!/javafx.base" />
+      <root url="jar://$PROJECT_DIR$/javafx-sdk-21.0.7/src.zip!/javafx.controls" />
+      <root url="jar://$PROJECT_DIR$/javafx-sdk-21.0.7/src.zip!/javafx.fxml" />
+      <root url="jar://$PROJECT_DIR$/javafx-sdk-21.0.7/src.zip!/javafx.graphics" />
+      <root url="jar://$PROJECT_DIR$/javafx-sdk-21.0.7/src.zip!/javafx.media" />
+      <root url="jar://$PROJECT_DIR$/javafx-sdk-21.0.7/src.zip!/javafx.swing" />
+      <root url="jar://$PROJECT_DIR$/javafx-sdk-21.0.7/src.zip!/javafx.web" />
+    </SOURCES>
+    <jarDirectory url="file://$PROJECT_DIR$/javafx-sdk-21.0.7/lib" recursive="false" />
+    <jarDirectory url="file://$PROJECT_DIR$/javafx-sdk-21.0.7/lib" recursive="false" />
+  </library>
+</component>
