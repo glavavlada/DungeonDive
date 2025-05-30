@@ -9,12 +9,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the abstract Character class.
- * Note: The abstract attack() method is tested in concrete subclasses (HeroTest, MonsterTest).
+ * Note: The abstract attack() method is tested in concrete subclasses (HeroTest, MonssterTest).
  */
 class CharacterTest {
 
     // A concrete implementation of Character for testing purposes
-    private static class ConcreteCharacter extends main.Model.character.Character {
+    private static class ConcreteCharacter extends Character {
         public ConcreteCharacter(int health, Point position) {
             super(health, position);
         }
