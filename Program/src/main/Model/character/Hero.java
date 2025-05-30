@@ -16,9 +16,7 @@ import main.Model.util.Point;
  * hero type, and interaction with game elements.
  */
 public class Hero extends Character { // Make sure Character is in main.Model.character
-    private final String myName;
-    private final HeroType myType;
-    private int myMaxHealth;
+    private final HeroType myHeroType;
     private final ArrayList<Item> myInventory;
     private int myPillarsActivated;
     private int myGold;
@@ -44,26 +42,12 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
      * Constructor for Hero.
      * Initializes the hero with a name, type, and starting position.
      * Base stats like health, attack, crit chance, etc., are derived from the HeroType enum.
-     *
-     * @param theName The hero's name.
-     * @param theType The hero's type (e.g., WARRIOR, PRIESTESS, THIEF).
-     * @param theStartPosition The hero's starting position in the dungeon.
      */
-    public Hero(final String theName, final HeroType theType, final Point theStartPosition) {
-        // Call the superclass (Character) constructor with base health from HeroType
-        super(theType.getBaseHealth(), theStartPosition); // Pass initial health and position
+    public Hero(final HeroBuilder theHeroBuilder) {
 
-        if (theName == null || theName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Hero name cannot be null or empty.");
-        }
-        if (theType == null) {
-            throw new IllegalArgumentException("HeroType cannot be null.");
-        }
-        // theStartPosition null check is handled by superclass if it does so, or add here.
+        super(theHeroBuilder);
+        myHeroType = theHeroBuilder.myHeroType;
 
-        this.myName = theName;
-        this.myType = theType;
-        this.myMaxHealth = theType.getBaseHealth(); // Max health is initially base health
         this.myInventory = new ArrayList<>();
         this.myPillarsActivated = 0;
         this.myGold = 0;
@@ -119,7 +103,7 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
         }
 
         // Base damage from HeroType
-        int damageDealt = myType.getBaseAttack();
+        int damageDealt = myHeroType.getBaseAttack();
 
         // TODO: Implement more complex damage calculation:
         // 1. Add weapon damage if applicable.
@@ -129,7 +113,7 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
         //    (e.g., if a special attack is charged or randomly procs)
         //    damageDealt += myType.getSpecialAttackDamage(); (This might be a separate action)
 
-        System.out.println(myName + " attacks " + ((theTarget instanceof Monster) ? ((Monster)theTarget).getName() : "target") + " for " + damageDealt + " damage.");
+        System.out.println(getName() + " attacks " + ((theTarget instanceof Monster) ? ((Monster)theTarget).getName() : "target") + " for " + damageDealt + " damage.");
         theTarget.takeDamage(damageDealt);
         return damageDealt;
     }
@@ -142,11 +126,11 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
      */
     public void useItem(final Item theItem) {
         if (theItem != null && myInventory.contains(theItem)) {
-            System.out.println(myName + " uses " + theItem.getName() + ".");
+            System.out.println(getName() + " uses " + theItem.getName() + ".");
             theItem.use(this); // Item's use method will affect the hero
             myInventory.remove(theItem);
         } else if (theItem != null) {
-            System.out.println(myName + " tried to use " + theItem.getName() + " but it's not in inventory.");
+            System.out.println(getName() + " tried to use " + theItem.getName() + " but it's not in inventory.");
         }
     }
 
@@ -163,24 +147,16 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
         final int maxInventorySize = 10; // Make this a constant or configurable
         if (myInventory.size() < maxInventorySize) {
             myInventory.add(theItem);
-            System.out.println(myName + " picked up " + theItem.getName() + ".");
+            System.out.println(getName() + " picked up " + theItem.getName() + ".");
             return true;
         } else {
-            System.out.println(myName + "'s inventory is full. Cannot pick up " + theItem.getName() + ".");
+            System.out.println(getName() + "'s inventory is full. Cannot pick up " + theItem.getName() + ".");
             return false;
         }
     }
 
-    public String getName() {
-        return myName;
-    }
-
     public HeroType getType() {
-        return myType;
-    }
-
-    public int getMaxHealth() {
-        return myMaxHealth;
+        return myHeroType;
     }
 
     public List<Item> getInventory() {
@@ -195,25 +171,25 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
         return myGold;
     }
 
-    /**
-     * Sets the hero's current health, ensuring it doesn't exceed maxHealth or go below 0.
-     * Overrides Character.setHealth to incorporate maxHealth.
-     * @param theHealth The new health value.
-     */
-    @Override
-    public void setHealth(final int theHealth) {
-        super.setHealth(Math.min(theHealth, this.myMaxHealth));
-    }
+//    /**
+//     * Sets the hero's current health, ensuring it doesn't exceed maxHealth or go below 0.
+//     * Overrides Character.setHealth to incorporate maxHealth.
+//     * @param theHealth The new health value.
+//     */
+//    @Override
+//    public void setHealth(final int theHealth) {
+//        super.setHealth(Math.min(theHealth, getMaxHealth()));
+//    }
 
 
-    public void setMaxHealth(final int theMaxHealth) {
-        if (theMaxHealth > 0) {
-            this.myMaxHealth = theMaxHealth;
-            if (getHealth() > this.myMaxHealth) { // Ensure current health doesn't exceed new max
-                setHealth(this.myMaxHealth);
-            }
-        }
-    }
+//    public void setMaxHealth(final int theMaxHealth) {
+//        if (theMaxHealth > 0) {
+//            this.myMaxHealth = theMaxHealth;
+//            if (getHealth() > this.myMaxHealth) { // Ensure current health doesn't exceed new max
+//                setHealth(this.myMaxHealth);
+//            }
+//        }
+//    }
 
     public void setPillarsActivated(final int thePillarsActivated) {
         this.myPillarsActivated = Math.max(0, thePillarsActivated);
@@ -222,17 +198,17 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
     public void addGold(final int theAmount) {
         if (theAmount > 0) {
             this.myGold += theAmount;
-            System.out.println(myName + " gained " + theAmount + " gold. Total: " + myGold);
+            System.out.println(getName() + " gained " + theAmount + " gold. Total: " + myGold);
         }
     }
 
     public boolean spendGold(final int theAmount) {
         if (theAmount > 0 && this.myGold >= theAmount) {
             this.myGold -= theAmount;
-            System.out.println(myName + " spent " + theAmount + " gold. Remaining: " + myGold);
+            System.out.println(getName() + " spent " + theAmount + " gold. Remaining: " + myGold);
             return true;
         }
-        System.out.println(myName + " does not have enough gold to spend " + theAmount + ".");
+        System.out.println(getName() + " does not have enough gold to spend " + theAmount + ".");
         return false;
     }
 
@@ -243,9 +219,9 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
     @Override
     public void takeDamage(final int theDamageAmount) {
         super.takeDamage(theDamageAmount); // Calls Character's takeDamage logic
-        System.out.println(myName + " takes " + theDamageAmount + " damage. Current health: " + getHealth() + "/" + myMaxHealth);
+        System.out.println(getName() + " takes " + theDamageAmount + " damage. Current health: " + getHealth() + "/" + getMaxHealth());
         if (!isAlive()) {
-            System.out.println(myName + " has been defeated!");
+            System.out.println(getName() + " has been defeated!");
             // Game over logic would typically be handled by a GameController observing this state.
         }
     }
@@ -296,11 +272,11 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
      * @return The amount of damage dealt
      */
     public int specialAttack() {
-        int baseDamage = myType.getSpecialAttackDamage();
+        int baseDamage = myHeroType.getSpecialAttackDamage();
         int bonusDamage = myStrengthBonus + myAgilityBonus;
         int totalDamage = baseDamage + bonusDamage;
 
-        System.out.println(myName + " performs a special attack!");
+        System.out.println(getName() + " performs a special attack!");
         return totalDamage;
     }
 
@@ -351,5 +327,23 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
      */
     public String getHealthDisplay() {
         return getHealth() + "/" + getMaxHealth();
+    }
+
+    public static class HeroBuilder extends CharacterBuilder<HeroBuilder, Hero> {
+
+        private HeroType myHeroType;
+
+        public HeroBuilder setHeroType(final HeroType theHeroType) {
+            myHeroType = theHeroType;
+            return self();
+        }
+
+        protected HeroBuilder self() {
+            return this;
+        }
+
+        public Hero build() {
+            return new Hero(this);
+        }
     }
 }

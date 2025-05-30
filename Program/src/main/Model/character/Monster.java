@@ -3,33 +3,28 @@ package main.Model.character;
 import java.util.ArrayList;
 import main.Model.element.Item;
 import main.Model.util.MonsterType;
-import main.Model.util.Point;
 
 /**
  * Represents an enemy in the game.
  */
 public class Monster extends Character {
     private boolean myIsElite;
-    private String myName;
-    private MonsterType myType;
+    private final MonsterType myMonsterType;
     private ArrayList<Item> myRewards;
-    private final int myMaxHealth;
+
 
     /**
      * Constructor for Monster.
-     * @param theName The monster's name
-     * @param theType The monster's type
-     * @param theIsElite Whether this is an elite monster
-     * @param theHealth Initial health points
-     * @param thePosition Starting position
+     *
+     * @param theMonsterBuilder Builder for making Monster.
      */
-    public Monster(final String theName, final MonsterType theType, final boolean theIsElite,
-                   final int theHealth, final Point thePosition) {
-        super(theHealth, thePosition);
-        this.myMaxHealth = theHealth;
-        this.myName = theName;
-        this.myType = theType;
-        this.myIsElite = theIsElite;
+    public Monster(final MonsterBuilder theMonsterBuilder) {
+        // Previous parameters
+        //final String theName, final MonsterType theType, final boolean theIsElite,
+        //final int theHealth, final Point thePosition
+        super(theMonsterBuilder);
+        myMonsterType = theMonsterBuilder.myMonsterType;
+        myIsElite = theMonsterBuilder.myIsElite;
         this.myRewards = new ArrayList<>();
     }
 
@@ -41,7 +36,7 @@ public class Monster extends Character {
     @Override
     public int attack(final Character theTarget) {
         // Use base damage from MonsterType
-        int baseDamage = this.myType.getBaseAttack(); // <-- Use MonsterType for base damage
+        int baseDamage = this.myMonsterType.getBaseAttack(); // <-- Use MonsterType for base damage
 
         // Elite monsters deal more damage
         if (myIsElite) {
@@ -79,16 +74,8 @@ public class Monster extends Character {
         this.myIsElite = theIsElite;
     }
 
-    public String getName() {
-        return myName;
-    }
-
     public MonsterType getType() {
-        return myType;
-    }
-
-    public int getMaxHealth() {
-        return myMaxHealth;
+        return myMonsterType;
     }
 
     /**
@@ -97,7 +84,7 @@ public class Monster extends Character {
      */
     public double getHealthPercentage() {
         // Use the stored myMaxHealth instead of type's base health
-        return Math.max(0.0, Math.min(1.0, (double) getHealth() / myMaxHealth));
+        return Math.max(0.0, Math.min(1.0, (double) getHealth() / getMaxHealth()));
     }
 
     /**
@@ -106,5 +93,30 @@ public class Monster extends Character {
      */
     public String getHealthDisplay() {
         return getHealth() + " / " + getMaxHealth();
+    }
+
+    public static class MonsterBuilder extends CharacterBuilder<MonsterBuilder, Monster> {
+
+        private MonsterType myMonsterType;
+        private Boolean myIsElite;
+
+        // Do setType for hero and monster types
+        public MonsterBuilder setMonsterType(final MonsterType theMonsterType) {
+            myMonsterType = theMonsterType;
+            return self();
+        }
+
+        public MonsterBuilder setIsElite(final boolean theIsElite) {
+            myIsElite = theIsElite;
+            return self();
+        }
+
+        protected MonsterBuilder self() {
+            return this;
+        }
+
+        public Monster build() {
+            return new Monster(this);
+        }
     }
 }

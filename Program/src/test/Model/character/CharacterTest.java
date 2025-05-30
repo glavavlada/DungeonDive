@@ -1,7 +1,9 @@
 package test.Model.character;
 
 import main.Model.character.Character;
+import main.Model.character.Hero;
 import main.Model.util.Direction;
+import main.Model.util.HeroType;
 import main.Model.util.Point;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,14 +11,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for the abstract Character class.
- * Note: The abstract attack() method is tested in concrete subclasses (HeroTest, MonssterTest).
+ * Note: The abstract attack() method is tested in concrete subclasses (HeroTest, MonsterTest).
  */
 class CharacterTest {
 
+    // TODO: Add tests for added changes like factory and builder stuff
+
     // A concrete implementation of Character for testing purposes
-    private static class ConcreteCharacter extends Character {
-        public ConcreteCharacter(int health, Point position) {
-            super(health, position);
+    private static class ConcreteCharacter extends main.Model.character.Character {
+        public ConcreteCharacter(final CharacterBuilder theCharacterBuilder) {
+            super(theCharacterBuilder);
         }
 
         @Override
@@ -28,15 +32,32 @@ class CharacterTest {
             }
             return damage;
         }
+
+        public static class ConcreteBuilder extends CharacterBuilder<ConcreteBuilder, ConcreteCharacter> {
+            protected ConcreteBuilder self() {
+                return this;
+            }
+
+            public ConcreteCharacter build() {
+                return new ConcreteCharacter(this);
+            }
+        }
     }
 
     private ConcreteCharacter character;
     private ConcreteCharacter targetCharacter;
 
+
     @BeforeEach
     void setUp() {
-        character = new ConcreteCharacter(100, new Point(0, 0));
-        targetCharacter = new ConcreteCharacter(50, new Point(1,1));
+        character = new ConcreteCharacter.ConcreteBuilder().
+                                          setHealth(100).
+                                          setPosition(new Point(0, 0)).
+                                          build();
+        targetCharacter = new ConcreteCharacter.ConcreteBuilder().
+                                                setHealth(50).
+                                                setPosition(new Point(1, 1)).
+                                                build();
     }
 
     @Test
