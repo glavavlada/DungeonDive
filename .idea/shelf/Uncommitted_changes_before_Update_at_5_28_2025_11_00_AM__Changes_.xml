@@ -1,0 +1,19 @@
+<changelist name="Uncommitted_changes_before_Update_at_5_28_2025_11_00_AM_[Changes]" date="1748455301133" recycled="true" deleted="true">
+  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_5_28_2025_11_00_AM_[Changes]/shelved.patch" />
+  <option name="DESCRIPTION" value="Uncommitted changes before Update at 5/28/2025 11:00 AM [Changes]" />
+  <binary>
+    <option name="BEFORE_PATH" value="out/production/DungeonDive/main/View/screen/CombatScreen$1.class" />
+    <option name="AFTER_PATH" value="out/production/DungeonDive/main/View/screen/CombatScreen$1.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_5_28_2025_11_00_AM_[Changes]/CombatScreen$1.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="out/production/DungeonDive/main/View/GameUI.class" />
+    <option name="AFTER_PATH" value="out/production/DungeonDive/main/View/GameUI.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_5_28_2025_11_00_AM_[Changes]/GameUI.class" />
+  </binary>
+  <binary>
+    <option name="BEFORE_PATH" value="out/production/DungeonDive/main/View/screen/CombatScreen.class" />
+    <option name="AFTER_PATH" value="out/production/DungeonDive/main/View/screen/CombatScreen.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_5_28_2025_11_00_AM_[Changes]/CombatScreen.class" />
+  </binary>
+</changelist>
