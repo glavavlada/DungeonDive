@@ -1,7 +1,9 @@
 package test.Model.character;
 
 import main.Model.character.Hero;
+import main.Model.character.HeroFactory;
 import main.Model.character.Monster;
+import main.Model.character.MonsterFactory;
 import main.Model.element.HealthPotion;
 import main.Model.element.Item;
 import main.Model.util.HeroType;
@@ -22,12 +24,18 @@ class MonsterTest {
     private Monster regularMonster;
     private Monster eliteMonster;
     private Hero dummyHero; // For attack target
+    private HeroFactory myHeroFactory;
+    private MonsterFactory myMonsterFactory;
+
+    // TODO: Add tests for stuff in factories, builders, etc.
 
     @BeforeEach
     void setUp() {
-        regularMonster = new Monster("Goblin", MonsterType.GOBLIN, false, 30, new Point(1, 1));
-        eliteMonster = new Monster("Orc Captain", MonsterType.ORC, true, 80, new Point(2, 2));
-        dummyHero = new Hero("Dummy", HeroType.WARRIOR, new Point(0,0));
+        myHeroFactory = new HeroFactory();
+        myMonsterFactory = new MonsterFactory();
+        regularMonster = myMonsterFactory.getMonster(MonsterType.GOBLIN, new Point(1,1));
+        eliteMonster = myMonsterFactory.getMonster(MonsterType.ORC, new Point(2, 2));
+        dummyHero = myHeroFactory.getHero("Dummy", HeroType.WARRIOR, new Point(0, 0));
     }
 
     @Test

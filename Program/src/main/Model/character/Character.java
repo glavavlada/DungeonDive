@@ -4,12 +4,30 @@ import main.Model.util.Point;
 import main.Model.util.Direction;
 
 public abstract class Character {
+
+    private final String myName;
+    private final int myMaxHealth;
     private int myHealth;
     private Point myPosition;
+    private final int myBaseAttackDamage;
+    private final int mySpecialAttackDamage;
+    private final String mySpecialAttackName;
+    private final double myCritChance;
+    private final double myCritMultiplier;
+    private final String myDescription;
 
-    public Character(final int theHealth, final Point thePosition) {
-        myHealth = theHealth;
-        myPosition = thePosition;
+
+    public Character(final CharacterBuilder theCharacterBuilder) {
+        myName = theCharacterBuilder.myName;
+        myMaxHealth = theCharacterBuilder.myMaxHealth;
+        myHealth = theCharacterBuilder.myHealth;
+        myPosition = theCharacterBuilder.myPosition;
+        myBaseAttackDamage = theCharacterBuilder.myBaseAttackDamage;
+        mySpecialAttackDamage = theCharacterBuilder.mySpecialAttackDamage;
+        mySpecialAttackName = theCharacterBuilder.mySpecialAttackName;
+        myCritChance = theCharacterBuilder.myCritChance;
+        myCritMultiplier = theCharacterBuilder.myCritMultiplier;
+        myDescription = theCharacterBuilder.myDescription;
     }
 
     public abstract int attack(final Character theTarget);
@@ -39,8 +57,16 @@ public abstract class Character {
         }
     }
 
+    public String getName() {
+        return myName;
+    }
+
     public int getHealth() {
         return myHealth;
+    }
+
+    public int getMaxHealth() {
+        return myMaxHealth;
     }
 
     public Point getPosition() {
@@ -48,10 +74,85 @@ public abstract class Character {
     }
 
     public void setHealth(final int theHealth) {
-        myHealth = theHealth;
+        myHealth = Math.min(theHealth, myMaxHealth);
     }
 
     public void setPosition(final Point thePosition) {
         myPosition = thePosition;
     }
+
+    public static abstract class CharacterBuilder<BuilderType, Type> {
+
+        private String myName;
+        private int myMaxHealth;
+        private int myHealth;
+        private Point myPosition;
+        private int myBaseAttackDamage;
+        private int mySpecialAttackDamage;
+        private String mySpecialAttackName;
+        private double myCritChance;
+        private double myCritMultiplier;
+        private String myDescription;
+
+        // TODO: do null checks and other error checking for builder methods
+
+        public BuilderType setName(final String theName) {
+            myName = theName;
+            return self();
+        }
+
+        public BuilderType setHealth(final int theHealth) {
+            if (theHealth > 0) {
+                myMaxHealth = theHealth;
+                myHealth = theHealth;
+                return self();
+            } else {
+                throw new IllegalArgumentException("Health cannot be zero or less" +
+                                                   " Character Builder setHealth()");
+            }
+        }
+
+        public BuilderType setPosition(final Point thePosition) {
+            myPosition = thePosition;
+            return self();
+        }
+
+        public BuilderType setBaseAttackDamage(final int theBaseAttackDamage) {
+            myBaseAttackDamage = theBaseAttackDamage;
+            return self();
+        }
+
+        public BuilderType setSpecialAttackDamage(final int theSpecialAttackDamage) {
+            mySpecialAttackDamage = theSpecialAttackDamage;
+            return self();
+        }
+
+        public BuilderType setSpecialAttackName(final String theSpecialAttackName) {
+            mySpecialAttackName = theSpecialAttackName;
+            return self();
+        }
+
+        public BuilderType setCritChance(final double theCritChance) {
+            myCritChance = theCritChance;
+            return self();
+        }
+
+        public BuilderType setCritMultiplier(final double theCritMultiplier) {
+            myCritMultiplier = theCritMultiplier;
+            return self();
+        }
+
+        public BuilderType setDescription(final String theDescription) {
+            myDescription = theDescription;
+            return self();
+        }
+
+        protected abstract BuilderType self();
+
+        public abstract Type build();
+
+    }
+
+
+
 }
