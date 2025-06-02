@@ -10,6 +10,9 @@ import main.Model.util.Direction;
 import main.Model.util.HeroType;
 import main.Model.util.Point;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 /**
  * Represents the player character.
  * This class extends Character and includes hero-specific attributes like inventory,
@@ -346,4 +349,96 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
             return new Hero(this);
         }
     }
+
+    // SERIALIZATION  METHODS //
+
+    /**
+     * Serializes hero to JSON format for saving.
+     * Converts hero's state including personal data, stats, inventory,
+     * position, and progress into JSON string that can be stored in database
+     * inventory items are serialized by name and will need to be recreated during loading
+     *
+     * @return JSON string representation of hero's state, or null if serialization fails
+     */
+    public String toJson() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            HeroSaveData saveData = new HeroSaveData();
+            saveData.name = getName();
+            saveData.heroType = myHeroType.name();
+            saveData.health = getHealth();
+            saveData.maxHealth = getMaxHealth();
+            saveData.gold = myGold;
+            saveData.pillarsActivated = myPillarsActivated;
+            saveData.positionX = getPosition().getX();
+            saveData.positionY = getPosition().getY();
+            saveData.pixelX = myPixelX;
+            saveData.pixelY = myPixelY;
+
+            //serialize inventory
+            saveData.inventoryItems = new ArrayList<>();
+            for (Item item : myInventory) {
+                saveData.inventoryItems.add(item.getName());
+            }
+
+            return mapper.writeValueAsString(saveData);
+        } catch (JsonProcessingException e) {
+            System.err.println("Error serializing hero: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Deserializes a hero from JSON format
+     * Creates a new Hero instance from saved JSON data, restoring all hero state
+     * including name, type, health, position, gold, pillar progress, and inventory
+     *
+     * @param json JSON string containing serialized hero data
+     * @return new Hero instance restored from JSON data, or null if deserialization fails
+     */
+    public static Hero fromJson(String json) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            HeroSaveData saveData = mapper.readValue(json, HeroSaveData.class);
+
+            HeroType heroType = HeroType.valueOf(saveData.heroType);
+            Hero hero = new HeroBuilder()
+                    .setName(saveData.name)
+                    .setHeroType(heroType)
+                    .setHealth(saveData.health)
+                    .setPosition(new Point(saveData.positionX, saveData.positionY))
+                    .build();
+
+            hero.myGold = saveData.gold;
+            hero.myPillarsActivated = saveData.pillarsActivated;
+            hero.myPixelX = saveData.pixelX;
+            hero.myPixelY = saveData.pixelY;
+
+            // Restore inventory (you'll need to implement item recreation)
+            for (String itemName : saveData.inventoryItems) {
+                // hero.addItem(ItemFactory.createItem(itemName));
+            }
+
+            return hero;
+        } catch (Exception e) {
+            System.err.println("Error deserializing hero: " + e.getMessage());
+            return null;
+        }
+    }
+
+    // inner class for save data
+    private static class HeroSaveData {
+        public String name;
+        public String heroType;
+        public int health;
+        public int maxHealth;
+        public int gold;
+        public int pillarsActivated;
+        public int positionX;
+        public int positionY;
+        public double pixelX;
+        public double pixelY;
+        public List<String> inventoryItems;
+    }
+
 }

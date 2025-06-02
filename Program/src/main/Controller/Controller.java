@@ -177,7 +177,10 @@ public class Controller {
         myInputController = new InputController(myGameController, myStateController);
 
         System.out.println("Game controllers initialized.");
-        theUI.setInputController(myInputController);
+
+        if (theUI != null) {
+            theUI.setInputController(myInputController);
+        }
 
         // For testing - remove later
         // myGameController.printStatus();
@@ -195,4 +198,14 @@ public class Controller {
     public GameController getGameController() {
         return myGameController;
     }
+
+    /**
+     * public method to initialize game controllers for a loaded game
+     * This is called when loading a game from the SavesScreen.
+     */
+    public void initializeGameControllersForLoadedGame(final GameUI theUI) {
+        initializeGameControllers(theUI);
+    }
+
+
 }

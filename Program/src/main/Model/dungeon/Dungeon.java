@@ -9,8 +9,10 @@ import main.Model.util.PillarType;
 import main.Model.util.Point;
 import main.Model.util.RoomType;
 
-import java.sql.SQLException;
 import java.util.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * Represents the entire dungeon, composed of multiple rooms.
@@ -320,4 +322,165 @@ public class Dungeon {
         }
         return sb.toString();
     }
+
+    /**
+     * serializes dungeon to JSON format for saving
+     * Converts entire dungeon state including dimensions, pillar status,
+     * spawn points, and all room data into a JSON string that can be stored in database
+     *
+     * @return JSON string representation of dungeon, or null if serialization fails
+     */
+    public String toJson() {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            DungeonSaveData saveData = new DungeonSaveData();
+            saveData.width = myWidth;
+            saveData.height = myHeight;
+            saveData.difficulty = myDifficulty;
+            saveData.totalPillars = myTotalPillars;
+            saveData.activatedPillars = myActivatedPillars;
+            saveData.bossSpawned = myBossSpawned;
+            saveData.heroSpawnX = myHeroSpawnPoint.getX();
+            saveData.heroSpawnY = myHeroSpawnPoint.getY();
+            saveData.exitX = myExitPoint.getX();
+            saveData.exitY = myExitPoint.getY();
+
+            //serialize room data
+            saveData.roomData = new RoomSaveData[myHeight][myWidth];
+            for (int y = 0; y < myHeight; y++) {
+                for (int x = 0; x < myWidth; x++) {
+                    Room room = myRooms[y][x];
+                    RoomSaveData roomSave = new RoomSaveData();
+                    roomSave.x = x;
+                    roomSave.y = y;
+                    roomSave.roomType = room.getRoomType().name();
+                    roomSave.visited = room.isVisited();
+                    roomSave.hasNorthDoor = room.hasNorthDoor();
+                    roomSave.hasEastDoor = room.hasEastDoor();
+                    roomSave.hasSouthDoor = room.hasSouthDoor();
+                    roomSave.hasWestDoor = room.hasWestDoor();
+
+                    //save pillar data if present
+                    if (room.hasPillar()) {
+                        roomSave.pillarType = room.getPillar().getType().name();
+                        roomSave.pillarActivated = room.getPillar().isActivated();
+                    }
+
+                    //save trap data if present
+                    if (room.hasTrap()) {
+                        roomSave.trapName = room.getTrap().getName();
+                        roomSave.trapDamage = room.getTrap().getDamage();
+                        roomSave.trapSprung = room.getTrap().isSprung();
+                    }
+
+                    saveData.roomData[y][x] = roomSave;
+                }
+            }
+
+            return mapper.writeValueAsString(saveData);
+        } catch (JsonProcessingException e) {
+            System.err.println("Error serializing dungeon: " + e.getMessage());
+            return null;
+        }
+    }
+
+
+    /**
+     * deserializes a dungeon from JSON format
+     * create new Dungeon instance from saved JSON data, restoring all dungeon state
+     * including room layout, doors, pillars, traps, and other dungeon properties
+     *
+     * @param json JSON string containing serialized dungeon data
+     * @return A new Dungeon instance restored from the JSON data, or null if deserialization fails
+     */
+    public static Dungeon fromJson(String json) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            DungeonSaveData saveData = mapper.readValue(json, DungeonSaveData.class);
+
+            //create new dungeon with saved dimensions and difficulty
+            Dungeon dungeon = new Dungeon(saveData.width, saveData.height, saveData.difficulty);
+
+            //restore dungeon state
+            dungeon.myTotalPillars = saveData.totalPillars;
+            dungeon.myActivatedPillars = saveData.activatedPillars;
+            dungeon.myBossSpawned = saveData.bossSpawned;
+            dungeon.myHeroSpawnPoint = new Point(saveData.heroSpawnX, saveData.heroSpawnY);
+            dungeon.myExitPoint = new Point(saveData.exitX, saveData.exitY);
+
+            //restore room data
+            for (int y = 0; y < saveData.height; y++) {
+                for (int x = 0; x < saveData.width; x++) {
+                    RoomSaveData roomSave = saveData.roomData[y][x];
+                    Room room = dungeon.myRooms[y][x];
+
+                    room.setRoomType(RoomType.valueOf(roomSave.roomType));
+                    room.setVisited(roomSave.visited);
+                    room.setNorthDoor(roomSave.hasNorthDoor);
+                    room.setEastDoor(roomSave.hasEastDoor);
+                    room.setSouthDoor(roomSave.hasSouthDoor);
+                    room.setWestDoor(roomSave.hasWestDoor);
+
+                    //restore pillar if present
+                    if (roomSave.pillarType != null) {
+                        PillarType pillarType = PillarType.valueOf(roomSave.pillarType);
+                        Pillar pillar = new Pillar(pillarType);
+                        if (roomSave.pillarActivated) {
+                            //implement a way to set pillar as activated
+                            // pillar.setActivated(true);
+                        }
+                        room.setPillar(pillar);
+                    }
+
+                    //restore trap if present
+                    if (roomSave.trapName != null) {
+                        Trap trap = new Trap(roomSave.trapName, "Restored trap", roomSave.trapDamage);
+                        if (roomSave.trapSprung) {
+                            //implement a way to set trap as sprung
+                            // trap.setSprung(true);
+                        }
+                        room.setTrap(trap);
+                    }
+                }
+            }
+
+            return dungeon;
+        } catch (Exception e) {
+            System.err.println("Error deserializing dungeon: " + e.getMessage());
+            return null;
+        }
+    }
+
+    //inner classes for save data
+    private static class DungeonSaveData {
+        public int width;
+        public int height;
+        public String difficulty;
+        public int totalPillars;
+        public int activatedPillars;
+        public boolean bossSpawned;
+        public int heroSpawnX;
+        public int heroSpawnY;
+        public int exitX;
+        public int exitY;
+        public RoomSaveData[][] roomData;
+    }
+
+    private static class RoomSaveData {
+        public int x;
+        public int y;
+        public String roomType;
+        public boolean visited;
+        public boolean hasNorthDoor;
+        public boolean hasEastDoor;
+        public boolean hasSouthDoor;
+        public boolean hasWestDoor;
+        public String pillarType;
+        public boolean pillarActivated;
+        public String trapName;
+        public int trapDamage;
+        public boolean trapSprung;
+    }
+
+
 }

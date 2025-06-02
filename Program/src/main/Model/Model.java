@@ -103,4 +103,16 @@ public class Model {
         // and then potentially call a method to update the UI.
         return false;
     }
+
+    // --- Setters ---
+    public void setPlayer(final Hero thePlayer) {
+        this.myPlayer = thePlayer;
+        System.out.println("Player set to: " + (thePlayer != null ? thePlayer.getName() : "null"));
+    }
+
+    public void setDungeon(final Dungeon theDungeon) {
+        this.myDungeon = theDungeon;
+        System.out.println("Dungeon set: " + (theDungeon != null ? "loaded" : "null"));
+    }
+
 }

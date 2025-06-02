@@ -211,7 +211,22 @@ public class Database {
             System.out.println("Table created/verified: pillars");
 
             System.out.println("All database tables created/verified successfully.");
+
+            //save game table
+            System.out.println("Attempting to create table: save_games");
+            statement.execute(
+                    "CREATE TABLE IF NOT EXISTS save_games (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "save_name TEXT NOT NULL UNIQUE," +
+                            "save_date TEXT NOT NULL," +
+                            "player_data TEXT NOT NULL," + //JSON serialized player data
+                            "dungeon_data TEXT NOT NULL," + //JSON serialized dungeon data
+                            "game_state TEXT NOT NULL" + //current game state info
+                            ");"
+            );
+            System.out.println("Table created/verified: save_games");
         }
+
     }
 
     /**
@@ -321,4 +336,56 @@ public class Database {
             System.err.println("Error closing database connection: " + e.getMessage());
         }
     }
+
+    public boolean saveGameData(String saveName, String playerData, String dungeonData, String gameState) {
+        String sql = "INSERT OR REPLACE INTO save_games (save_name, save_date, player_data, dungeon_data, game_state) VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = myConnection.prepareStatement(sql)) {
+            pstmt.setString(1, saveName);
+            pstmt.setString(2, java.time.LocalDateTime.now().toString());
+            pstmt.setString(3, playerData);
+            pstmt.setString(4, dungeonData);
+            pstmt.setString(5, gameState);
+            pstmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("Error saving game: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public ResultSet loadGameData(String saveName) {
+        String sql = "SELECT * FROM save_games WHERE save_name = ?";
+        try {
+            PreparedStatement pstmt = myConnection.prepareStatement(sql);
+            pstmt.setString(1, saveName);
+            return pstmt.executeQuery();
+        } catch (SQLException e) {
+            System.err.println("Error loading game: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public ResultSet getAllSaveGames() {
+        String sql = "SELECT save_name, save_date FROM save_games ORDER BY save_date DESC";
+        try {
+            Statement stmt = myConnection.createStatement();
+            return stmt.executeQuery(sql);
+        } catch (SQLException e) {
+            System.err.println("Error getting save games: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public boolean deleteSaveGame(String saveName) {
+        String sql = "DELETE FROM save_games WHERE save_name = ?";
+        try (PreparedStatement pstmt = myConnection.prepareStatement(sql)) {
+            pstmt.setString(1, saveName);
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Error deleting save game: " + e.getMessage());
+            return false;
+        }
+    }
+
 }

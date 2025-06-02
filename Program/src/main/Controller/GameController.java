@@ -1,8 +1,10 @@
 package main.Controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import main.Model.Model;
 import main.Model.character.Hero;
 import main.Model.character.Monster;
+import main.Model.dungeon.Dungeon;
 import main.Model.dungeon.Room;
 import main.Model.element.Item;
 import main.Model.element.Pillar;
@@ -12,6 +14,7 @@ import main.Controller.StateController.GameState;
 
 import main.Model.util.Point;
 
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -675,15 +678,38 @@ public class GameController {
      *saves the current game state
      */
     public void saveGame() {
-        // Delegate to model to save game data
-        // Assuming saveGame method expects save slot or file name
-        boolean saved = myGameModel.saveGame("save1");
+        try {
+            // Serialize player data
+            String playerData = myGameModel.getPlayer().toJson();
 
-        if (saved) {
-            System.out.println("Game saved successfully");
-            myGameUI.showSaveSuccessMessage();
-        } else {
-            System.out.println("Failed to save game");
+            // Serialize dungeon data (you'll need to implement this in Dungeon class)
+            String dungeonData = myGameModel.getDungeon().toJson();
+
+            // Create game state info
+            GameStateData stateData = new GameStateData();
+            stateData.currentState = myStateController.getCurrentState().name();
+            stateData.saveTimestamp = System.currentTimeMillis();
+
+            ObjectMapper mapper = new ObjectMapper();
+            String gameStateJson = mapper.writeValueAsString(stateData);
+
+            // Save to database
+            boolean saved = myGameModel.getDatabase().saveGameData(
+                    "save1", // You can make this dynamic
+                    playerData,
+                    dungeonData,
+                    gameStateJson
+            );
+
+            if (saved) {
+                System.out.println("Game saved successfully");
+                myGameUI.showSaveSuccessMessage();
+            } else {
+                System.out.println("Failed to save game");
+                myGameUI.showSaveFailureMessage();
+            }
+        } catch (Exception e) {
+            System.err.println("Error saving game: " + e.getMessage());
             myGameUI.showSaveFailureMessage();
         }
     }
@@ -696,32 +722,46 @@ public class GameController {
      * @return True if game was loaded successfully
      */
     public boolean loadGame(final String theSaveId) {
-        boolean loaded = myGameModel.loadGame(theSaveId);
+        try {
+            ResultSet rs = myGameModel.getDatabase().loadGameData(theSaveId);
 
-        if (loaded) {
-            // Update state based on loaded game
-            Room currentRoom = myGameModel.getDungeon().getRoom(myGameModel.getPlayer().getPosition());
+            if (rs != null && rs.next()) {
+                String playerData = rs.getString("player_data");
+                String dungeonData = rs.getString("dungeon_data");
+                String gameStateData = rs.getString("game_state");
 
-            if (!currentRoom.getMonsters().isEmpty()) {
-                myStateController.changeState(GameState.COMBAT);
-                myGameUI.showCombatScreen(currentRoom.getMonsters());
-            } else {
-                myStateController.changeState(GameState.EXPLORING);
+                // Restore player
+                Hero loadedPlayer = Hero.fromJson(playerData);
+                myGameModel.setPlayer(loadedPlayer);
+
+                // Restore dungeon (implement Dungeon.fromJson())
+                // Dungeon loadedDungeon = Dungeon.fromJson(dungeonData);
+                // myGameModel.setDungeon(loadedDungeon);
+
+                // Restore game state
+                ObjectMapper mapper = new ObjectMapper();
+                GameStateData stateData = mapper.readValue(gameStateData, GameStateData.class);
+                myStateController.changeState(GameState.valueOf(stateData.currentState));
+
+                // Update UI
+                myGameUI.updatePlayerStats();
+                myGameUI.updateInventory();
+
+                System.out.println("Game loaded successfully");
+                return true;
             }
-
-            // Update UI with loaded game data
-            myGameUI.updatePlayerStats();
-            myGameUI.updateInventory();
-            myGameUI.updateRoomDescription(currentRoom);
-            myGameUI.updatePillarCollection();
-
-            System.out.println("Game loaded successfully");
-            return true;
-        } else {
-            System.out.println("Failed to load game");
-            return false;
+        } catch (Exception e) {
+            System.err.println("Error loading game: " + e.getMessage());
         }
+
+        return false;
     }
+
+    private static class GameStateData {
+        public String currentState;
+        public long saveTimestamp;
+    }
+
 
 
     /**
@@ -838,6 +878,74 @@ public class GameController {
     public GameUI getGameUI() {
         return myGameUI;
     }
+
+    /**
+     * Loads a game from database data (called from SavesScreen)
+     */
+    public boolean loadGameFromSaveData(String playerData, String dungeonData, String gameStateData) {
+        try {
+            // Restore player
+            Hero loadedPlayer = Hero.fromJson(playerData);
+            myGameModel.setPlayer(loadedPlayer);
+
+            // Restore dungeon
+            Dungeon loadedDungeon = Dungeon.fromJson(dungeonData);
+            myGameModel.setDungeon(loadedDungeon);
+
+            // Restore game state
+            ObjectMapper mapper = new ObjectMapper();
+            GameStateData stateData = mapper.readValue(gameStateData, GameStateData.class);
+            myStateController.changeState(GameState.valueOf(stateData.currentState));
+
+            System.out.println("Game loaded successfully from save data");
+            return true;
+        } catch (Exception e) {
+            System.err.println("Error loading game from save data: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Saves the game with a custom name
+     */
+    public void saveGameWithName(String saveName) {
+        try {
+            //serialize player data
+            String playerData = myGameModel.getPlayer().toJson();
+
+            //serialize dungeon data
+            String dungeonData = myGameModel.getDungeon().toJson();
+
+            //create game state info
+            GameStateData stateData = new GameStateData();
+            stateData.currentState = myStateController.getCurrentState().name();
+            stateData.saveTimestamp = System.currentTimeMillis();
+
+            ObjectMapper mapper = new ObjectMapper();
+            String gameStateJson = mapper.writeValueAsString(stateData);
+
+            //save to database with custom name
+            boolean saved = myGameModel.getDatabase().saveGameData(
+                    saveName,
+                    playerData,
+                    dungeonData,
+                    gameStateJson
+            );
+
+            if (saved) {
+                System.out.println("Game saved successfully as: " + saveName);
+                myGameUI.showSaveSuccessMessage();
+            } else {
+                System.out.println("Failed to save game: " + saveName);
+                myGameUI.showSaveFailureMessage();
+            }
+        } catch (Exception e) {
+            System.err.println("Error saving game: " + e.getMessage());
+            myGameUI.showSaveFailureMessage();
+        }
+    }
+
 }
 
 
