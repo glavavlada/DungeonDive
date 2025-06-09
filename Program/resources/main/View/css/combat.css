@@ -12,6 +12,17 @@
     -fx-background-repeat: no-repeat;
 }
 
+.label {
+    -fx-text-background-color: transparent;
+    -fx-text-fill: #333333;
+}
+
+.text {
+    -fx-text-background-color: transparent;
+    -fx-fill: #333333;
+}
+
+
 /* ============================================================================ */
 /* BOTTOM INTERFACE (The Main Text Box)                                         */
 /* ============================================================================ */
@@ -118,12 +129,14 @@
     -fx-font-size: 16px;
     -fx-font-weight: bold;
     -fx-fill: #111111;
+    -fx-text-background-color: transparent;
 }
 
 .combat-subtitle {
     -fx-font-size: 12px;
     -fx-font-style: italic;
     -fx-fill: #333333;
+    -fx-text-background-color: transparent;
 }
 
 /* Health Bar Styling */

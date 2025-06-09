@@ -3,6 +3,8 @@ import main.Model.Database;
 import main.View.util.UIConstants;
 import javafx.application.Application;
 import javafx.stage.Stage;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * Main class where the program is run.
@@ -14,6 +16,27 @@ import javafx.stage.Stage;
  * @version 5/13/2025
  */
 public class Main extends Application {
+
+    // Static block runs before JavaFX initialization to suppress CSS warnings
+    static {
+        try {
+            // Suppress JavaFX CSS warnings that occur during startup
+            Logger cssLogger = Logger.getLogger("javafx.scene.CssStyleHelper");
+            cssLogger.setLevel(Level.SEVERE);
+            cssLogger.setUseParentHandlers(false); // Prevent propagation to parent loggers
+
+            // Also suppress related JavaFX CSS loggers
+            Logger.getLogger("javafx.css").setLevel(Level.SEVERE);
+            Logger.getLogger("com.sun.javafx.css").setLevel(Level.SEVERE);
+
+            // Keep other JavaFX logging at reasonable level
+            Logger.getLogger("javafx").setLevel(Level.WARNING);
+
+        } catch (Exception e) {
+            System.err.println("Failed to configure CSS logging: " + e.getMessage());
+        }
+    }
+
     /**
      * main method where the program is run.
      *

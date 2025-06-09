@@ -53,140 +53,199 @@ public class GameController {
         System.out.println("GameController initialized with model, UI, and state controller");
     }
 
-    public void startPlayerMovement(final Direction theDirection) {
+//    public void startPlayerMovement(final Direction theDirection) {
+//        if (!myStateController.isInState(GameState.EXPLORING)) {
+//            return;
+//        }
+//
+//        Hero player = myGameModel.getPlayer();
+//        player.startMoving(theDirection);
+//    }
+//
+//    public void stopPlayerMovement() {
+//        Hero player = myGameModel.getPlayer();
+//        if (player != null) {
+//            player.stopMoving();
+//        }
+//    }
+
+    /**
+     * Starts continuous movement north.
+     */
+    public void startPlayerMovementNorth() {
+        if (myStateController.isInState(GameState.EXPLORING)) {
+            myGameModel.getPlayer().startMovingNorth();
+        }
+    }
+
+    public void startPlayerMovementSouth() {
+        if (myStateController.isInState(GameState.EXPLORING)) {
+            myGameModel.getPlayer().startMovingSouth();
+        }
+    }
+
+    public void startPlayerMovementEast() {
+        if (myStateController.isInState(GameState.EXPLORING)) {
+            myGameModel.getPlayer().startMovingEast();
+        }
+    }
+
+    public void startPlayerMovementWest() {
+        if (myStateController.isInState(GameState.EXPLORING)) {
+            myGameModel.getPlayer().startMovingWest();
+        }
+    }
+
+    public void stopPlayerMovementNorth() {
+        Hero player = myGameModel.getPlayer();
+        if (player != null) {
+            player.stopMovingNorth();
+        }
+    }
+
+    public void stopPlayerMovementSouth() {
+        Hero player = myGameModel.getPlayer();
+        if (player != null) {
+            player.stopMovingSouth();
+        }
+    }
+
+    public void stopPlayerMovementEast() {
+        Hero player = myGameModel.getPlayer();
+        if (player != null) {
+            player.stopMovingEast();
+        }
+    }
+
+    public void stopPlayerMovementWest() {
+        Hero player = myGameModel.getPlayer();
+        if (player != null) {
+            player.stopMovingWest();
+        }
+    }
+
+    /**
+     * Updates existing room transition methods to only handle room changes,
+     * not pixel movement (that's handled in Hero.updatePixelPosition()).
+     */
+    public void movePlayerNorth() {
         if (!myStateController.isInState(GameState.EXPLORING)) {
             return;
         }
 
         Hero player = myGameModel.getPlayer();
-        player.startMoving(theDirection);
-    }
-
-    public void stopPlayerMovement() {
-        Hero player = myGameModel.getPlayer();
-        if (player != null) {
-            player.stopMoving();
-        }
-    }
-
-    /**
-     * Moves the player north if possible.
-     */
-    public void movePlayerNorth() {
-        if (!myStateController.isInState(GameState.EXPLORING)) {
-            return; // Can only move during exploration
-        }
-
-        Hero player = myGameModel.getPlayer();
         Point currentPos = player.getPosition();
-        Room currentRoom = myGameModel.getDungeon().getRoom(currentPos);
+        Point newPos = new Point(currentPos.getX(), currentPos.getY() - 1);
 
-        // Check if there's a door to the north
-        if (currentRoom.hasNorthDoor()) {
-            // Move player to the north room
-            Point newPos = new Point(currentPos.getX(), currentPos.getY() - 1);
-            player.setPosition(newPos);
+        // Move player to the new room
+        player.setPosition(newPos);
 
-            // Enter the new room and handle room effects
-            Room newRoom = myGameModel.getDungeon().getRoom(newPos);
-            enterRoom(newRoom);
+        // Enter the new room and handle room effects
+        Room newRoom = myGameModel.getDungeon().getRoom(newPos);
+        enterRoom(newRoom);
 
-            // Update UI
-            myGameUI.updatePlayerPosition();
-            System.out.println("Player moved north to " + newPos);
-        } else {
-            System.out.println("Cannot move north - no door in that direction");
-        }
+        // Notify UI of room change
+        notifyRoomChanged();
 
+        System.out.println("Player moved north to " + newPos);
     }
 
-    /**
-     * Moves the player south if possible.
-     */
     public void movePlayerSouth() {
         if (!myStateController.isInState(GameState.EXPLORING)) {
-            return; // Can only move during exploration
+            return;
         }
 
         Hero player = myGameModel.getPlayer();
         Point currentPos = player.getPosition();
-        Room currentRoom = myGameModel.getDungeon().getRoom(currentPos);
+        Point newPos = new Point(currentPos.getX(), currentPos.getY() + 1);
 
-        // Check if there's a door to the south
-        if (currentRoom.hasSouthDoor()) {
-            // Move player to the south room
-            Point newPos = new Point(currentPos.getX(), currentPos.getY() + 1);
-            player.setPosition(newPos);
+        player.setPosition(newPos);
+        Room newRoom = myGameModel.getDungeon().getRoom(newPos);
+        enterRoom(newRoom);
+        notifyRoomChanged();
 
-            // Enter the new room and handle room effects
-            Room newRoom = myGameModel.getDungeon().getRoom(newPos);
-            enterRoom(newRoom);
-
-            // Update UI
-            myGameUI.updatePlayerPosition();
-            System.out.println("Player moved south to " + newPos);
-        } else {
-            System.out.println("Cannot move south - no door in that direction");
-        }
+        System.out.println("Player moved south to " + newPos);
     }
 
-    /**
-     * Moves the player east if possible.
-     */
     public void movePlayerEast() {
         if (!myStateController.isInState(GameState.EXPLORING)) {
-            return; // Can only move during exploration
+            return;
         }
 
         Hero player = myGameModel.getPlayer();
         Point currentPos = player.getPosition();
-        Room currentRoom = myGameModel.getDungeon().getRoom(currentPos);
+        Point newPos = new Point(currentPos.getX() + 1, currentPos.getY());
 
-        // Check if there's a door to the east
-        if (currentRoom.hasEastDoor()) {
-            // Move player to the east room
-            Point newPos = new Point(currentPos.getX()+1, currentPos.getY());
-            player.setPosition(newPos);
+        player.setPosition(newPos);
+        Room newRoom = myGameModel.getDungeon().getRoom(newPos);
+        enterRoom(newRoom);
+        notifyRoomChanged();
 
-            // Enter the new room and handle room effects
-            Room newRoom = myGameModel.getDungeon().getRoom(newPos);
-            enterRoom(newRoom);
+        System.out.println("Player moved east to " + newPos);
+    }
 
-            // Update UI
-            myGameUI.updatePlayerPosition();
-            System.out.println("Player moved east to " + newPos);
-        } else {
-            System.out.println("Cannot move east - no door in that direction");
+    public void movePlayerWest() {
+        if (!myStateController.isInState(GameState.EXPLORING)) {
+            return;
+        }
+
+        Hero player = myGameModel.getPlayer();
+        Point currentPos = player.getPosition();
+        Point newPos = new Point(currentPos.getX() - 1, currentPos.getY());
+
+        player.setPosition(newPos);
+        Room newRoom = myGameModel.getDungeon().getRoom(newPos);
+        enterRoom(newRoom);
+        notifyRoomChanged();
+
+        System.out.println("Player moved west to " + newPos);
+    }
+
+//    /**
+//     * Update the legacy startPlayerMovement method to work with new system.
+//     */
+//    public void startPlayerMovement(final Direction theDirection) {
+//        switch (theDirection) {
+//            case NORTH:
+//                startPlayerMovementNorth();
+//                break;
+//            case SOUTH:
+//                startPlayerMovementSouth();
+//                break;
+//            case EAST:
+//                startPlayerMovementEast();
+//                break;
+//            case WEST:
+//                startPlayerMovementWest();
+//                break;
+//        }
+//    }
+//
+//    /**
+//     * Update the legacy stopPlayerMovement method.
+//     */
+//    public void stopPlayerMovement() {
+//        Hero player = myGameModel.getPlayer();
+//        if (player != null) {
+//            player.stopAllMovement();
+//        }
+//    }
+
+    /**
+     * Notifies the UI that the player has moved to a new room.
+     */
+    private void notifyRoomChanged() {
+        if (myGameUI != null && myGameUI.getGameScreen() != null) {
+            myGameUI.getGameScreen().onRoomChanged();
         }
     }
 
     /**
-     * Moves the player west if possible.
+     * Adds a message to the game UI.
      */
-    public void movePlayerWest() {
-        if (!myStateController.isInState(GameState.EXPLORING)) {
-            return; // Can only move during exploration
-        }
-
-        Hero player = myGameModel.getPlayer();
-        Point currentPos = player.getPosition();
-        Room currentRoom = myGameModel.getDungeon().getRoom(currentPos);
-
-        // Check if there's a door to the west
-        if (currentRoom.hasWestDoor()) {
-            // Move player to the west room
-            Point newPos = new Point(currentPos.getX() - 1, currentPos.getY());
-            player.setPosition(newPos);
-
-            // Enter the new room and handle room effects
-            Room newRoom = myGameModel.getDungeon().getRoom(newPos);
-            enterRoom(newRoom);
-
-            // Update UI
-            myGameUI.updatePlayerPosition();
-            System.out.println("Player moved west to " + newPos);
-        } else {
-            System.out.println("Cannot move west - no door in that direction");
+    private void addGameMessage(String message) {
+        if (myGameUI != null && myGameUI.getGameScreen() != null) {
+            myGameUI.getGameScreen().addGameMessage(message);
         }
     }
 
@@ -763,6 +822,13 @@ public class GameController {
     }
 
 
+    /**
+     * Gets reference to the game model
+     * @return The Model instance
+     */
+    public Model getGameModel() {
+        return myGameModel;
+    }
 
     /**
      *gets current room description
