@@ -3,6 +3,7 @@ package main.Model.character;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import main.Model.element.Item;
 import main.Model.element.Pillar;
@@ -23,6 +24,7 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
     private final ArrayList<Item> myInventory;
     private int myPillarsActivated;
     private int myGold;
+    private int mySpecialMana = 2;
     // Replace the pillar collection counter with stat tracking
     private int myStrengthBonus = 0;
     private int myDefenseBonus = 0;
@@ -110,14 +112,21 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
 
         // TODO: Implement more complex damage calculation:
         // 1. Add weapon damage if applicable.
-        // 2. Check for critical hit based on myType.getCritChance()
-        //    If crit: damageDealt *= myType.getCritMultiplier();
-        // 3. Apply special attack logic if conditions are met.
-        //    (e.g., if a special attack is charged or randomly procs)
-        //    damageDealt += myType.getSpecialAttackDamage(); (This might be a separate action)
+
+
+        Random rand = new Random();
+        if (rand.nextDouble(1) < getCritChance()) {
+            damageDealt *= getCritMultiplier();
+            System.out.println("Crit landed");
+        }
+
 
         System.out.println(getName() + " attacks " + ((theTarget instanceof Monster) ? ((Monster)theTarget).getName() : "target") + " for " + damageDealt + " damage.");
         theTarget.takeDamage(damageDealt);
+        if (!theTarget.isAlive() && theTarget instanceof Monster) {
+            addGold(((Monster) theTarget).getGoldReward());
+            addMana();
+        }
         return damageDealt;
     }
 
@@ -174,25 +183,6 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
         return myGold;
     }
 
-//    /**
-//     * Sets the hero's current health, ensuring it doesn't exceed maxHealth or go below 0.
-//     * Overrides Character.setHealth to incorporate maxHealth.
-//     * @param theHealth The new health value.
-//     */
-//    @Override
-//    public void setHealth(final int theHealth) {
-//        super.setHealth(Math.min(theHealth, getMaxHealth()));
-//    }
-
-
-//    public void setMaxHealth(final int theMaxHealth) {
-//        if (theMaxHealth > 0) {
-//            this.myMaxHealth = theMaxHealth;
-//            if (getHealth() > this.myMaxHealth) { // Ensure current health doesn't exceed new max
-//                setHealth(this.myMaxHealth);
-//            }
-//        }
-//    }
 
     public void setPillarsActivated(final int thePillarsActivated) {
         this.myPillarsActivated = Math.max(0, thePillarsActivated);
@@ -275,11 +265,19 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
      * @return The amount of damage dealt
      */
     public int specialAttack() {
+
         int baseDamage = myHeroType.getSpecialAttackDamage();
         int bonusDamage = myStrengthBonus + myAgilityBonus;
         int totalDamage = baseDamage + bonusDamage;
 
+        Random rand = new Random();
+        if (rand.nextDouble(1) < getCritChance()) {
+            totalDamage *= getCritMultiplier();
+            System.out.println("Crit landed");
+        }
+
         System.out.println(getName() + " performs a special attack!");
+        mySpecialMana -= 2;
         return totalDamage;
     }
 
@@ -291,12 +289,17 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
      * @return true if hero can use special attack
      */
     public boolean canUseSpecialAttack() {
-        // For now, always allow special attacks
-        // You can modify this later to add limitations like:
-        // - Once per combat
-        // - Every other turn
-        // - Based on health percentage
-        return true;
+        boolean canUse = mySpecialMana >= 2;
+        return canUse;
+    }
+
+    public void addMana() {
+        if (mySpecialMana < 4) {
+            mySpecialMana++;
+            System.out.println("Mana gained: " + mySpecialMana + "/4");
+        } else {
+            System.out.println("Mana at max: " + mySpecialMana + "/4");
+        }
     }
 
 

@@ -534,6 +534,7 @@ public class GameController {
         if (target.getHealth() <= 0) {
             System.out.println("Defeated " + target.getName() + "!");
             currentRoom.removeMonster(target);
+            player.addGold(target.getGoldReward());
 
             // Check if all monsters are defeated
             if (currentRoom.getMonsters().isEmpty()) {

@@ -81,6 +81,22 @@ public abstract class Character {
         myPosition = thePosition;
     }
 
+    public int getBaseAttackDamage() {
+        return myBaseAttackDamage;
+    }
+
+    public String getSpecialAttackName() {
+        return mySpecialAttackName;
+    }
+
+    public double getCritChance() {
+        return myCritChance;
+    }
+
+    public double getCritMultiplier() {
+        return myCritMultiplier;
+    }
+
     public static abstract class CharacterBuilder<BuilderType, Type> {
 
         private String myName;

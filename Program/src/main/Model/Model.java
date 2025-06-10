@@ -45,7 +45,8 @@ public class Model {
         Point startPosition = new Point(0, 0); // Default, will be overridden by dungeon spawn
         this.myPlayer = myHeroFactory.getHero(theHeroName, theHeroType, startPosition);
 
-        this.myDungeon = new Dungeon(DEFAULT_DUNGEON_WIDTH, DEFAULT_DUNGEON_HEIGHT, DEFAULT_DIFFICULTY);
+        //this.myDungeon = new Dungeon(DEFAULT_DUNGEON_WIDTH, DEFAULT_DUNGEON_HEIGHT, DEFAULT_DIFFICULTY);
+        this.myDungeon = new Dungeon(5, 5, DEFAULT_DIFFICULTY);
 
         if (this.myDungeon.getHeroSpawnPoint() != null) {
             this.myPlayer.setPosition(this.myDungeon.getHeroSpawnPoint());

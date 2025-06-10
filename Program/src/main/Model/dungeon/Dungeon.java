@@ -134,7 +134,7 @@ public class Dungeon {
                 if (monsterCount > 0 && random.nextBoolean()) { // Alternate placing monsters/traps
                     room.setRoomType(RoomType.MONSTER);
                     // Add an actual monster (using constructor like in spawnBoss)
-                    room.addMonster(myMonsterFactory.getMonster(MonsterType.GOBLIN, spot));
+                    addMonsterToRoom(room, spot);
                     monsterCount--;
                 } else if (trapCount > 0) {
                     room.setTrap(new Trap("Floor Spikes", "Sharp spikes emerge from the floor.", 5 + random.nextInt(10)));
@@ -143,6 +143,8 @@ public class Dungeon {
                 // Could add Treasure rooms here too
             }
         }
+
+        // TODO: place health potions make other items give monsters items
 
         System.out.println("Randomized Dungeon generated. Pillars: " + myTotalPillars);
     }
@@ -449,6 +451,24 @@ public class Dungeon {
             System.err.println("Error deserializing dungeon: " + e.getMessage());
             return null;
         }
+    }
+
+    private void addMonsterToRoom(Room theRoom, Point theSpot) {
+      Random rand = new Random();
+      double percentChance = rand.nextDouble(1);
+      if (percentChance < .3) {
+          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.GOBLIN, theSpot));
+      } else if (percentChance < .5) {
+          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.SKELETON, theSpot));
+      } else if (percentChance < .7) {
+          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.SLIME, theSpot));
+      } else if (percentChance < .8) {
+          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.ORC, theSpot));
+      } else if (percentChance < .9) {
+          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.BIG_SLIME, theSpot));
+      } else {
+          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.WIZARD, theSpot));
+      }
     }
 
     //inner classes for save data

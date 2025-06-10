@@ -69,6 +69,7 @@ public class MonsterFactory {
                                setSpecialAttackName(theRS.getString("special_attack_name")).
                                setCritChance(theRS.getDouble("crit_chance")).
                                setCritMultiplier(theRS.getDouble("crit_multiplier")).
+                               setGoldReward(theRS.getInt("gold_reward")).
                                setDescription(theRS.getString("description")).
                                setMonsterType(theMonsterType).
                                setIsElite(theRS.getBoolean("is_elite")).
