@@ -5,26 +5,17 @@ import javafx.scene.input.KeyCode;
 import main.Controller.StateController.GameState;
 import main.Model.util.Direction;
 
-
-/**
- * Handles raw keyboard input events and translates them into actions
- * by calling methods on the GameController.
- *
- * @author Jacob Hilliker
- * @author Emanuel Feria
- * @author Vladyslav Glavatskyi
- * @version 5/13/2025
- */
 public class InputController {
     private final GameController myGameController;
     private final StateController myStateController;
 
-    /**
-     * Constructor for InputController
-     *
-     * @param theGameController game controller will process game actions
-     * @param theStateController state controller tracks game state
-     */
+    // Track the previous state to detect state changes
+    private GameState myPreviousState;
+
+    // Add cooldown tracking
+    private long myLastCombatEndTime = 0;
+    private static final long COMBAT_END_COOLDOWN = 500; // 500ms cooldown after combat
+
     public InputController(final GameController theGameController, final StateController theStateController) {
         if (theGameController == null) {
             throw new IllegalArgumentException("GameController cannot be null for InputController.");
@@ -34,20 +25,32 @@ public class InputController {
         }
         this.myGameController = theGameController;
         this.myStateController = theStateController;
+        this.myPreviousState = theStateController.getCurrentState();
         System.out.println("InputController initialized with GameController and StateController.");
     }
 
-    /**
-     * Handles key pressed events based on the current game state.
-     *
-     * @param theEvent The KeyEvent representing the key press.
-     */
     public void handleKeyPress(final KeyEvent theEvent) {
         KeyCode code = theEvent.getCode();
-        System.out.println("Key Pressed: " + code + " in state: " + myStateController.getCurrentState());
+        GameState currentState = myStateController.getCurrentState();
 
-        // Handle input based on current game state
-        switch (myStateController.getCurrentState()) {
+        //check if state changed and stop all movement if transitioning from EXPLORING
+        if (myPreviousState != currentState) {
+            if (myPreviousState == GameState.EXPLORING) {
+                myGameController.stopPlayerMovement();
+                System.out.println("Stopped all player movement due to state transition from " + myPreviousState + " to " + currentState);
+            }
+            //track when combat ends
+            if (myPreviousState == GameState.COMBAT && currentState == GameState.EXPLORING) {
+                myLastCombatEndTime = System.currentTimeMillis();
+                System.out.println("Combat ended, starting cooldown period");
+            }
+            myPreviousState = currentState;
+        }
+
+        System.out.println("Key Pressed: " + code + " in state: " + currentState);
+
+        //handle input based on current game state
+        switch (currentState) {
             case EXPLORING:
                 handleExplorationInput(code);
                 break;
@@ -72,12 +75,61 @@ public class InputController {
         theEvent.consume();
     }
 
+    public void handleKeyRelease(final KeyEvent theEvent) {
+        KeyCode code = theEvent.getCode();
+        GameState currentState = myStateController.getCurrentState();
+
+        // ONLY handle movement key releases in EXPLORING state
+        if (currentState == GameState.EXPLORING && !isInPostCombatCooldown()) {
+            handleMovementKeyRelease(code);
+        }
+
+        theEvent.consume();
+    }
+
     /**
-     * Handles input during exploration mode.
-     *
-     * @param theCode The key code pressed
+     * Handles movement key releases specifically
      */
+    private void handleMovementKeyRelease(final KeyCode theCode) {
+        switch (theCode) {
+            case UP:
+            case W:
+                myGameController.stopPlayerMovementNorth();
+                break;
+            case DOWN:
+            case S:
+                myGameController.stopPlayerMovementSouth();
+                break;
+            case LEFT:
+            case A:
+                myGameController.stopPlayerMovementWest();
+                break;
+            case RIGHT:
+            case D:
+                myGameController.stopPlayerMovementEast();
+                break;
+        }
+    }
+
+    /**
+     * Check if we're still in the cooldown period after combat ended
+     */
+    private boolean isInPostCombatCooldown() {
+        if (myLastCombatEndTime == 0) {
+            return false; // No combat has ended yet
+        }
+
+        long timeSinceCombatEnd = System.currentTimeMillis() - myLastCombatEndTime;
+        return timeSinceCombatEnd < COMBAT_END_COOLDOWN;
+    }
+
     private void handleExplorationInput(final KeyCode theCode) {
+        // Check if we're in cooldown period after combat
+        if (isInPostCombatCooldown()) {
+            System.out.println("Ignoring input during post-combat cooldown");
+            return;
+        }
+
         switch (theCode) {
             case UP:
             case W:
@@ -97,137 +149,82 @@ public class InputController {
                 break;
             case E:
             case ENTER:
-                // Interact with objects in the room
                 myGameController.interact();
                 break;
             case I:
-                // Open inventory
                 myGameController.openInventory();
                 break;
             case ESCAPE:
-                // Pause game
                 myGameController.pauseGame();
                 break;
             default:
-                // Ignore other keys
                 break;
         }
     }
 
-    /**
-     * Handles key released events.
-     *
-     * @param theEvent The KeyEvent representing the key release.
-     */
-    public void handleKeyRelease(final KeyEvent theEvent) {
-        KeyCode code = theEvent.getCode();
-
-        if (myStateController.getCurrentState() == GameState.EXPLORING) {
-            switch (code) {
-                case UP:
-                case W:
-                    myGameController.stopPlayerMovementNorth();
-                    break;
-                case DOWN:
-                case S:
-                    myGameController.stopPlayerMovementSouth();
-                    break;
-                case LEFT:
-                case A:
-                    myGameController.stopPlayerMovementWest();
-                    break;
-                case RIGHT:
-                case D:
-                    myGameController.stopPlayerMovementEast();
-                    break;
-            }
-        }
-        theEvent.consume();
-    }
-    /**
-     * Handles input during combat mode.
-     *
-     * @param theCode The key code pressed
-     */
     private void handleCombatInput(final KeyCode theCode) {
+        // Make sure we're actually in combat state
+        if (!myStateController.isInState(GameState.COMBAT)) {
+            System.out.println("Ignoring combat input - not in combat state");
+            return;
+        }
+
         switch (theCode) {
             case A:
-                // Regular attack
                 myGameController.playerAttack();
                 break;
             case S:
-                // Special attack
                 myGameController.playerSpecialAttack();
                 break;
             case R:
-                // Run from combat
                 myGameController.playerRun();
                 break;
             case I:
-                // Open inventory during combat
                 myGameController.openInventory();
                 break;
             case ESCAPE:
-                // Pause game
                 myGameController.pauseGame();
                 break;
+            // Don't handle W, A, S, D as movement in combat!
             default:
-                // Ignore other keys
+                System.out.println("Unhandled key in combat: " + theCode);
                 break;
         }
     }
 
-    /**
-     * Handles input during inventory mode.
-     *
-     * @param theCode The key code pressed
-     */
     private void handleInventoryInput(final KeyCode theCode) {
         switch (theCode) {
             case UP:
             case W:
-                // Scroll inventory up
                 myGameController.scrollInventoryUp();
                 break;
             case DOWN:
             case S:
-                // Scroll inventory down
                 myGameController.scrollInventoryDown();
                 break;
             case E:
             case ENTER:
-                // Use selected item
                 myGameController.useSelectedItem();
                 break;
             case I:
             case ESCAPE:
-                // Close inventory
                 myGameController.closeInventory();
                 break;
             default:
-                // Ignore other keys
                 break;
         }
     }
 
-    /**
-     * Handles input when interacting with a chest.
-     *
-     * @param theCode The key code pressed
-     */
     private void handleChestInput(final KeyCode theCode) {
         switch (theCode) {
             case E:
             case ENTER:
-                // Open chest and collect items
                 myGameController.openChest();
                 break;
             case ESCAPE:
-                // Cancel chest interaction
                 myGameController.cancelChestInteraction();
                 break;
             default:
-                // Ignore other keys
                 break;
         }
     }

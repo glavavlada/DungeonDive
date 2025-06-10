@@ -54,7 +54,7 @@ public class Hero extends Character {
         this.myHeroType = theHeroBuilder.myHeroType;
         this.myInventory = new ArrayList<>();
         this.myPillarsActivated = 0;
-        this.myGold = 0;
+        this.myGold = 10;
         this.myMovementState = new MovementState();
         this.myAnimationState = new AnimationState();
         loadSpriteSheet();

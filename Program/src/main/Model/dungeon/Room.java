@@ -236,27 +236,13 @@ public class Room {
      */
     public void openChest(final Hero thePlayer) {
         if (getRoomType() == RoomType.TREASURE) {
+            if (myChestOpened) {
+                System.out.println("This chest has already been opened and is now empty.");
+                return;
+            }
+
             int itemRemoveCount = 0;
-            if (thePlayer.getGold() >= 10 && !myChestOpened) {
-                boolean inventoryNotFull = true;
-                for (Item item : myChest) {
-                    inventoryNotFull = thePlayer.pickupItem(item);
-                    myChestOpened = true;
-                    if (!inventoryNotFull) {
-                        System.out.println("Inventory full, use items before collecting more.");
-                        break;
-                    } else {
-                        itemRemoveCount++;
-                        System.out.println("Found item in chest: " + item.getName());
-                    }
-                }
-                while (itemRemoveCount != 0) {
-                    myChest.removeFirst();
-                    itemRemoveCount--;
-                }
-                thePlayer.spendGold(10);
-            } else if (myChestOpened && !myChest.isEmpty()) {
-                // If chest already opened, ignore gold requirement and spending.
+            if (thePlayer.getGold() >= 5) {
                 boolean inventoryNotFull = true;
                 for (Item item : myChest) {
                     inventoryNotFull = thePlayer.pickupItem(item);
@@ -268,12 +254,19 @@ public class Room {
                         System.out.println("Found item in chest: " + item.getName());
                     }
                 }
+
+                // Remove collected items from chest
                 while (itemRemoveCount != 0) {
                     myChest.removeFirst();
                     itemRemoveCount--;
                 }
+
+                thePlayer.spendGold(5);
+                myChestOpened = true; // Mark chest as opened
+                System.out.println("Chest opened! Spent 5 gold.");
+
             } else {
-                System.out.println("Chest empty or not enough gold.");
+                System.out.println("You need at least 5 gold to open this chest. Current gold: " + thePlayer.getGold());
             }
         }
     }
@@ -316,11 +309,45 @@ public class Room {
      * @return string description of room
      */
     public String getDescription() {
-        return myRoomType.getDisplayName() + " room";
+        StringBuilder description = new StringBuilder();
+        description.append(myRoomType.getDisplayName()).append(" room");
+
+        //add chest information if present
+        if (hasChest()) {
+            if (myChestOpened) {
+                description.append(". There is an empty chest here that has already been opened.");
+            } else {
+                description.append(". There is a chest here. Press 'E' to open it for 5 gold.");
+            }
+        }
+
+        //add items information
+        if (!myItems.isEmpty()) {
+            description.append(". There are items on the ground. Press 'E' to collect them.");
+        }
+
+        //add pillar information
+        if (hasPillar()) {
+            if (myPillar.isActivated()) {
+                description.append(". The Pillar of ").append(myPillar.getType().getDisplayName()).append(" stands here, already activated.");
+            } else {
+                description.append(". The Pillar of ").append(myPillar.getType().getDisplayName()).append(" stands here. Press 'E' to activate it.");
+            }
+        }
+
+        // Add trap information
+        if (hasTrap() && myTrap.isSprung()) {
+            description.append(". There is a spike trap here.");
+        }
+
+        return description.toString();
     }
 
-
-
-
-
+    /**
+     * Checks if the chest in this room has been opened
+     * @return true if chest has been opened, false otherwise
+     */
+    public boolean isChestOpened() {
+        return myChestOpened;
+    }
 }

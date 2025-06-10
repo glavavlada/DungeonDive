@@ -561,6 +561,8 @@ public class GameScreen extends Screen {
     private boolean checkRoomTransition() {
         Hero player = getController().getPlayer();
         Room currentRoom = getCurrentRoom();
+        
+        
         if (player == null || currentRoom == null) return false;
 
         double px = player.getPixelX();
