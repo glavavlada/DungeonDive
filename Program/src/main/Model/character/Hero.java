@@ -1,97 +1,82 @@
 package main.Model.character;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
+import main.Model.element.HealthPotion;
 import main.Model.element.Item;
 import main.Model.element.Pillar;
-import main.Model.util.Direction;
 import main.Model.util.HeroType;
-import main.Model.util.Point;
+import javafx.scene.image.Image;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import main.Model.util.Point;
 
 /**
  * Represents the player character.
  * This class extends Character and includes hero-specific attributes like inventory,
  * hero type, and interaction with game elements.
  */
-public class Hero extends Character { // Make sure Character is in main.Model.character
+public class Hero extends Character {
+
+    // Constants
+    private static final int MAX_INVENTORY_SIZE = 10;
+    private static final int TOTAL_PILLARS = 4;
+    private static final double BASE_CANVAS_SIZE = 480.0;
+    private static final double BASE_MOVEMENT_SPEED = 2.0;
+    public static final int SPRITE_FRAME_WIDTH = 232;
+    public static final int SPRITE_FRAME_HEIGHT = 212;
+
+    // Core hero attributes
     private final HeroType myHeroType;
     private final ArrayList<Item> myInventory;
     private int myPillarsActivated;
     private int myGold;
     private int mySpecialMana = 2;
-    // Replace the pillar collection counter with stat tracking
-    private int myStrengthBonus = 0;
-    private int myDefenseBonus = 0;
-    private int myAgilityBonus = 0;
-    private int myHealthBonus = 0;
-    // Add fields for other stats derived from HeroType if they can be modified by game events (buffs, items)
-    // example:
-    // private int myCurrentAttackPower;
-    // private double myCurrentCritChance;
-    // private double myCurrentCritMultiplier;
+    private boolean myBossSlain = false;
 
-    private double myPixelX; // Actual pixel position
+    private boolean myManaBuff = false;
+    private int myAttackBuff = 0;
+
+    // Movement and positioning
+    private double myPixelX;
     private double myPixelY;
-    private double myMoveSpeed = 2.0; // Pixels per frame
-    private boolean myIsMoving = false;
-    private Direction myFacingDirection = Direction.SOUTH;
-    private Direction myMoveDirection = null;
+    private final MovementState myMovementState;
+    private double myMovementSpeed = BASE_MOVEMENT_SPEED;
 
-    /**
-     * Constructor for Hero.
-     * Initializes the hero with a name, type, and starting position.
-     * Base stats like health, attack, crit chance, etc., are derived from the HeroType enum.
-     */
+    // Animation
+    private transient Image mySpriteSheet;
+    private final AnimationState myAnimationState;
+    private transient Image mySprite;
+
     public Hero(final HeroBuilder theHeroBuilder) {
-
         super(theHeroBuilder);
-        myHeroType = theHeroBuilder.myHeroType;
-
+        this.myHeroType = theHeroBuilder.myHeroType;
         this.myInventory = new ArrayList<>();
         this.myPillarsActivated = 0;
         this.myGold = 0;
-
-        // Initialize other modifiable stats from HeroType's base values
-        // this.myCurrentAttackPower = theType.getBaseAttack();
-        // this.myCurrentCritChance = theType.getCritChance();
-        // this.myCurrentCritMultiplier = theType.getCritMultiplier();
-        // etc.
+        this.myMovementState = new MovementState();
+        this.myAnimationState = new AnimationState();
+        loadSpriteSheet();
     }
 
-    public void startMoving(final Direction theDirection) {
-        myMoveDirection = theDirection;
-        myFacingDirection = theDirection;
-        myIsMoving = true;
-    }
-
-    public void stopMoving() {
-        myIsMoving = false;
-        myMoveDirection = null;
-    }
-
-    public void updatePosition() {
-        if (myIsMoving && myMoveDirection != null) {
-            switch (myMoveDirection) {
-                case NORTH:
-                    myPixelY -= myMoveSpeed;
-                    break;
-                case SOUTH:
-                    myPixelY += myMoveSpeed;
-                    break;
-                case EAST:
-                    myPixelX += myMoveSpeed;
-                    break;
-                case WEST:
-                    myPixelX -= myMoveSpeed;
-                    break;
-            }
+    private void loadSpriteSheet() {
+        try {
+            String spritePath = getSpritePathForHeroType();
+            mySpriteSheet = new Image(Objects.requireNonNull(
+                    getClass().getResourceAsStream(spritePath)));
+        } catch (Exception e) {
+            System.err.println("Error loading hero sprite sheet: " + e.getMessage());
+            mySpriteSheet = null;
         }
+    }
+
+    private String getSpritePathForHeroType() {
+        return switch (myHeroType) {
+            case THIEF -> "/sprites/heroes/thief_walk_spritesheet.png";
+            case WARRIOR -> "/sprites/heroes/warrior_walk_spritesheet.png";
+            case PRIESTESS -> "/sprites/heroes/priestess_walk_spritesheet.png";
+        };
     }
 
     /**
@@ -103,198 +88,113 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
      */
     @Override
     public int attack(final Character theTarget) {
-        if (theTarget == null || !theTarget.isAlive()) {
-            return 0; // Cannot attack null or dead target
+        if(theTarget == null || !theTarget.isAlive()) {
+            return 0;//Cannot attack null or dead target
         }
 
-        // Base damage from HeroType
-        int damageDealt = myHeroType.getBaseAttack();
-
-        // TODO: Implement more complex damage calculation:
-        // 1. Add weapon damage if applicable.
-
+        //Base damage from HeroType
+        int damageDealt = myHeroType.getBaseAttack() + myAttackBuff;
 
         Random rand = new Random();
-        if (rand.nextDouble(1) < getCritChance()) {
+        if(rand.nextDouble(1) < getCritChance()){
             damageDealt *= getCritMultiplier();
             System.out.println("Crit landed");
         }
 
+        System.out.println(getName()+ "attacks" + ((theTarget instanceof Monster) ?
+                ((Monster)theTarget).getName():"target") + "for" + damageDealt + "damage.");
 
-        System.out.println(getName() + " attacks " + ((theTarget instanceof Monster) ? ((Monster)theTarget).getName() : "target") + " for " + damageDealt + " damage.");
         theTarget.takeDamage(damageDealt);
-        if (!theTarget.isAlive() && theTarget instanceof Monster) {
-            addGold(((Monster) theTarget).getGoldReward());
+        if(!theTarget.isAlive() && theTarget instanceof Monster) {
+            addGold(((Monster)theTarget).getGoldReward());
             addMana();
+            if (((Monster) theTarget).getType().isBoss()) {
+                myBossSlain = true;
+            }
         }
         return damageDealt;
     }
 
-    /**
-     * Uses an item from the hero's inventory.
-     * The item's effect is applied to the hero, and the item is removed from inventory.
-     *
-     * @param theItem The Item to use.
-     */
-    public void useItem(final Item theItem) {
-        if (theItem != null && myInventory.contains(theItem)) {
-            System.out.println(getName() + " uses " + theItem.getName() + ".");
-            theItem.use(this); // Item's use method will affect the hero
-            myInventory.remove(theItem);
-        } else if (theItem != null) {
-            System.out.println(getName() + " tried to use " + theItem.getName() + " but it's not in inventory.");
-        }
+    private String getTargetName(Character target) {
+        return (target instanceof Monster monster) ? monster.getName() : "target";
     }
 
-    /**
-     * Picks up an item and adds it to the hero's inventory if there's space.
-     *
-     * @param theItem The Item to pick up.
-     * @return true if the item was successfully picked up, false otherwise.
-     */
-    public boolean pickupItem(final Item theItem) {
-        if (theItem == null) return false;
+    public void useItem(final Item theItem) {
+        if (theItem == null || !myInventory.contains(theItem)) {
+            if (theItem != null) {
+                System.out.println(getName() + " tried to use " + theItem.getName() +
+                        " but it's not in inventory.");
+            }
+            return;
+        }
 
-        // Example: Limit inventory size
-        final int maxInventorySize = 10; // Make this a constant or configurable
-        if (myInventory.size() < maxInventorySize) {
-            myInventory.add(theItem);
-            System.out.println(getName() + " picked up " + theItem.getName() + ".");
-            return true;
-        } else {
-            System.out.println(getName() + "'s inventory is full. Cannot pick up " + theItem.getName() + ".");
+        System.out.println(getName() + " uses " + theItem.getName() + ".");
+        theItem.use(this);
+        myInventory.remove(theItem);
+    }
+
+    public boolean pickupItem(final Item theItem) {
+        if (theItem == null) {
             return false;
         }
-    }
 
-    public HeroType getType() {
-        return myHeroType;
-    }
-
-    public List<Item> getInventory() {
-        return Collections.unmodifiableList(myInventory);
-    }
-
-    public int getPillarsActivated() {
-        return myPillarsActivated;
-    }
-
-    public int getGold() {
-        return myGold;
-    }
-
-
-    public void setPillarsActivated(final int thePillarsActivated) {
-        this.myPillarsActivated = Math.max(0, thePillarsActivated);
-    }
-
-    public void addGold(final int theAmount) {
-        if (theAmount > 0) {
-            this.myGold += theAmount;
-            System.out.println(getName() + " gained " + theAmount + " gold. Total: " + myGold);
+        if (myInventory.size() >= MAX_INVENTORY_SIZE) {
+            System.out.println(getName() + "'s inventory is full. Cannot pick up " +
+                    theItem.getName() + ".");
+            return false;
         }
+
+        myInventory.add(theItem);
+        System.out.println(getName() + " picked up " + theItem.getName() + ".");
+        return true;
     }
 
-    public boolean spendGold(final int theAmount) {
-        if (theAmount > 0 && this.myGold >= theAmount) {
-            this.myGold -= theAmount;
-            System.out.println(getName() + " spent " + theAmount + " gold. Remaining: " + myGold);
-            return true;
-        }
-        System.out.println(getName() + " does not have enough gold to spend " + theAmount + ".");
-        return false;
-    }
-
-    /**
-     * Overrides Character's takeDamage to provide hero-specific feedback or effects.
-     * @param theDamageAmount The amount of damage to take.
-     */
-    @Override
-    public void takeDamage(final int theDamageAmount) {
-        super.takeDamage(theDamageAmount); // Calls Character's takeDamage logic
-        System.out.println(getName() + " takes " + theDamageAmount + " damage. Current health: " + getHealth() + "/" + getMaxHealth());
-        if (!isAlive()) {
-            System.out.println(getName() + " has been defeated!");
-            // Game over logic would typically be handled by a GameController observing this state.
-        }
-    }
-
-    /**
-     *add item to hero's inventory
-     *
-     * @param theItem item to add
-     * @return true if item was added successfully, false otherwise
-     */
-    public boolean addItem(final Item theItem) {
-        return pickupItem(theItem); // Use existing pickupItem method
-    }
-
-    /**
-     * Activates a pillar and receives its stat bonus.
-     *
-     * @param thePillar The pillar to activate
-     * @return true if the pillar was successfully activated
-     */
     public boolean activatePillar(final Pillar thePillar) {
         if (thePillar == null || thePillar.isActivated()) {
             return false;
         }
-
-        // Mark the pillar as activated - pass this hero as the parameter
         thePillar.activate(this);
-
         return true;
     }
 
-    /**
-     * Checks if the hero has activated all pillars.
-     *
-     * @return true if all pillars have been activated, false otherwise
-     */
     public boolean hasActivatedAllPillars() {
-        // Assuming there are 4 pillars in total
-        final int TOTAL_PILLARS = 4;
         return myPillarsActivated >= TOTAL_PILLARS;
     }
 
-
-
-    /**
-     * Performs a special attack, now affected by strength and agility bonuses.
-     *
-     * @return The amount of damage dealt
-     */
     public int specialAttack() {
-
         int baseDamage = myHeroType.getSpecialAttackDamage();
-        int bonusDamage = myStrengthBonus + myAgilityBonus;
-        int totalDamage = baseDamage + bonusDamage;
+        // Stat bonuses from pillars
+        int totalDamage = baseDamage + myAttackBuff;
 
         Random rand = new Random();
-        if (rand.nextDouble(1) < getCritChance()) {
+        if(rand.nextDouble(1) < getCritChance()){
             totalDamage *= getCritMultiplier();
-            System.out.println("Crit landed");
+            System.out.println("Critlanded");
         }
 
         System.out.println(getName() + " performs a special attack!");
-        mySpecialMana -= 2;
+        if (myManaBuff) {
+            mySpecialMana--;
+            System.out.println("Mana at: " + mySpecialMana + "/4");
+        } else {
+            mySpecialMana -= 2;
+            System.out.println("Mana at: " + mySpecialMana + "/4");
+        }
         return totalDamage;
     }
 
-    /**
-     *checks if hero can use special attack
-     * This is simple implementation that always returns true
-     *modify this later to add limitations as needed
-     *
-     * @return true if hero can use special attack
-     */
     public boolean canUseSpecialAttack() {
-        boolean canUse = mySpecialMana >= 2;
+        boolean canUse = false;
+        if (myManaBuff) {
+            canUse = mySpecialMana >= 1;
+        } else {
+            canUse = mySpecialMana >= 2;
+        }
         return canUse;
     }
 
     public void addMana() {
-        if (mySpecialMana < 4) {
+        if (mySpecialMana < 4){
             mySpecialMana++;
             System.out.println("Mana gained: " + mySpecialMana + "/4");
         } else {
@@ -302,41 +202,188 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
         }
     }
 
+    @Override
+    public void takeDamage(final int theDamageAmount) {
+        super.takeDamage(theDamageAmount);
+        System.out.println(getName() + " takes " + theDamageAmount +
+                " damage. Current health: " + getHealth() + "/" + getMaxHealth());
 
-    public double getPixelX() {
-        return myPixelX;
+        if (!isAlive()) {
+            System.out.println(getName() + " has been defeated!");
+        }
     }
 
-    public double getPixelY() {
-        return myPixelY;
+    public void addGold(final int theAmount) {
+        if (theAmount > 0) {
+            this.myGold += theAmount;
+            System.out.println(getName() + " gained " + theAmount +
+                    " gold. Total: " + myGold);
+        }
     }
 
-    public void setPixelX(int i) {
-        myPixelX = i;
+    public boolean spendGold(final int theAmount) {
+        if (theAmount <= 0 || this.myGold < theAmount) {
+            System.out.println(getName() + " does not have enough gold to spend " +
+                    theAmount + ".");
+            return false;
+        }
+
+        this.myGold -= theAmount;
+        System.out.println(getName() + " spent " + theAmount +
+                " gold. Remaining: " + myGold);
+        return true;
     }
 
-    public void setPixelY(int i) {
-        myPixelY = i;
+    // Movement methods
+    public void setPixelPosition(double x, double y) {
+        myPixelX = x;
+        myPixelY = y;
     }
 
-    /**
-     * Gets the current health percentage for display purposes
-     * @return Health as a percentage (0.0 to 1.0)
-     */
+    public void startMovingNorth() { myMovementState.setMovingNorth(true); }
+    public void stopMovingNorth() { myMovementState.setMovingNorth(false); }
+    public void startMovingSouth() { myMovementState.setMovingSouth(true); }
+    public void stopMovingSouth() { myMovementState.setMovingSouth(false); }
+    public void startMovingEast() { myMovementState.setMovingEast(true); }
+    public void stopMovingEast() { myMovementState.setMovingEast(false); }
+    public void startMovingWest() { myMovementState.setMovingWest(true); }
+    public void stopMovingWest() { myMovementState.setMovingWest(false); }
+
+    public void setMovementSpeedForCanvasSize(double canvasSize) {
+        double speedScale = canvasSize / BASE_CANVAS_SIZE;
+        myMovementSpeed = BASE_MOVEMENT_SPEED * speedScale;
+        myMovementSpeed = Math.max(1.0, Math.min(myMovementSpeed, 8.0));
+    }
+
+    public void updatePixelPosition() {
+        if (myMovementState.isMovingNorth()) myPixelY -= myMovementSpeed;
+        if (myMovementState.isMovingSouth()) myPixelY += myMovementSpeed;
+        if (myMovementState.isMovingEast()) myPixelX += myMovementSpeed;
+        if (myMovementState.isMovingWest()) myPixelX -= myMovementSpeed;
+    }
+
+    public boolean isMoving() {
+        return myMovementState.isMoving();
+    }
+
+    public void updateAnimation(long currentTimeNanos) {
+        myAnimationState.update(currentTimeNanos, isMoving(), myMovementState);
+    }
+
+    // Animation getters
+    public Image getSpriteSheet() { return mySpriteSheet; }
+    public Image getSprite() { return mySprite; }
+    public int getCurrentFrameX() { return myAnimationState.getCurrentFrameX(); }
+    public int getAnimationRow() { return myAnimationState.getAnimationRow(); }
+
+    // Health display methods
     public double getHealthPercentage() {
         return Math.max(0.0, Math.min(1.0, (double) getHealth() / getMaxHealth()));
     }
 
-    /**
-     * Gets formatted health display string
-     * @return String in format "current/max"
-     */
     public String getHealthDisplay() {
         return getHealth() + "/" + getMaxHealth();
     }
 
-    public static class HeroBuilder extends CharacterBuilder<HeroBuilder, Hero> {
+    // Getters
+    public HeroType getType() { return myHeroType; }
+    public List<Item> getInventory() { return Collections.unmodifiableList(myInventory); }
+    public int getPillarsActivated() { return myPillarsActivated; }
+    public int getGold() { return myGold; }
+    public double getPixelX() { return myPixelX; }
+    public double getPixelY() { return myPixelY; }
 
+    // Setters
+    public void setPillarsActivated(final int thePillarsActivated) {
+        this.myPillarsActivated = Math.max(0, thePillarsActivated);
+    }
+
+    public void setManaBuff(final boolean theManaBuff) {
+        myManaBuff = theManaBuff;
+    }
+
+    public void addAttackBuff(final int theAttackBuff) {
+        myAttackBuff += theAttackBuff;
+    }
+
+    public void addItem(final Item theItem) {
+        pickupItem(theItem);
+    }
+
+    public boolean getBossSlain() {
+        return myBossSlain;
+    }
+
+    public void setBossSlain(final boolean theBossSlain) {
+        myBossSlain = theBossSlain;
+    }
+
+    // Inner classes for better organization
+    private static class MovementState {
+        private boolean isMovingNorth = false;
+        private boolean isMovingSouth = false;
+        private boolean isMovingEast = false;
+        private boolean isMovingWest = false;
+
+        public void setMovingNorth(boolean moving) { isMovingNorth = moving; }
+        public void setMovingSouth(boolean moving) { isMovingSouth = moving; }
+        public void setMovingEast(boolean moving) { isMovingEast = moving; }
+        public void setMovingWest(boolean moving) { isMovingWest = moving; }
+
+        public boolean isMovingNorth() { return isMovingNorth; }
+        public boolean isMovingSouth() { return isMovingSouth; }
+        public boolean isMovingEast() { return isMovingEast; }
+        public boolean isMovingWest() { return isMovingWest; }
+
+        public boolean isMoving() {
+            return isMovingNorth || isMovingSouth || isMovingEast || isMovingWest;
+        }
+    }
+
+    private static class AnimationState {
+        private static final int TOTAL_FRAMES_PER_DIRECTION = 3;
+        private static final long FRAME_DURATION_MILLIS = 150;
+
+        private int currentFrameX = 0;
+        private int animationRow = 0;
+        private long lastFrameTime = 0;
+
+        public void update(long currentTimeNanos, boolean isMoving, MovementState movementState) {
+            if (lastFrameTime == 0) {
+                lastFrameTime = currentTimeNanos;
+            }
+
+            if (!isMoving) {
+                currentFrameX = 1; // Idle frame
+                return;
+            }
+
+            long elapsedTimeMillis = (currentTimeNanos - lastFrameTime) / 1_000_000;
+            if (elapsedTimeMillis > FRAME_DURATION_MILLIS) {
+                lastFrameTime = currentTimeNanos;
+                currentFrameX = (currentFrameX + 1) % TOTAL_FRAMES_PER_DIRECTION;
+            }
+
+            updateAnimationRow(movementState);
+        }
+
+        private void updateAnimationRow(MovementState movementState) {
+            if (movementState.isMovingNorth()) {
+                animationRow = 2;
+            } else if (movementState.isMovingSouth()) {
+                animationRow = 0;
+            } else if (movementState.isMovingWest()) {
+                animationRow = 3;
+            } else if (movementState.isMovingEast()) {
+                animationRow = 1;
+            }
+        }
+
+        public int getCurrentFrameX() { return currentFrameX; }
+        public int getAnimationRow() { return animationRow; }
+    }
+
+    public static class HeroBuilder extends CharacterBuilder<HeroBuilder, Hero> {
         private HeroType myHeroType;
 
         public HeroBuilder setHeroType(final HeroType theHeroType) {
@@ -344,10 +391,12 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
             return self();
         }
 
+        @Override
         protected HeroBuilder self() {
             return this;
         }
 
+        @Override
         public Hero build() {
             return new Hero(this);
         }
@@ -420,6 +469,7 @@ public class Hero extends Character { // Make sure Character is in main.Model.ch
             // Restore inventory (you'll need to implement item recreation)
             for (String itemName : saveData.inventoryItems) {
                 // hero.addItem(ItemFactory.createItem(itemName));
+                hero.addItem(new HealthPotion("Health Potion", "Heals 50", 50));
             }
 
             return hero;

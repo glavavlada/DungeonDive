@@ -257,6 +257,7 @@ public class GameController {
     private void enterRoom(final Room theRoom) {
         // Mark room as visited
         theRoom.setVisited(true);
+        checkWinCondition();
 
         // Check for monsters
         if (!theRoom.getMonsters().isEmpty()) {
@@ -331,10 +332,13 @@ public class GameController {
     }
 
     /**
-     * Checks if the player has met the win condition (activated all pillars).
+     * Checks if the player has met the win condition (activated all pillars and in exit).
      */
-    private void checkWinCondition() {
-        if (myGameModel.getPlayer().hasActivatedAllPillars()) {
+    public void checkWinCondition() {
+        if (myGameModel.getPlayer().hasActivatedAllPillars() &&
+            myGameModel.getPlayer().getPosition().equals(myGameModel.getDungeon().getExitPoint()) &&
+            myGameModel.getPlayer().getBossSlain()) {
+
             System.out.println("Player has activated all pillars! Victory!");
             myStateController.changeState(GameState.VICTORY);
             myGameUI.showVictoryScreen();
@@ -372,6 +376,7 @@ public class GameController {
         // Check for pillar interaction
         else if (currentRoom.hasPillar() && !currentRoom.getPillar().isActivated()) {
             activatePillar(currentRoom);
+            myGameModel.getDungeon().recordPillarActivation();
             System.out.println("Activated pillar in room");
         }
         // Check for items on the ground
@@ -549,8 +554,9 @@ public class GameController {
 
         // Monsters' turn to attack (only if combat continues)
         if (myStateController.isInState(GameState.COMBAT)) {
-            monsterAttacks();
+            //monsterAttacks();
             myGameUI.updateCombatScreen(currentRoom.getMonsters());
+            myGameUI.updatePlayerStats(); // Update mana/energy display
         }
     }
 
@@ -594,6 +600,9 @@ public class GameController {
             System.out.println("Defeated " + target.getName() + "!");
             currentRoom.removeMonster(target);
             player.addGold(target.getGoldReward());
+            if (target.getType().isBoss()) {
+                player.setBossSlain(true);
+            }
 
             // Check if all monsters are defeated
             if (currentRoom.getMonsters().isEmpty()) {
@@ -604,7 +613,7 @@ public class GameController {
 
         // Monsters' turn to attack (only if combat continues)
         if (myStateController.isInState(GameState.COMBAT)) {
-            monsterAttacks();
+            //monsterAttacks();
             myGameUI.updateCombatScreen(currentRoom.getMonsters());
             myGameUI.updatePlayerStats(); // Update mana/energy display
         }
@@ -664,6 +673,7 @@ public class GameController {
         myStateController.changeState(GameState.EXPLORING);
         myGameUI.hideCombatScreen();
         System.out.println("Combat ended, returning to exploration");
+        checkWinCondition();
     }
 
     /**
@@ -677,23 +687,16 @@ public class GameController {
         Hero player = myGameModel.getPlayer();
         Room currentRoom = myGameModel.getDungeon().getRoom(player.getPosition());
 
-        if (currentRoom.hasChest()) {
-            // Get items from chest
-            List<Item> chestItems = currentRoom.openChest();
+        // Get items from chest
+        currentRoom.openChest(player);
 
-            // Add items to player inventory
-            for (Item item : chestItems) {
-                player.addItem(item);
-                System.out.println("Found item in chest: " + item.getName());
-            }
+        // Update UI
+        myGameUI.showChestContents(currentRoom.getChest());
+        myGameUI.updateInventory();
 
-            // Update UI
-            myGameUI.showChestContents(chestItems);
-            myGameUI.updateInventory();
+        // Return to exploration mode
+        myStateController.changeState(GameState.EXPLORING);
 
-            // Return to exploration mode
-            myStateController.changeState(GameState.EXPLORING);
-        }
     }
 
     /**

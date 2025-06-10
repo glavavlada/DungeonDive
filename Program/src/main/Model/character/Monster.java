@@ -42,9 +42,9 @@ public class Monster extends Character {
         Random rand = new Random();
         int damage = 0;
 
-        // 20 Percent chance of special with 50% more damage.
+        // 20 Percent chance of special with 25% more damage.
         if (rand.nextDouble(1) < .2) {
-            damage = (int) (getBaseAttackDamage() + getBaseAttackDamage() * 0.5);
+            damage = (int) (getBaseAttackDamage() + getBaseAttackDamage() * 0.25);
             System.out.println(getName() + " used " + getSpecialAttackName());
         } else {
             damage = getBaseAttackDamage();

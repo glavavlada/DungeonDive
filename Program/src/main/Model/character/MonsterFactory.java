@@ -65,7 +65,6 @@ public class MonsterFactory {
                                setHealth(theRS.getInt("health")).
                                setPosition(theSpot).
                                setBaseAttackDamage(theRS.getInt("attack")).
-                               //setSpecialAttackDamage(). // TODO: Fix database to add monster special damage. Also things like gold rewards need to be figured out.
                                setSpecialAttackName(theRS.getString("special_attack_name")).
                                setCritChance(theRS.getDouble("crit_chance")).
                                setCritMultiplier(theRS.getDouble("crit_multiplier")).

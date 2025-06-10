@@ -132,7 +132,12 @@ public class Controller {
     }
 
     public void resumeCurrentGame(final GameUI theUI) {
-        theUI.showGameScreen(); // This will re-attach key listeners via GameUI.showGameScreen()
+        // This checks if boss is defeated so it does not go back to game screen after win.
+        if (myGameModel.getPlayer().getBossSlain()) {
+            myGameController.checkWinCondition();
+        } else {
+            theUI.showGameScreen(); // This will re-attach key listeners via GameUI.showGameScreen()
+        }
     }
 
     public void quitToMenu(final GameUI theUI) {
