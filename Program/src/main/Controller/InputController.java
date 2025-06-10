@@ -81,21 +81,36 @@ public class InputController {
         switch (theCode) {
             case UP:
             case W:
-                myGameController.startPlayerMovement(Direction.NORTH);
+                myGameController.startPlayerMovementNorth();
                 break;
             case DOWN:
             case S:
-                myGameController.startPlayerMovement(Direction.SOUTH);
+                myGameController.startPlayerMovementSouth();
                 break;
             case LEFT:
             case A:
-                myGameController.startPlayerMovement(Direction.WEST);
+                myGameController.startPlayerMovementWest();
                 break;
             case RIGHT:
             case D:
-                myGameController.startPlayerMovement(Direction.EAST);
+                myGameController.startPlayerMovementEast();
                 break;
-            // ... other cases
+            case E:
+            case ENTER:
+                // Interact with objects in the room
+                myGameController.interact();
+                break;
+            case I:
+                // Open inventory
+                myGameController.openInventory();
+                break;
+            case ESCAPE:
+                // Pause game
+                myGameController.pauseGame();
+                break;
+            default:
+                // Ignore other keys
+                break;
         }
     }
 
@@ -104,26 +119,31 @@ public class InputController {
      *
      * @param theEvent The KeyEvent representing the key release.
      */
-     public void handleKeyRelease(final KeyEvent theEvent) {
+    public void handleKeyRelease(final KeyEvent theEvent) {
         KeyCode code = theEvent.getCode();
 
         if (myStateController.getCurrentState() == GameState.EXPLORING) {
             switch (code) {
                 case UP:
                 case W:
+                    myGameController.stopPlayerMovementNorth();
+                    break;
                 case DOWN:
                 case S:
+                    myGameController.stopPlayerMovementSouth();
+                    break;
                 case LEFT:
                 case A:
+                    myGameController.stopPlayerMovementWest();
+                    break;
                 case RIGHT:
                 case D:
-                    myGameController.stopPlayerMovement();
+                    myGameController.stopPlayerMovementEast();
                     break;
             }
         }
         theEvent.consume();
     }
-
     /**
      * Handles input during combat mode.
      *
