@@ -1,6 +1,8 @@
 package main.Model.character;
 
 import java.util.ArrayList;
+import java.util.Random;
+
 import main.Model.element.Item;
 import main.Model.util.MonsterType;
 
@@ -10,6 +12,7 @@ import main.Model.util.MonsterType;
 public class Monster extends Character {
     private boolean myIsElite;
     private final MonsterType myMonsterType;
+    private final int myGoldReward;
     private ArrayList<Item> myRewards;
 
 
@@ -25,6 +28,7 @@ public class Monster extends Character {
         super(theMonsterBuilder);
         myMonsterType = theMonsterBuilder.myMonsterType;
         myIsElite = theMonsterBuilder.myIsElite;
+        myGoldReward = theMonsterBuilder.myGoldReward;
         this.myRewards = new ArrayList<>();
     }
 
@@ -35,17 +39,31 @@ public class Monster extends Character {
      */
     @Override
     public int attack(final Character theTarget) {
-        // Use base damage from MonsterType
-        int baseDamage = this.myMonsterType.getBaseAttack(); // <-- Use MonsterType for base damage
+        Random rand = new Random();
+        int damage = 0;
+
+        // 20 Percent chance of special with 25% more damage.
+        if (rand.nextDouble(1) < .2) {
+            damage = (int) (getBaseAttackDamage() + getBaseAttackDamage() * 0.25);
+            System.out.println(getName() + " used " + getSpecialAttackName());
+        } else {
+            damage = getBaseAttackDamage();
+        }
 
         // Elite monsters deal more damage
         if (myIsElite) {
-            baseDamage *= 1.5; // Example: 50% increase
+            damage *= 1.5; // Example: 50% increase
         }
 
-        System.out.println(getName() + " attacks " + theTarget.getClass().getSimpleName() + " for " + baseDamage + " damage!");
-        theTarget.takeDamage(baseDamage); // Apply the damage
-        return baseDamage;
+
+        if (rand.nextDouble(1) < getCritChance()) {
+            damage *= getCritMultiplier();
+            System.out.println("Monster Crit landed");
+        }
+
+        System.out.println(getName() + " attacks " + theTarget.getClass().getSimpleName() + " for " + damage + " damage!");
+        theTarget.takeDamage(damage); // Apply the damage
+        return damage;
     }
 
 
@@ -87,6 +105,10 @@ public class Monster extends Character {
         return Math.max(0.0, Math.min(1.0, (double) getHealth() / getMaxHealth()));
     }
 
+    public int getGoldReward() {
+        return myGoldReward;
+    }
+
     /**
      * Gets formatted health display string
      * @return String in format "current/max"
@@ -99,6 +121,7 @@ public class Monster extends Character {
 
         private MonsterType myMonsterType;
         private Boolean myIsElite;
+        private int myGoldReward;
 
         // Do setType for hero and monster types
         public MonsterBuilder setMonsterType(final MonsterType theMonsterType) {
@@ -108,6 +131,11 @@ public class Monster extends Character {
 
         public MonsterBuilder setIsElite(final boolean theIsElite) {
             myIsElite = theIsElite;
+            return self();
+        }
+
+        public MonsterBuilder setGoldReward(final int theGoldReward) {
+            myGoldReward = theGoldReward;
             return self();
         }
 

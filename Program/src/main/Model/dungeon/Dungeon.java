@@ -2,6 +2,8 @@ package main.Model.dungeon;
 
 import main.Model.character.Monster;
 import main.Model.character.MonsterFactory;
+import main.Model.element.HealthPotion;
+import main.Model.element.Item;
 import main.Model.element.Pillar;
 import main.Model.element.Trap;
 import main.Model.util.MonsterType;
@@ -125,8 +127,9 @@ public class Dungeon {
         // 5. Place Other Rooms (Monsters, Traps)
         int monsterCount = (myWidth * myHeight) / 5; // Adjust density as needed
         int trapCount = (myWidth * myHeight) / 10;
+        int chestCount = (myWidth * myHeight) / 10;
 
-        while ((monsterCount > 0 || trapCount > 0) && !availableSpots.isEmpty()) {
+        while ((monsterCount > 0 || trapCount > 0 || chestCount > 0) && !availableSpots.isEmpty()) {
             Point spot = availableSpots.remove(0); // Pick another random spot
             Room room = getRoom(spot);
             // Only place if it's currently empty (not Start, Exit, or Pillar)
@@ -134,14 +137,29 @@ public class Dungeon {
                 if (monsterCount > 0 && random.nextBoolean()) { // Alternate placing monsters/traps
                     room.setRoomType(RoomType.MONSTER);
                     // Add an actual monster (using constructor like in spawnBoss)
-                    room.addMonster(myMonsterFactory.getMonster(MonsterType.GOBLIN, spot));
+                    addMonsterToRoom(room, spot);
                     monsterCount--;
                 } else if (trapCount > 0) {
                     room.setTrap(new Trap("Floor Spikes", "Sharp spikes emerge from the floor.", 5 + random.nextInt(10)));
                     trapCount--;
+                } else if (chestCount > 0) {
+                    createChest(room);
+                    room.setRoomType(RoomType.TREASURE);
+                    chestCount--;
                 }
                 // Could add Treasure rooms here too
             }
+        }
+
+        // TODO: place health potions make other items give monsters items
+
+        int potionCount = (myWidth * myHeight) / 10;
+
+        while (potionCount > 0) {
+            Point spot = availableSpots.remove(0);
+            Room room = getRoom(spot);
+            room.addItem(new HealthPotion("Health Potion", "Heals 50", 50));
+            potionCount--;
         }
 
         System.out.println("Randomized Dungeon generated. Pillars: " + myTotalPillars);
@@ -275,7 +293,9 @@ public class Dungeon {
         Room bossRoom = getRoom(myExitPoint);
         if (bossRoom != null) {
             bossRoom.setRoomType(RoomType.BOSS);
-            bossRoom.getMonsters().clear();
+            if (!bossRoom.getMonsters().isEmpty()) {
+                bossRoom.getMonsters().clear();
+            }
 
             // Assuming MonsterType.GIANT is defined as a boss type
             MonsterType bossType = MonsterType.GIANT;
@@ -449,6 +469,35 @@ public class Dungeon {
             System.err.println("Error deserializing dungeon: " + e.getMessage());
             return null;
         }
+    }
+
+    private void addMonsterToRoom(final Room theRoom, final Point theSpot) {
+      Random rand = new Random();
+      double percentChance = rand.nextDouble(1);
+      if (percentChance < .3) {
+          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.GOBLIN, theSpot));
+      } else if (percentChance < .5) {
+          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.SKELETON, theSpot));
+      } else if (percentChance < .7) {
+          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.SLIME, theSpot));
+      } else if (percentChance < .8) {
+          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.ORC, theSpot));
+      } else if (percentChance < .9) {
+          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.BIG_SLIME, theSpot));
+      } else {
+          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.WIZARD, theSpot));
+      }
+    }
+
+    private void createChest(final Room theRoom) {
+        Random rand = new Random();
+        int itemAmount = rand.nextInt(5) + 1;
+        List<Item> chestItems = new ArrayList<>();
+        while (itemAmount != 0) {
+            chestItems.add(new HealthPotion("Health Potion", "Heals 50", 50));
+            itemAmount--;
+        }
+        theRoom.setChest(chestItems);
     }
 
     //inner classes for save data

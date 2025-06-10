@@ -1,10 +1,8 @@
 package main.Model.character;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
+import main.Model.element.HealthPotion;
 import main.Model.element.Item;
 import main.Model.element.Pillar;
 import main.Model.util.HeroType;
@@ -34,9 +32,11 @@ public class Hero extends Character {
     private final ArrayList<Item> myInventory;
     private int myPillarsActivated;
     private int myGold;
+    private int mySpecialMana = 2;
+    private boolean myBossSlain = false;
 
-    private final int myDefenseBonus = 0;
-    private final int myHealthBonus = 0;
+    private boolean myManaBuff = false;
+    private int myAttackBuff = 0;
 
     // Movement and positioning
     private double myPixelX;
@@ -79,16 +79,39 @@ public class Hero extends Character {
         };
     }
 
+    /**
+     * Performs an attack on a target character.
+     * Damage calculation can be based on hero's type, equipped items, and other factors.
+     *
+     * @param theTarget The Character to attack.
+     * @return The amount of damage dealt.
+     */
     @Override
     public int attack(final Character theTarget) {
-        if (theTarget == null || !theTarget.isAlive()) {
-            return 0;
+        if(theTarget == null || !theTarget.isAlive()) {
+            return 0;//Cannot attack null or dead target
         }
 
-        int damageDealt = myHeroType.getBaseAttack();
-        System.out.println(getName() + " attacks " +
-                getTargetName(theTarget) + " for " + damageDealt + " damage.");
+        //Base damage from HeroType
+        int damageDealt = myHeroType.getBaseAttack() + myAttackBuff;
+
+        Random rand = new Random();
+        if(rand.nextDouble(1) < getCritChance()){
+            damageDealt *= getCritMultiplier();
+            System.out.println("Crit landed");
+        }
+
+        System.out.println(getName()+ "attacks" + ((theTarget instanceof Monster) ?
+                ((Monster)theTarget).getName():"target") + "for" + damageDealt + "damage.");
+
         theTarget.takeDamage(damageDealt);
+        if(!theTarget.isAlive() && theTarget instanceof Monster) {
+            addGold(((Monster)theTarget).getGoldReward());
+            addMana();
+            if (((Monster) theTarget).getType().isBoss()) {
+                myBossSlain = true;
+            }
+        }
         return damageDealt;
     }
 
@@ -141,17 +164,42 @@ public class Hero extends Character {
     public int specialAttack() {
         int baseDamage = myHeroType.getSpecialAttackDamage();
         // Stat bonuses from pillars
-        int myStrengthBonus = 0; // TODO: implement bonuses
-        int myAgilityBonus = 0;
-        int bonusDamage = myStrengthBonus + myAgilityBonus;
-        int totalDamage = baseDamage + bonusDamage;
+        int totalDamage = baseDamage + myAttackBuff;
+
+        Random rand = new Random();
+        if(rand.nextDouble(1) < getCritChance()){
+            totalDamage *= getCritMultiplier();
+            System.out.println("Critlanded");
+        }
 
         System.out.println(getName() + " performs a special attack!");
+        if (myManaBuff) {
+            mySpecialMana--;
+            System.out.println("Mana at: " + mySpecialMana + "/4");
+        } else {
+            mySpecialMana -= 2;
+            System.out.println("Mana at: " + mySpecialMana + "/4");
+        }
         return totalDamage;
     }
 
     public boolean canUseSpecialAttack() {
-        return true; // Simple implementation for now
+        boolean canUse = false;
+        if (myManaBuff) {
+            canUse = mySpecialMana >= 1;
+        } else {
+            canUse = mySpecialMana >= 2;
+        }
+        return canUse;
+    }
+
+    public void addMana() {
+        if (mySpecialMana < 4){
+            mySpecialMana++;
+            System.out.println("Mana gained: " + mySpecialMana + "/4");
+        } else {
+            System.out.println("Mana at max: " + mySpecialMana + "/4");
+        }
     }
 
     @Override
@@ -250,8 +298,24 @@ public class Hero extends Character {
         this.myPillarsActivated = Math.max(0, thePillarsActivated);
     }
 
+    public void setManaBuff(final boolean theManaBuff) {
+        myManaBuff = theManaBuff;
+    }
+
+    public void addAttackBuff(final int theAttackBuff) {
+        myAttackBuff += theAttackBuff;
+    }
+
     public void addItem(final Item theItem) {
         pickupItem(theItem);
+    }
+
+    public boolean getBossSlain() {
+        return myBossSlain;
+    }
+
+    public void setBossSlain(final boolean theBossSlain) {
+        myBossSlain = theBossSlain;
     }
 
     // Inner classes for better organization
@@ -405,6 +469,7 @@ public class Hero extends Character {
             // Restore inventory (you'll need to implement item recreation)
             for (String itemName : saveData.inventoryItems) {
                 // hero.addItem(ItemFactory.createItem(itemName));
+                hero.addItem(new HealthPotion("Health Potion", "Heals 50", 50));
             }
 
             return hero;

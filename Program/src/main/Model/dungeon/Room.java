@@ -28,6 +28,9 @@ public class Room {
     private final List<Item> myItems;
     private Pillar myPillar; // A room can have at most one pillar
     private Trap myTrap;     // A room can have at most one trap (or a list if multiple are allowed)
+    private final List<Item> myChest;
+    private boolean myChestOpened;
+
 
     // Door states (true if a door exists in that direction)
     private boolean myHasNorthDoor;
@@ -55,6 +58,8 @@ public class Room {
         this.myItems = new ArrayList<>();
         this.myPillar = null;
         this.myTrap = null;
+        this.myChest = new ArrayList<>();
+        this.myChestOpened = false;
 
         // Doors are initially closed/non-existent until explicitly set
         this.myHasNorthDoor = false;
@@ -209,26 +214,68 @@ public class Room {
         return Objects.hash(myPosition);
     }
 
-    /**
-     *checks if this room has chest
-     *
-     * @return true if the room has chest false otherwise
-     */
-    public boolean hasChest() {
-        //check if this room contains chest
-        return false; //replace with actual implementation
+    public void setChest(final List<Item> theChest) {
+        if (theChest != null) {
+            setRoomType(RoomType.TREASURE);
+            myChest.addAll(theChest);
+        } else {
+            System.out.println("chest was null, skipping treasure room setting.");
+        }
     }
 
+   public List<Item> getChest() {
+        return myChest;
+   }
+
+   public boolean hasChest() {
+        return RoomType.TREASURE == getRoomType();
+   }
+
     /**
-     *opens chest in this room and returns its contents
-     *
-     * @return list of items from chest
+     * opens chest in this room and returns its contents
      */
-    public List<Item> openChest() {
-        //open chest and return contents
-        //add chest items to the list
-        //remove chest from room or mark as opened
-        return new ArrayList<>(); //replace with actual implementation
+    public void openChest(final Hero thePlayer) {
+        if (getRoomType() == RoomType.TREASURE) {
+            int itemRemoveCount = 0;
+            if (thePlayer.getGold() >= 10 && !myChestOpened) {
+                boolean inventoryNotFull = true;
+                for (Item item : myChest) {
+                    inventoryNotFull = thePlayer.pickupItem(item);
+                    myChestOpened = true;
+                    if (!inventoryNotFull) {
+                        System.out.println("Inventory full, use items before collecting more.");
+                        break;
+                    } else {
+                        itemRemoveCount++;
+                        System.out.println("Found item in chest: " + item.getName());
+                    }
+                }
+                while (itemRemoveCount != 0) {
+                    myChest.removeFirst();
+                    itemRemoveCount--;
+                }
+                thePlayer.spendGold(10);
+            } else if (myChestOpened && !myChest.isEmpty()) {
+                // If chest already opened, ignore gold requirement and spending.
+                boolean inventoryNotFull = true;
+                for (Item item : myChest) {
+                    inventoryNotFull = thePlayer.pickupItem(item);
+                    if (!inventoryNotFull) {
+                        System.out.println("Inventory full, use items before collecting more.");
+                        break;
+                    } else {
+                        itemRemoveCount++;
+                        System.out.println("Found item in chest: " + item.getName());
+                    }
+                }
+                while (itemRemoveCount != 0) {
+                    myChest.removeFirst();
+                    itemRemoveCount--;
+                }
+            } else {
+                System.out.println("Chest empty or not enough gold.");
+            }
+        }
     }
 
     /**

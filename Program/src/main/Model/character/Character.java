@@ -6,13 +6,13 @@ import main.Model.util.Direction;
 public abstract class Character {
 
     private final String myName;
-    private final int myMaxHealth;
+    private int myMaxHealth;
     private int myHealth;
     private Point myPosition;
     private final int myBaseAttackDamage;
     private final int mySpecialAttackDamage;
     private final String mySpecialAttackName;
-    private final double myCritChance;
+    private double myCritChance;
     private final double myCritMultiplier;
     private final String myDescription;
 
@@ -73,12 +73,36 @@ public abstract class Character {
         return myPosition;
     }
 
+    public void addMaxHealth(final int theHealth) {
+        myMaxHealth += theHealth;
+    }
+
     public void setHealth(final int theHealth) {
         myHealth = Math.min(theHealth, myMaxHealth);
     }
 
     public void setPosition(final Point thePosition) {
         myPosition = thePosition;
+    }
+
+    public int getBaseAttackDamage() {
+        return myBaseAttackDamage;
+    }
+
+    public String getSpecialAttackName() {
+        return mySpecialAttackName;
+    }
+
+    public double getCritChance() {
+        return myCritChance;
+    }
+
+    public double getCritMultiplier() {
+        return myCritMultiplier;
+    }
+
+    public void addCritChance(final double theCritChance) {
+        myCritChance += theCritChance;
     }
 
     public static abstract class CharacterBuilder<BuilderType, Type> {

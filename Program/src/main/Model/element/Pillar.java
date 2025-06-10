@@ -61,20 +61,25 @@ public class Pillar extends DungeonElement {
         // Apply stat bonuses based on pillar type
         switch (myType) {
             case ABSTRACTION:
-                // Increase strength
-                System.out.println(theHero.getName() + "'s strength increased!");
+                // Increase crit chance
+                theHero.addCritChance(0.25);
+                System.out.println(theHero.getName() + "'s crit chance increased!");
                 break;
             case ENCAPSULATION:
-                // Increase Attack
-                System.out.println(theHero.getName() + "'s attack increased!");
+                // Increase maximum Health
+                theHero.addMaxHealth(30);
+                theHero.setHealth(theHero.getMaxHealth());
+                System.out.println(theHero.getName() + "'s max health increased!");
                 break;
             case INHERITANCE:
-                // Increase max health
-                System.out.println(theHero.getName() + "'s maximum health increased!");
+                theHero.setManaBuff(true);
+                // decrease mana needed for special
+                System.out.println(theHero.getName() + "'s Mana needed for special dropped from 2 to 1!");
                 break;
             case POLYMORPHISM:
-                // Increase Special Attack Damage
-                System.out.println(theHero.getName() + "'s special Attack Damage increased!");
+                // Buff to attack
+                theHero.addAttackBuff(15);
+                System.out.println(theHero.getName() + "'s got an attack buff");
                 break;
             default:
                 System.out.println("Unknown pillar type, no buff applied.");
