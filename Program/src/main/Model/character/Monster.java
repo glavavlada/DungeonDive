@@ -55,7 +55,6 @@ public class Monster extends Character {
             damage *= 1.5; // Example: 50% increase
         }
 
-
         if (rand.nextDouble(1) < getCritChance()) {
             damage *= getCritMultiplier();
             System.out.println("Monster Crit landed");

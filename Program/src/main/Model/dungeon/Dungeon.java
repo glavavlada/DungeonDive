@@ -2,10 +2,7 @@ package main.Model.dungeon;
 
 import main.Model.character.Monster;
 import main.Model.character.MonsterFactory;
-import main.Model.element.HealthPotion;
-import main.Model.element.Item;
-import main.Model.element.Pillar;
-import main.Model.element.Trap;
+import main.Model.element.*;
 import main.Model.util.MonsterType;
 import main.Model.util.PillarType;
 import main.Model.util.Point;
@@ -128,6 +125,7 @@ public class Dungeon {
         int monsterCount = (myWidth * myHeight) / 5; // Adjust density as needed
         int trapCount = (myWidth * myHeight) / 10;
         int chestCount = (myWidth * myHeight) / 10;
+        int potionCount = (myWidth * myHeight) / 10;
 
         while ((monsterCount > 0 || trapCount > 0 || chestCount > 0) && !availableSpots.isEmpty()) {
             Point spot = availableSpots.remove(0); // Pick another random spot
@@ -142,23 +140,23 @@ public class Dungeon {
                 } else if (trapCount > 0) {
                     room.setTrap(new Trap("Floor Spikes", "Sharp spikes emerge from the floor.", 5 + random.nextInt(10)));
                     trapCount--;
-                } else if (chestCount > 0) {
+                } else if (chestCount > 0 && !room.hasPillar()) {
                     createChest(room);
                     room.setRoomType(RoomType.TREASURE);
                     chestCount--;
                 }
-                // Could add Treasure rooms here too
             }
         }
-
-        // TODO: place health potions make other items give monsters items
-
-        int potionCount = (myWidth * myHeight) / 10;
 
         while (potionCount > 0) {
             Point spot = availableSpots.remove(0);
             Room room = getRoom(spot);
-            room.addItem(new HealthPotion("Health Potion", "Heals 50", 50));
+            if (potionCount % 2 == 0) {
+                room.addItem(new HealthPotion("Health Potion", "Heals 50", 50));
+            } else {
+                room.addItem(new VisionPotion("Vision Potion", "Reveals nearby tiles", this));
+            }
+
             potionCount--;
         }
 
@@ -375,6 +373,7 @@ public class Dungeon {
                     roomSave.y = y;
                     roomSave.roomType = room.getRoomType().name();
                     roomSave.visited = room.isVisited();
+                    roomSave.chestOpened = room.getChestOpened();
                     roomSave.hasNorthDoor = room.hasNorthDoor();
                     roomSave.hasEastDoor = room.hasEastDoor();
                     roomSave.hasSouthDoor = room.hasSouthDoor();
@@ -436,6 +435,8 @@ public class Dungeon {
 
                     room.setRoomType(RoomType.valueOf(roomSave.roomType));
                     room.setVisited(roomSave.visited);
+                    room.setChestOpened(roomSave.chestOpened);
+                    room.setItemsCollected(roomSave.itemsCollected);
                     room.setNorthDoor(roomSave.hasNorthDoor);
                     room.setEastDoor(roomSave.hasEastDoor);
                     room.setSouthDoor(roomSave.hasSouthDoor);
@@ -446,10 +447,10 @@ public class Dungeon {
                         PillarType pillarType = PillarType.valueOf(roomSave.pillarType);
                         Pillar pillar = new Pillar(pillarType);
                         if (roomSave.pillarActivated) {
-                            //implement a way to set pillar as activated
-                            // pillar.setActivated(true);
+                            room.removePillar();
+                        } else {
+                            room.setPillar(pillar);
                         }
-                        room.setPillar(pillar);
                     }
 
                     //restore trap if present
@@ -460,6 +461,12 @@ public class Dungeon {
                             // trap.setSprung(true);
                         }
                         room.setTrap(trap);
+                    }
+
+                    // Restore boss if spawned
+                    if (room.getRoomType() == RoomType.BOSS && dungeon.myBossSpawned) {
+                        dungeon.myBossSpawned = false;
+                        dungeon.spawnBoss();
                     }
                 }
             }
@@ -494,7 +501,12 @@ public class Dungeon {
         int itemAmount = rand.nextInt(5) + 1;
         List<Item> chestItems = new ArrayList<>();
         while (itemAmount != 0) {
-            chestItems.add(new HealthPotion("Health Potion", "Heals 50", 50));
+            if (itemAmount % 2 == 0) {
+                chestItems.add(new HealthPotion("Health Potion", "Heals 50", 50));
+            } else {
+                chestItems.add(new VisionPotion("Vision Potion", "Reveals nearby tiles", this));
+            }
+
             itemAmount--;
         }
         theRoom.setChest(chestItems);
@@ -520,6 +532,8 @@ public class Dungeon {
         public int y;
         public String roomType;
         public boolean visited;
+        public boolean chestOpened;
+        public boolean itemsCollected;
         public boolean hasNorthDoor;
         public boolean hasEastDoor;
         public boolean hasSouthDoor;

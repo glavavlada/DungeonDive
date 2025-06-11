@@ -30,6 +30,7 @@ public class Room {
     private Trap myTrap;     // A room can have at most one trap (or a list if multiple are allowed)
     private final List<Item> myChest;
     private boolean myChestOpened;
+    private boolean myItemsCollected;
 
 
     // Door states (true if a door exists in that direction)
@@ -60,12 +61,21 @@ public class Room {
         this.myTrap = null;
         this.myChest = new ArrayList<>();
         this.myChestOpened = false;
+        this.myItemsCollected = false;
 
         // Doors are initially closed/non-existent until explicitly set
         this.myHasNorthDoor = false;
         this.myHasEastDoor = false;
         this.myHasSouthDoor = false;
         this.myHasWestDoor = false;
+    }
+
+    public void setChestOpened(final boolean theOpened) {
+        this.myChestOpened = theOpened;
+    }
+
+    public void setItemsCollected(final boolean theCollected) {
+        this.myItemsCollected = theCollected;
     }
 
     /**
@@ -142,7 +152,7 @@ public class Room {
     }
 
     public void addItem(final Item theItem) {
-        if (theItem != null) {
+        if (theItem != null && !myItemsCollected) {
             myItems.add(theItem);
         }
     }
@@ -227,6 +237,10 @@ public class Room {
         return myChest;
    }
 
+   public boolean getChestOpened() {
+        return myChestOpened;
+   }
+
    public boolean hasChest() {
         return RoomType.TREASURE == getRoomType();
    }
@@ -301,6 +315,7 @@ public class Room {
      */
     public void clearItems() {
         myItems.clear();
+        myItemsCollected = true;
     }
 
     /**

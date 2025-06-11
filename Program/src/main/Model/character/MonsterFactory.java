@@ -63,6 +63,7 @@ public class MonsterFactory {
         try {
             return new Monster.MonsterBuilder().setName(theRS.getString("name")).
                                setHealth(theRS.getInt("health")).
+                               setMaxHealth(theRS.getInt("health")).
                                setPosition(theSpot).
                                setBaseAttackDamage(theRS.getInt("attack")).
                                setSpecialAttackName(theRS.getString("special_attack_name")).
