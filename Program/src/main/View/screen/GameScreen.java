@@ -3,20 +3,20 @@ package main.View.screen;
 import javafx.animation.AnimationTimer;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.NumberBinding;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import main.Controller.Controller;
 import main.Controller.StateController;
@@ -26,95 +26,33 @@ import main.Model.dungeon.Room;
 import main.Model.util.Point;
 import main.View.GameUI;
 
+import java.io.InputStream;
+import java.util.Objects;
+
 public class GameScreen extends Screen {
 
-    // ====== CONFIGURATION CONSTANTS ======
-    private static final class Config {
-        // Canvas Configuration
-        static final double DEFAULT_CANVAS_SIZE = 480.0;
-        static final double CANVAS_MIN_SIZE = 400.0;
-        static final double CANVAS_PADDING = 20.0;
-
-        // Tile and Hero Configuration
-        static final double TILES_PER_CANVAS = 30.0;
-        static final double HERO_SIZE_MULTIPLIER = 2.0;
-        static final double DOOR_WIDTH_MULTIPLIER = 2.0;
-
-        // Panel Configuration
-        static final double PANEL_MIN_WIDTH = 150.0;
-        static final double PANEL_PREF_WIDTH = 160.0;
-        static final double PANEL_MAX_WIDTH = 180.0;
-        static final double PANEL_PADDING = 10.0;
-
-        // Button Configuration
-        static final double BUTTON_HEIGHT = 28.0;
-        static final double BUTTON_PADDING = 5.0;
-        static final double COMPACT_BUTTON_WIDTH = 130.0;
-
-        // Minimap Configuration
-        static final double MINIMAP_SIZE = 110.0;
-        static final double MINIMAP_ROOM_SIZE = 10.0;
-        static final double MINIMAP_GRID_SIZE = 7.0;
-
-        // Message Area Configuration
-        static final double MESSAGE_AREA_HEIGHT_RATIO = 0.12;
-        static final double MESSAGE_AREA_MIN_HEIGHT = 80.0;
-        static final double MESSAGE_AREA_MAX_HEIGHT = 120.0;
-        static final int MAX_MESSAGES = 8;
-
-        // Font Configuration
-        static final String FONT_FAMILY = "Monospaced";
-        static final double STATS_FONT_SIZE = 12.0;
-        static final double TITLE_FONT_SIZE = 28.0;
-
-        // Colors
-        static final String BACKGROUND_COLOR = "#1a1a1a";
-        static final String PANEL_COLOR = "#8B4513";
-        static final String PANEL_BORDER_COLOR = "#654321";
-        static final String BUTTON_COLOR = "#654321";
-        static final String MESSAGE_AREA_COLOR = "#2a2a2a";
-    }
-
-    // ====== DIMENSION CALCULATION CLASS ======
-    private static class CanvasDimensions {
-        private final double size;
-        private final double tileSize;
-        private final double heroSize;
-        private final double wallThickness;
-        private final double doorWidth;
-
-        public CanvasDimensions(double canvasSize) {
-            this.size = canvasSize;
-            this.tileSize = canvasSize / Config.TILES_PER_CANVAS;
-            this.heroSize = tileSize * Config.HERO_SIZE_MULTIPLIER;
-            this.wallThickness = tileSize;
-            this.doorWidth = wallThickness * Config.DOOR_WIDTH_MULTIPLIER;
-        }
-
-        double getSize() { return size; }
-        double getTileSize() { return tileSize; }
-        double getHeroSize() { return heroSize; }
-        double getWallThickness() { return wallThickness; }
-        double getDoorWidth() { return doorWidth; }
-
-        double getBoundaryTop() { return wallThickness; }
-        double getBoundaryBottom() { return size - wallThickness - heroSize; }
-        double getBoundaryLeft() { return wallThickness; }
-        double getBoundaryRight() { return size - wallThickness - heroSize; }
-    }
+    // ====== THEME CONSTANTS (matching other screens) ======
+    private static final Color TAN_COLOR = Color.rgb(222, 184, 135);
+    private static final Color ORANGE_COLOR = Color.ORANGE;
+    private static final String SHADOW_STYLE = "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0.5, 4, 4);";
+    private static final String FONT_PATH = "/main/View/fonts/PixelFont.ttf";
+    private static final String BACKGROUND_PATH = "/sprites/backgrounds/brick_wall_background.png";
 
     // ====== UI COMPONENTS ======
     private Scene scene;
+    private StackPane scalableRoot; // For consistent scaling
     private Canvas roomCanvas;
     private GraphicsContext graphicsContext;
     private GraphicsContext minimapGraphics;
-
     private GraphicsContext portraitGraphics;
+    private Canvas minimapCanvas;
+    private ResponsiveDimensions responsiveDims;
 
     // Player Stats
     private Label playerHealthLabel;
     private Label playerAttackLabel;
     private Label playerGoldLabel;
+    private Label playerPillarsLabel;
 
     // Message Area
     private VBox messagesArea;
@@ -134,34 +72,61 @@ public class GameScreen extends Screen {
     // ====== MAIN SCREEN SETUP ======
     @Override
     public void showScreen(final GameUI gameUI) {
-        scene = createScene(gameUI);
-        initializeHeroPosition();
-        setupCanvasScaling();
+        // Create scalable root container (like other screens)
+        scalableRoot = new StackPane();
 
-        Platform.runLater(() -> {
-            initializeHeroMovementSpeed();
-            renderRoom();
-            updatePlayerStats();
-            updateMinimap();
-            startGameLoop();
-        });
+        // Get current scene dimensions for smooth transition
+        double currentWidth = BASE_WIDTH;
+        double currentHeight = BASE_HEIGHT;
 
-        addGameMessage("Welcome to the dungeon!");
-        if (getController().getGameController() != null) {
-            addGameMessage(getController().getGameController().getCurrentRoomDescription());
+        if (getStage().getScene() != null) {
+            currentWidth = getStage().getScene().getWidth();
+            currentHeight = getStage().getScene().getHeight();
         }
+
+        scene = new Scene(scalableRoot, currentWidth, currentHeight);
+
+        // Initialize canvas early (before UI creation)
+        roomCanvas = new Canvas(Config.DEFAULT_CANVAS_SIZE, Config.DEFAULT_CANVAS_SIZE);
+        graphicsContext = roomCanvas.getGraphicsContext2D();
+
+        responsiveDims = new ResponsiveDimensions(scene);
+
+        // Create the main content
+        BorderPane mainContent = createMainContent(gameUI);
+        scalableRoot.getChildren().add(mainContent);
+
+        // Apply consistent scaling and theming
+        setupScalingAndTheming();
+        setupInitialState();
+
+        // Preserve fullscreen state for smooth transition
+        boolean wasFullScreen = getStage().isFullScreen();
 
         getStage().setScene(scene);
         getStage().setTitle("Dungeon Dive - Pixel Adventure");
-        getStage().show();
+
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ESCAPE) {
+                // This ensures the game loop is stopped correctly
+                getController().pauseGame(null, gameUI);
+            }
+        });
+
+        if (wasFullScreen) {
+            getStage().setFullScreen(true);
+        }
+
+        if (!getStage().isShowing()) {
+            getStage().show();
+        }
     }
 
-    // ====== SCENE CREATION ======
-    private Scene createScene(GameUI gameUI) {
+    private BorderPane createMainContent(GameUI gameUI) {
         BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: " + Config.BACKGROUND_COLOR + ";");
 
-        scene = new Scene(root, 1000, 750);
+        // Apply themed background
+        setupThemedBackground(root);
 
         HBox mainGameArea = createMainGameArea(gameUI);
         createMessageArea();
@@ -169,15 +134,59 @@ public class GameScreen extends Screen {
         root.setCenter(mainGameArea);
         root.setBottom(messageContainer);
 
-        setupResponsiveBindings(mainGameArea);
-
-        return scene;
+        return root;
     }
 
+    private void setupThemedBackground(BorderPane root) {
+        try (InputStream bgStream = getClass().getResourceAsStream(BACKGROUND_PATH)) {
+            if (bgStream != null) {
+                root.setStyle(
+                        "-fx-background-image: url('" + BACKGROUND_PATH + "'); " +
+                                "-fx-background-repeat: no-repeat; " +
+                                "-fx-background-size: cover; " +
+                                "-fx-background-position: center center;"
+                );
+            } else {
+                root.setStyle("-fx-background-color: #202020;");
+            }
+        } catch (Exception e) {
+            root.setStyle("-fx-background-color: #202020;");
+        }
+    }
+
+    private void setupScalingAndTheming() {
+        // Apply consistent scaling like other screens
+        //applyScaling(scalableRoot, scene);
+        setupResponsiveBindings();
+    }
+
+    private void setupInitialState() {
+        initializeHeroPosition();
+        scaleCanvas();
+
+        Platform.runLater(() -> {
+            initializeHeroMovementSpeed();
+            renderRoom();
+            updatePlayerStats();
+            updateMinimap();
+            startGameLoop();
+            displayWelcomeMessages();
+        });
+    }
+
+    private void displayWelcomeMessages() {
+        addGameMessage("Welcome to the dungeon!");
+        if (getController().getGameController() != null) {
+            addGameMessage(getController().getGameController().getCurrentRoomDescription());
+        }
+    }
+
+    // ====== MAIN GAME AREA CREATION ======
     private HBox createMainGameArea(GameUI gameUI) {
         HBox mainGameArea = new HBox();
-        mainGameArea.setStyle("-fx-background-color: " + Config.BACKGROUND_COLOR + ";");
+        mainGameArea.setStyle("-fx-background-color: rgba(0,0,0,0.3);"); // Semi-transparent overlay
         mainGameArea.setFillHeight(true);
+        mainGameArea.setMinWidth(600); // Force minimum sizes to prevent disappearing panels
 
         VBox leftPanel = createLeftPanel();
         VBox centerArea = createCenterArea();
@@ -188,300 +197,406 @@ public class GameScreen extends Screen {
         HBox.setHgrow(rightPanel, Priority.NEVER);
 
         mainGameArea.getChildren().addAll(leftPanel, centerArea, rightPanel);
-
         return mainGameArea;
     }
 
-    // ====== LEFT PANEL CREATION ======
+    // ====== LEFT PANEL CREATION (with theming) ======
     private VBox createLeftPanel() {
-        VBox leftPanel = createStyledPanel();
+        VBox leftPanel = createThemedPanel();
 
         VBox statsBox = createPlayerStatsBox();
         VBox portraitSection = createCharacterPortrait();
-        Button inventoryButton = createStyledButton("INV");
-        inventoryButton.setOnAction(_ -> getController().getGameController().openInventory());
+        Button inventoryButton = createThemedButton("INV");
+        inventoryButton.setOnAction(e -> getController().getGameController().openInventory());
 
         leftPanel.getChildren().addAll(statsBox, portraitSection, inventoryButton);
-
         return leftPanel;
     }
 
     private VBox createPlayerStatsBox() {
-        VBox statsBox = new VBox(6);
+        VBox statsBox = new VBox();
+        statsBox.spacingProperty().bind(responsiveDims.getPanelPaddingBinding().divide(3));
         statsBox.setStyle(
-                "-fx-background-color: " + Config.PANEL_BORDER_COLOR + "; " +
-                        "-fx-border-color: " + Config.PANEL_COLOR + "; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-padding: 8; " +
-                        "-fx-border-radius: 5px; " +
-                        "-fx-background-radius: 5px;"
+                "-fx-background-color: rgba(139, 69, 19, 0.9); " +
+                        "-fx-border-color: " + Config.PANEL_BORDER_COLOR + "; " +
+                        "-fx-border-width: 2px; -fx-padding: 8; " +
+                        "-fx-border-radius: 5px; -fx-background-radius: 5px;" +
+                        SHADOW_STYLE
         );
+        playerHealthLabel = createThemedStatLabel();
+        HBox healthBox = createStatBox("/sprites/icons/heart.png", playerHealthLabel);
 
-        Font statsFont = Font.font(Config.FONT_FAMILY, FontWeight.BOLD, Config.STATS_FONT_SIZE);
+        playerAttackLabel = createThemedStatLabel();
+        HBox attackBox = createStatBox("/sprites/icons/sword.png", playerAttackLabel);
 
-        // Health with heart icon
-        HBox healthBox = createStatBox("❤", Color.RED);
-        playerHealthLabel = createStatLabel(statsFont);
-        healthBox.getChildren().add(playerHealthLabel);
+        playerGoldLabel = createThemedStatLabel();
+        HBox goldBox = createStatBox("/sprites/icons/coin.png", playerGoldLabel);
 
-        // Attack with sword icon
-        HBox attackBox = createStatBox("⚔", Color.LIGHTGRAY);
-        playerAttackLabel = createStatLabel(statsFont);
-        attackBox.getChildren().add(playerAttackLabel);
+        playerPillarsLabel = createThemedStatLabel();
+        HBox pillarsBox = createStatBox("/sprites/icons/pillar.png", playerPillarsLabel);
 
-        // Gold with coin icon
-        HBox goldBox = createStatBox("🪙", Color.GOLD);
-        playerGoldLabel = createStatLabel(statsFont);
-        goldBox.getChildren().add(playerGoldLabel);
+        statsBox.getChildren().addAll(healthBox, attackBox, goldBox, pillarsBox);
+        return statsBox;    }
 
-        statsBox.getChildren().addAll(healthBox, attackBox, goldBox);
+    // FIX: Modified createStatBox to bind icon size and add padding for text fitting
+    private HBox createStatBox(String iconPath, Label valueLabel) {
+        Image iconImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream(iconPath)));
+        ImageView iconView = new ImageView(iconImage);
 
-        return statsBox;
-    }
+        // Bind icon size to a responsive dimension, related to font size for consistency
+        iconView.fitWidthProperty().bind(responsiveDims.getStatsIconSizeBinding());
+        iconView.fitHeightProperty().bind(responsiveDims.getStatsIconSizeBinding());
+        iconView.setPreserveRatio(true);
 
-    private HBox createStatBox(String icon, Color iconColor) {
-        HBox statBox = new HBox(3);
+        valueLabel.setWrapText(true); // Ensure text wrapping is enabled
+        valueLabel.setMaxWidth(Double.MAX_VALUE); // Allow label to expand to fill available space
+
+        HBox statBox = new HBox(6, iconView, valueLabel);
         statBox.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(valueLabel, Priority.ALWAYS); // Allow the label to grow horizontally
 
-        Label iconLabel = new Label(icon);
-        iconLabel.setTextFill(iconColor);
-        iconLabel.setFont(Font.font(14));
+        // Add padding to the HBox itself to prevent text from hitting the edge
+        statBox.paddingProperty().bind(Bindings.createObjectBinding(() ->
+                        new Insets(0, responsiveDims.getPanelPaddingBinding().getValue().doubleValue() / 4, 0, 0),
+                responsiveDims.getPanelPaddingBinding()));
 
-        statBox.getChildren().add(iconLabel);
         return statBox;
     }
 
-    private Label createStatLabel(Font font) {
+    // FIX: Refined createThemedStatLabel for better text wrapping and alignment
+    private Label createThemedStatLabel() {
         Label label = new Label();
-        label.setFont(font);
-        label.setTextFill(Color.WHITE);
+        label.fontProperty().bind(Bindings.createObjectBinding(() ->
+                        loadFont(FONT_PATH, responsiveDims.getStatsFontSizeBinding().getValue().intValue(), "Monospaced"),
+                responsiveDims.getStatsFontSizeBinding()));
+        label.setTextFill(TAN_COLOR);
+        label.setStyle(SHADOW_STYLE);
+        label.setMaxWidth(Double.MAX_VALUE); // Allow it to expand as much as the parent HBox allows
+        label.setWrapText(true); // Crucial for multi-line text if needed
+        label.setAlignment(Pos.CENTER_LEFT); // Align text within the label
         return label;
     }
 
     private VBox createCharacterPortrait() {
-        VBox portraitSection = new VBox(3);
-        portraitSection.setAlignment(Pos.CENTER);
-        portraitSection.setStyle(
-                "-fx-background-color: " + Config.PANEL_BORDER_COLOR + "; " +
-                        "-fx-border-color: " + Config.PANEL_COLOR + "; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-padding: 6; " +
-                        "-fx-border-radius: 5px; " +
-                        "-fx-background-radius: 5px;"
-        );
+        VBox portraitSection = createPortraitContainer();
+        StackPane portraitFrame = createPortraitFrame();
 
-        StackPane portraitFrame = new StackPane();
-        portraitFrame.setPrefSize(80, 80);
-        portraitFrame.setStyle(
-                "-fx-background-color: #2a2a2a; " +
-                        "-fx-border-color: " + Config.PANEL_BORDER_COLOR + "; " +
-                        "-fx-border-width: 2px;"
-        );
-
-        // Create canvas for animated portrait instead of static image
-        // Portrait Canvas for animated character
-        Canvas portraitCanvas = new Canvas(70, 70);
-        portraitGraphics = portraitCanvas.getGraphicsContext2D();
-
-        // Set up the canvas with a dark background
-        portraitGraphics.setFill(Color.rgb(40, 40, 45));
-        portraitGraphics.fillRect(0, 0, 70, 70);
-
+        Canvas portraitCanvas = createPortraitCanvas(portraitFrame);
         portraitFrame.getChildren().add(portraitCanvas);
         portraitSection.getChildren().add(portraitFrame);
 
         return portraitSection;
     }
 
-    // ====== CENTER AREA CREATION ======
+    private VBox createPortraitContainer() {
+        VBox portraitSection = new VBox();
+        portraitSection.spacingProperty().bind(responsiveDims.getPanelPaddingBinding().divide(3));
+        portraitSection.setAlignment(Pos.CENTER);
+        portraitSection.setStyle(
+                "-fx-background-color: rgba(139, 69, 19, 0.9); " +
+                        "-fx-border-color: " + Config.PANEL_BORDER_COLOR + "; " +
+                        "-fx-border-width: 2px; -fx-padding: 6; " +
+                        "-fx-border-radius: 5px; -fx-background-radius: 5px;" +
+                        SHADOW_STYLE
+        );
+        return portraitSection;
+    }
+
+    private StackPane createPortraitFrame() {
+        StackPane portraitFrame = new StackPane();
+        portraitFrame.prefWidthProperty().bind(responsiveDims.getPanelWidthBinding().multiply(0.5));
+        portraitFrame.prefHeightProperty().bind(responsiveDims.getPanelWidthBinding().multiply(0.5));
+        portraitFrame.setStyle(
+                "-fx-background-color: #2a2a2a; " +
+                        "-fx-border-color: " + Config.PANEL_BORDER_COLOR + "; " +
+                        "-fx-border-width: 2px;" +
+                        SHADOW_STYLE
+        );
+        return portraitFrame;
+    }
+
+    private Canvas createPortraitCanvas(StackPane portraitFrame) {
+        Canvas portraitCanvas = new Canvas();
+        portraitCanvas.widthProperty().bind(portraitFrame.prefWidthProperty().subtract(10));
+        portraitCanvas.heightProperty().bind(portraitFrame.prefHeightProperty().subtract(10));
+        portraitGraphics = portraitCanvas.getGraphicsContext2D();
+
+        portraitCanvas.widthProperty().addListener((obs, oldVal, newVal) -> updatePortraitBackground());
+        portraitCanvas.heightProperty().addListener((obs, oldVal, newVal) -> updatePortraitBackground());
+
+        return portraitCanvas;
+    }
+
+    private void updatePortraitBackground() {
+        if (portraitGraphics != null) {
+            Canvas canvas = portraitGraphics.getCanvas();
+            portraitGraphics.setFill(Color.rgb(40, 40, 45));
+            portraitGraphics.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        }
+    }
+
+    // ====== CENTER AREA CREATION (with theming) ======
     private VBox createCenterArea() {
         VBox centerArea = new VBox();
         centerArea.setAlignment(Pos.CENTER);
-        centerArea.setStyle("-fx-background-color: " + Config.BACKGROUND_COLOR + ";");
+        centerArea.setStyle("-fx-background-color: rgba(0,0,0,0.2);"); // Semi-transparent
 
-        VBox titleBox = createTitleBox();
+        VBox titleBox = createThemedTitleBox();
         StackPane canvasContainer = createCanvasContainer();
 
         centerArea.getChildren().addAll(titleBox, canvasContainer);
         VBox.setVgrow(canvasContainer, Priority.ALWAYS);
-
         return centerArea;
     }
 
-    private VBox createTitleBox() {
-        VBox titleBox = new VBox(5);
+    private VBox createThemedTitleBox() {
+        VBox titleBox = new VBox(10);
+        titleBox.spacingProperty().bind(responsiveDims.getPanelPaddingBinding().divide(2));
+        titleBox.paddingProperty().bind(Bindings.createObjectBinding(() ->
+                        new Insets(responsiveDims.getPanelPaddingBinding().getValue().doubleValue()),
+                responsiveDims.getPanelPaddingBinding()));
         titleBox.setAlignment(Pos.CENTER);
-        titleBox.setPadding(new Insets(10));
 
-        Label gameTitle = new Label("Dungeon Dive");
-        gameTitle.setFont(Font.font("Serif", FontWeight.BOLD, Config.TITLE_FONT_SIZE));
-        gameTitle.setTextFill(Color.web("#D4AF37"));
-        gameTitle.setAlignment(Pos.CENTER);
+        Text gameTitle = new Text("DUNGEON");
+        gameTitle.fontProperty().bind(Bindings.createObjectBinding(() ->
+                        loadFont(FONT_PATH, responsiveDims.getTitleFontSizeBinding().getValue().intValue(), "Impact"),
+                responsiveDims.getTitleFontSizeBinding()));
+        gameTitle.setFill(ORANGE_COLOR);
+        gameTitle.setStyle(SHADOW_STYLE);
 
-        Label subtitle = new Label("Pixel Adventure");
-        subtitle.setFont(Font.font("Serif", FontWeight.NORMAL, 16));
-        subtitle.setTextFill(Color.web("#D4AF37"));
-        subtitle.setAlignment(Pos.CENTER);
+        Text subtitle = new Text("DIVE");
+        subtitle.fontProperty().bind(Bindings.createObjectBinding(() ->
+                        loadFont(FONT_PATH, (int)(responsiveDims.getTitleFontSizeBinding().getValue().doubleValue() * 0.6), "Impact"),
+                responsiveDims.getTitleFontSizeBinding()));
+        subtitle.setFill(ORANGE_COLOR);
+        subtitle.setStyle(SHADOW_STYLE);
 
         titleBox.getChildren().addAll(gameTitle, subtitle);
         return titleBox;
     }
 
     private StackPane createCanvasContainer() {
-        StackPane canvasContainer = new StackPane();
+        StackPane canvasContainer = new StackPane(roomCanvas);
         canvasContainer.setAlignment(Pos.CENTER);
-        canvasContainer.setStyle("-fx-background-color: " + Config.BACKGROUND_COLOR + ";");
-
-        roomCanvas = new Canvas(Config.DEFAULT_CANVAS_SIZE, Config.DEFAULT_CANVAS_SIZE);
-        graphicsContext = roomCanvas.getGraphicsContext2D();
-        roomCanvas.setVisible(true);
-        roomCanvas.setManaged(true);
-
-        canvasContainer.getChildren().add(roomCanvas);
-
+        canvasContainer.setStyle(
+                "-fx-background-color: rgba(0,0,0,0.7); " +
+                        "-fx-border-color: " + Config.PANEL_BORDER_COLOR + "; " +
+                        "-fx-border-width: 3px; " +
+                        "-fx-border-radius: 10px; " +
+                        "-fx-background-radius: 10px;" +
+                        SHADOW_STYLE
+        );
+        canvasContainer.setPadding(new Insets(10));
         return canvasContainer;
     }
 
-    // ====== RIGHT PANEL CREATION ======
+    // ====== RIGHT PANEL CREATION (with theming) ======
     private VBox createRightPanel(GameUI gameUI) {
-        VBox rightPanel = createStyledPanel();
+        VBox rightPanel = createThemedPanel();
 
         VBox minimapContainer = createMinimapContainer();
+        Button helpButton = createThemedButton("HELP");
+        Button pauseButton = createThemedButton("PAUSE");
 
-        Button questButton = createStyledButton("QUEST");
-        Button helpButton = createStyledButton("HELP");
-        Button pauseButton = createStyledButton("PAUSE");
-
-        questButton.setOnAction(_ -> addGameMessage("Quest system not yet implemented!"));
         helpButton.setOnAction(event -> getController().helpMenu(event, gameUI));
         pauseButton.setOnAction(event -> getController().pauseGame(event, gameUI));
 
-        rightPanel.getChildren().addAll(minimapContainer, questButton, helpButton, pauseButton);
-
+        rightPanel.getChildren().addAll(minimapContainer, helpButton, pauseButton);
         return rightPanel;
     }
 
     private VBox createMinimapContainer() {
-        VBox minimapContainer = new VBox(5);
-        minimapContainer.setAlignment(Pos.CENTER);
-        minimapContainer.setStyle(
-                "-fx-background-color: #000000; " +
-                        "-fx-border-color: " + Config.PANEL_BORDER_COLOR + "; " +
-                        "-fx-border-width: 3px; " +
-                        "-fx-padding: 6; " +
-                        "-fx-border-radius: 5px; " +
-                        "-fx-background-radius: 5px;"
-        );
-
-        Label minimapTitle = new Label("MAP");
-        minimapTitle.setFont(Font.font("Serif", FontWeight.BOLD, 12));
-        minimapTitle.setTextFill(Color.WHITE);
-        minimapTitle.setAlignment(Pos.CENTER);
-
-        Canvas minimapCanvas = new Canvas(Config.MINIMAP_SIZE, Config.MINIMAP_SIZE);
-        minimapGraphics = minimapCanvas.getGraphicsContext2D();
+        VBox minimapContainer = createMinimapContainerBase();
+        Label minimapTitle = createMinimapTitle();
+        minimapCanvas = createMinimapCanvas();
 
         minimapContainer.getChildren().addAll(minimapTitle, minimapCanvas);
-
         return minimapContainer;
     }
 
-    // ====== UTILITY METHODS FOR UI CREATION ======
-    private VBox createStyledPanel() {
-        VBox panel = new VBox(8);
-        panel.setPrefWidth(Config.PANEL_PREF_WIDTH);
-        panel.setMaxWidth(Config.PANEL_MAX_WIDTH);
-        panel.setMinWidth(Config.PANEL_MIN_WIDTH);
+    private VBox createMinimapContainerBase() {
+        VBox minimapContainer = new VBox();
+        minimapContainer.spacingProperty().bind(responsiveDims.getPanelPaddingBinding().divide(2));
+        minimapContainer.setAlignment(Pos.CENTER);
+        minimapContainer.setStyle(
+                "-fx-background-color: rgba(0, 0, 0, 0.9); " +
+                        "-fx-border-color: " + Config.PANEL_BORDER_COLOR + "; " +
+                        "-fx-border-width: 3px; -fx-padding: 6; " +
+                        "-fx-border-radius: 5px; -fx-background-radius: 5px;" +
+                        SHADOW_STYLE
+        );
+        return minimapContainer;
+    }
+
+    private Label createMinimapTitle() {
+        Label minimapTitle = new Label("MAP");
+        minimapTitle.fontProperty().bind(Bindings.createObjectBinding(() ->
+                        loadFont(FONT_PATH, responsiveDims.getStatsFontSizeBinding().getValue().intValue(), "Impact"),
+                responsiveDims.getStatsFontSizeBinding()));
+        minimapTitle.setTextFill(TAN_COLOR);
+        minimapTitle.setAlignment(Pos.CENTER);
+        minimapTitle.setStyle(SHADOW_STYLE);
+        return minimapTitle;
+    }
+
+    private Canvas createMinimapCanvas() {
+        Canvas canvas = new Canvas();
+        canvas.widthProperty().bind(responsiveDims.getMinimapSizeBinding());
+        canvas.heightProperty().bind(responsiveDims.getMinimapSizeBinding());
+
+        minimapGraphics = canvas.getGraphicsContext2D();
+        canvas.widthProperty().addListener((obs, oldVal, newVal) -> updateMinimap());
+        canvas.heightProperty().addListener((obs, oldVal, newVal) -> updateMinimap());
+
+        return canvas;
+    }
+
+    // ====== THEMED UI UTILITY METHODS ======
+    private VBox createThemedPanel() {
+        VBox panel = new VBox();
+        panel.setAlignment(Pos.TOP_CENTER);
+        panel.spacingProperty().bind(responsiveDims.getPanelPaddingBinding());
+        panel.prefWidthProperty().bind(responsiveDims.getPanelWidthBinding());
+        panel.maxWidthProperty().bind(responsiveDims.getPanelWidthBinding().multiply(1.2));
+        panel.minWidthProperty().bind(responsiveDims.getPanelWidthBinding().multiply(0.8));
+        panel.paddingProperty().bind(Bindings.createObjectBinding(() ->
+                        new Insets(responsiveDims.getPanelPaddingBinding().getValue().doubleValue()),
+                responsiveDims.getPanelPaddingBinding()));
         panel.setStyle(
-                "-fx-background-color: " + Config.PANEL_COLOR + "; " +
+                "-fx-background-color: rgba(139, 69, 19, 0.9); " +
                         "-fx-border-color: " + Config.PANEL_BORDER_COLOR + "; " +
                         "-fx-border-width: 3px; " +
-                        "-fx-padding: " + Config.PANEL_PADDING + ";"
+                        "-fx-border-radius: 5px; " +
+                        "-fx-background-radius: 5px;" +
+                        SHADOW_STYLE
         );
         return panel;
     }
 
-    private Button createStyledButton(String text) {
-        Button button = new Button(text);
-        button.setFont(Font.font(Config.FONT_FAMILY, FontWeight.BOLD, 11));
-        button.setPrefWidth(Config.COMPACT_BUTTON_WIDTH);
-        button.setPrefHeight(Config.BUTTON_HEIGHT);
-        button.setStyle(
-                "-fx-background-color: " + Config.BUTTON_COLOR + "; " +
-                        "-fx-text-fill: #E0E0E0; " +
-                        "-fx-border-color: " + Config.PANEL_BORDER_COLOR + "; " +
-                        "-fx-border-width: 2px; " +
-                        "-fx-padding: " + Config.BUTTON_PADDING + "px; " +
-                        "-fx-background-radius: 3px; " +
-                        "-fx-border-radius: 3px;"
-        );
+    private Button createThemedButton(String text) {
+        Font buttonFont = loadFont(FONT_PATH, 12, "Courier New");
+        Button button = new Button(); // Changed from createStyledButton since it's not defined
+        button.setText(text);
+        button.setTextFill(Color.WHITE);
 
-        String originalStyle = button.getStyle();
-        button.setOnMouseEntered(_ ->
-                button.setStyle(originalStyle + "-fx-background-color: " + Config.PANEL_COLOR + ";"));
-        button.setOnMouseExited(_ ->
-                button.setStyle(originalStyle));
+        button.setTextOverrun(OverrunStyle.CLIP);
+
+        // Responsive font binding
+        button.fontProperty().bind(Bindings.createObjectBinding(() ->
+                        loadFont(FONT_PATH,
+                                responsiveDims.getButtonFontSizeBinding().getValue().intValue(),
+                                "Courier New"),
+                responsiveDims.getButtonFontSizeBinding()));
+
+        // Size bindings
+        button.prefWidthProperty().bind(responsiveDims.getPanelWidthBinding().multiply(Config.BUTTON_WIDTH_RATIO));
+        button.prefHeightProperty().bind(responsiveDims.getButtonHeightBinding());
+
+        button.minWidthProperty().bind(responsiveDims.getPanelWidthBinding().multiply(0.8));
+        button.minHeightProperty().bind(Bindings.createDoubleBinding(() ->
+                        Math.max(Config.BUTTON_MIN_HEIGHT,
+                                responsiveDims.getButtonHeightBinding().getValue().doubleValue()),
+                responsiveDims.getButtonHeightBinding()));
+
+        button.setWrapText(true);
+        button.setAlignment(Pos.CENTER);
+        button.setContentDisplay(ContentDisplay.CENTER);
+
+        // Set default (base) style
+        String baseStyle = "-fx-background-color: #444444;" +
+                "-fx-text-fill: white;" +
+                "-fx-background-radius: 6;" +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0.5, 4, 4);";
+        button.setStyle(baseStyle);
+
+        // Set hover effect manually (since we're not using CSS)
+        button.setOnMouseEntered(e -> button.setStyle(
+                "-fx-background-color: #666666;" +
+                        "-fx-text-fill: white;" +
+                        "-fx-background-radius: 6;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0.5, 4, 4);"
+        ));
+
+        // Reset style on exit
+        button.setOnMouseExited(e -> button.setStyle(baseStyle));
 
         return button;
     }
 
-    // ====== MESSAGE AREA ======
+    // ====== MESSAGE AREA (with theming) ======
     private void createMessageArea() {
-        messageContainer = new VBox();
-        messageContainer.setStyle(
-                "-fx-background-color: " + Config.MESSAGE_AREA_COLOR + "; " +
-                        "-fx-border-color: " + Config.PANEL_BORDER_COLOR + "; " +
-                        "-fx-border-width: 3 0 0 0; " +
-                        "-fx-padding: " + Config.PANEL_PADDING + ";"
-        );
-
-        messagesArea = new VBox(6);
-        messagesArea.setAlignment(Pos.TOP_LEFT);
-        messagesArea.setStyle("-fx-padding: 8;");
-
-        messageScrollPane = new ScrollPane(messagesArea);
-        messageScrollPane.setFitToWidth(true);
-        messageScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        messageScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        messageScrollPane.setStyle(
-                "-fx-background: transparent; " +
-                        "-fx-background-color: transparent; " +
-                        "-fx-border-color: transparent;"
-        );
-        messageScrollPane.setPrefHeight(Config.MESSAGE_AREA_MIN_HEIGHT);
-        messageScrollPane.setMaxHeight(Config.MESSAGE_AREA_MAX_HEIGHT);
-
+        messageContainer = createThemedMessageContainer();
+        messagesArea = createMessagesArea();
+        messageScrollPane = createMessageScrollPane();
         messageContainer.getChildren().add(messageScrollPane);
     }
 
-    // ====== RESPONSIVE BINDINGS ======
-    private void setupResponsiveBindings(HBox mainGameArea) {
-        VBox leftPanel = (VBox) mainGameArea.getChildren().get(0);
-        VBox rightPanel = (VBox) mainGameArea.getChildren().get(2);
+    private VBox createThemedMessageContainer() {
+        VBox container = new VBox();
+        container.setStyle(
+                "-fx-background-color: rgba(42, 42, 42, 0.9); " +
+                        "-fx-border-color: " + Config.PANEL_BORDER_COLOR + "; " +
+                        "-fx-border-width: 3 0 0 0;" +
+                        SHADOW_STYLE
+        );
+        container.paddingProperty().bind(Bindings.createObjectBinding(() ->
+                        new Insets(responsiveDims.getPanelPaddingBinding().getValue().doubleValue()),
+                responsiveDims.getPanelPaddingBinding()));
+        return container;
+    }
 
-        leftPanel.setMinWidth(Config.PANEL_MIN_WIDTH);
-        leftPanel.setPrefWidth(Config.PANEL_PREF_WIDTH);
-        leftPanel.setMaxWidth(Config.PANEL_MAX_WIDTH);
+    private VBox createMessagesArea() {
+        VBox area = new VBox();
+        area.spacingProperty().bind(responsiveDims.getPanelPaddingBinding().divide(2));
+        area.paddingProperty().bind(Bindings.createObjectBinding(() ->
+                        new Insets(responsiveDims.getPanelPaddingBinding().getValue().doubleValue()),
+                responsiveDims.getPanelPaddingBinding()));
+        area.setAlignment(Pos.TOP_LEFT);
+        return area;
+    }
 
-        rightPanel.setMinWidth(Config.PANEL_MIN_WIDTH);
-        rightPanel.setPrefWidth(Config.PANEL_PREF_WIDTH);
-        rightPanel.setMaxWidth(Config.PANEL_MAX_WIDTH);
-
-        messageContainer.prefHeightProperty().bind(
+    private ScrollPane createMessageScrollPane() {
+        ScrollPane scrollPane = new ScrollPane(messagesArea);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setStyle(
+                "-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent;"
+        );
+        scrollPane.prefHeightProperty().bind(
                 Bindings.max(Config.MESSAGE_AREA_MIN_HEIGHT,
-                        scene.heightProperty().multiply(Config.MESSAGE_AREA_HEIGHT_RATIO))
+                        Bindings.min(Config.MESSAGE_AREA_MAX_HEIGHT,
+                                scene.heightProperty().multiply(Config.MESSAGE_AREA_HEIGHT_RATIO)))
+        );
+        return scrollPane;
+    }
+
+    // ====== RESPONSIVE BINDINGS ======
+    private void setupResponsiveBindings() {
+        // The width available for the canvas is the scene width minus the panels and some padding.
+        // The previous magic number '100' was too large. 40 provides a safer buffer.
+        NumberBinding availableWidth = scene.widthProperty()
+                .subtract(responsiveDims.getPanelWidthBinding().multiply(2))
+                .subtract(40);
+
+        // The previous magic number '200' for height was not scalable.
+        // Using a ratio of the scene height is more robust for handling the title and message areas.
+        NumberBinding availableHeight = scene.heightProperty().multiply(0.70);
+
+        // Bind the canvas to the smaller of the two dimensions to maintain its square shape.
+        NumberBinding canvasSizeBinding = Bindings.max(
+                Config.CANVAS_MIN_SIZE,
+                Bindings.min(availableWidth, availableHeight)
         );
 
-        mainGameArea.prefWidthProperty().bind(scene.widthProperty());
-        mainGameArea.minWidthProperty().bind(scene.widthProperty());
+        roomCanvas.widthProperty().bind(canvasSizeBinding);
+        roomCanvas.heightProperty().bind(canvasSizeBinding);
+
+        // Add listener to re-render when size changes
+        roomCanvas.widthProperty().addListener((obs, oldVal, newVal) -> scaleCanvas());
     }
 
     // ====== CANVAS SCALING ======
-    private void setupCanvasScaling() {
-        roomCanvas.widthProperty().addListener((obs, oldVal, newVal) -> scaleCanvas());
-        roomCanvas.heightProperty().addListener((obs, oldVal, newVal) -> scaleCanvas());
-    }
-
     private void scaleCanvas() {
         currentDimensions = new CanvasDimensions(roomCanvas.getWidth());
 
@@ -490,16 +605,43 @@ public class GameScreen extends Screen {
             player.setMovementSpeedForCanvasSize(currentDimensions.getSize());
         }
 
-        Platform.runLater(() -> renderRoom());
+        Platform.runLater(this::renderRoom);
     }
 
-    // ====== HERO INITIALIZATION ======
+    // ====== MESSAGE HANDLING ======
+    public void addGameMessage(final String message) {
+        if (messagesArea == null || messageScrollPane == null) return;
+
+        Label messageLabel = createThemedMessageLabel(message);
+        messagesArea.getChildren().add(messageLabel);
+
+        if (messagesArea.getChildren().size() > Config.MAX_MESSAGES) {
+            messagesArea.getChildren().remove(0);
+        }
+        Platform.runLater(() -> messageScrollPane.setVvalue(1.0));
+    }
+
+    private Label createThemedMessageLabel(String message) {
+        Label label = new Label("• " + message);
+        label.fontProperty().bind(Bindings.createObjectBinding(() ->
+                        loadFont(FONT_PATH, responsiveDims.getMessageFontSizeBinding().getValue().intValue(), "Monospaced"),
+                responsiveDims.getMessageFontSizeBinding()));
+        label.paddingProperty().bind(Bindings.createObjectBinding(() ->
+                        new Insets(responsiveDims.getPanelPaddingBinding().getValue().doubleValue() / 4, 0,
+                                responsiveDims.getPanelPaddingBinding().getValue().doubleValue() / 4, 0),
+                responsiveDims.getPanelPaddingBinding()));
+        label.maxWidthProperty().bind(scene.widthProperty().subtract(responsiveDims.getPanelWidthBinding().multiply(2)).subtract(100));
+        label.setTextFill(TAN_COLOR);
+        label.setWrapText(true);
+        label.setStyle(SHADOW_STYLE);
+        return label;
+    }
+
+    // ====== HERO INITIALIZATION AND GAME LOOP ======
     private void initializeHeroPosition() {
         Hero player = getController().getPlayer();
-        if (player != null && (player.getPixelX() == 0 && player.getPixelY() == 0)) {
-            double centerPos = Config.DEFAULT_CANVAS_SIZE / 2 -
-                    (Config.DEFAULT_CANVAS_SIZE / Config.TILES_PER_CANVAS *
-                            Config.HERO_SIZE_MULTIPLIER) / 2;
+        if (player != null && player.getPixelX() == 0 && player.getPixelY() == 0) {
+            double centerPos = currentDimensions.getSize() / 2 - currentDimensions.getHeroSize() / 2;
             player.setPixelPosition(centerPos, centerPos);
         }
     }
@@ -511,7 +653,6 @@ public class GameScreen extends Screen {
         }
     }
 
-    // ====== GAME LOOP ======
     private void startGameLoop() {
         if (gameLoop == null) {
             gameLoop = new AnimationTimer() {
@@ -520,7 +661,7 @@ public class GameScreen extends Screen {
                     if (shouldUpdateGame()) {
                         updateGame();
                     }
-                    renderRoom();
+                    renderRoom(); // Always render for smooth visuals
                 }
             };
         }
@@ -528,11 +669,9 @@ public class GameScreen extends Screen {
     }
 
     private boolean shouldUpdateGame() {
-        return getController() != null &&
-                getController().getGameController() != null &&
-                getController().getPlayer() != null &&
-                getController().getGameController().getStateController()
-                        .isInState(StateController.GameState.EXPLORING);
+        Controller c = getController();
+        return c != null && c.getGameController() != null && c.getPlayer() != null &&
+                c.getGameController().getStateController().isInState(StateController.GameState.EXPLORING);
     }
 
     private void updateGame() {
@@ -541,13 +680,12 @@ public class GameScreen extends Screen {
             player.updatePixelPosition();
             player.updateAnimation(System.nanoTime());
 
-            boolean roomChanged = checkRoomTransition();
-            if (roomChanged) {
+            if (checkRoomTransition()) {
                 onRoomChanged();
             }
 
-            // Update the portrait canvas to match player animation
             updatePortraitCanvas();
+            updatePlayerStats();
         }
     }
 
@@ -557,98 +695,70 @@ public class GameScreen extends Screen {
         }
     }
 
-    // ====== MOVEMENT AND ROOM TRANSITIONS ======
+    // ====== MOVEMENT AND ROOM TRANSITION LOGIC ======
     private boolean checkRoomTransition() {
         Hero player = getController().getPlayer();
         Room currentRoom = getCurrentRoom();
-        
-        
         if (player == null || currentRoom == null) return false;
 
         double px = player.getPixelX();
         double py = player.getPixelY();
         double heroSize = currentDimensions.getHeroSize();
+        boolean transitioned = false;
+
+        // North
+        if (py <= currentDimensions.getBoundaryTop() && currentRoom.hasNorthDoor()) {
+            if (isPlayerInDoorRange(px, heroSize)) {
+                getController().getGameController().movePlayerNorth();
+                player.setPixelPosition(px, currentDimensions.getBoundaryBottom() - 1);
+                transitioned = true;
+            }
+        }
+        // South
+        else if (py >= currentDimensions.getBoundaryBottom() && currentRoom.hasSouthDoor()) {
+            if (isPlayerInDoorRange(px, heroSize)) {
+                getController().getGameController().movePlayerSouth();
+                player.setPixelPosition(px, currentDimensions.getBoundaryTop() + 1);
+                transitioned = true;
+            }
+        }
+        // West
+        else if (px <= currentDimensions.getBoundaryLeft() && currentRoom.hasWestDoor()) {
+            if (isPlayerInDoorRange(py, heroSize)) {
+                getController().getGameController().movePlayerWest();
+                player.setPixelPosition(currentDimensions.getBoundaryRight() - 1, py);
+                transitioned = true;
+            }
+        }
+        // East
+        else if (px >= currentDimensions.getBoundaryRight() && currentRoom.hasEastDoor()) {
+            if (isPlayerInDoorRange(py, heroSize)) {
+                getController().getGameController().movePlayerEast();
+                player.setPixelPosition(currentDimensions.getBoundaryLeft() + 1, py);
+                transitioned = true;
+            }
+        }
+
+        if (!transitioned) {
+            double constrainedX = Math.max(currentDimensions.getBoundaryLeft(), Math.min(currentDimensions.getBoundaryRight(), px));
+            double constrainedY = Math.max(currentDimensions.getBoundaryTop(), Math.min(currentDimensions.getBoundaryBottom(), py));
+            player.setPixelPosition(constrainedX, constrainedY);
+        }
+
+        return transitioned;
+    }
+
+    private boolean isPlayerInDoorRange(double playerPos, double heroSize) {
+        double playerCenter = playerPos + heroSize / 2;
         double doorWidth = currentDimensions.getDoorWidth();
         double canvasSize = currentDimensions.getSize();
+        double doorStart = (canvasSize - doorWidth) / 2;
+        double doorEnd = doorStart + doorWidth;
 
-        // Calculate door positions
-        double doorStartHorizontal = (canvasSize - doorWidth) / 2;
-        double doorEndHorizontal = doorStartHorizontal + doorWidth;
-        double doorStartVertical = (canvasSize - doorWidth) / 2;
-        double doorEndVertical = doorStartVertical + doorWidth;
-
-        // Check each direction for room transition
-        if (checkNorthTransition(currentRoom, px, py, heroSize, doorStartHorizontal, doorEndHorizontal)) {
-            return true;
-        }
-        if (checkSouthTransition(currentRoom, px, py, heroSize, doorStartHorizontal, doorEndHorizontal)) {
-            return true;
-        }
-        if (checkWestTransition(currentRoom, px, py, heroSize, doorStartVertical, doorEndVertical)) {
-            return true;
-        }
-        if (checkEastTransition(currentRoom, px, py, heroSize, doorStartVertical, doorEndVertical)) {
-            return true;
-        }
-
-        // Keep player within boundaries if no transition
-        constrainPlayerToBoundaries(player);
-        return false;
+        return playerCenter >= doorStart && playerCenter <= doorEnd;
     }
 
-    private boolean checkNorthTransition(Room currentRoom, double px, double py, double heroSize,
-                                         double doorStart, double doorEnd) {
-        if (py <= currentDimensions.getBoundaryTop() && currentRoom.hasNorthDoor() &&
-                px + heroSize / 2 >= doorStart && px + heroSize / 2 <= doorEnd) {
-            getController().getGameController().movePlayerNorth();
-            getController().getPlayer().setPixelPosition(px, currentDimensions.getBoundaryBottom() - 1);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean checkSouthTransition(Room currentRoom, double px, double py, double heroSize,
-                                         double doorStart, double doorEnd) {
-        if (py + heroSize >= currentDimensions.getBoundaryBottom() + heroSize && currentRoom.hasSouthDoor() &&
-                px + heroSize / 2 >= doorStart && px + heroSize / 2 <= doorEnd) {
-            getController().getGameController().movePlayerSouth();
-            getController().getPlayer().setPixelPosition(px, currentDimensions.getBoundaryTop() + 1);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean checkWestTransition(Room currentRoom, double px, double py, double heroSize,
-                                        double doorStart, double doorEnd) {
-        if (px <= currentDimensions.getBoundaryLeft() && currentRoom.hasWestDoor() &&
-                py + heroSize / 2 >= doorStart && py + heroSize / 2 <= doorEnd) {
-            getController().getGameController().movePlayerWest();
-            getController().getPlayer().setPixelPosition(currentDimensions.getBoundaryRight() - 1, py);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean checkEastTransition(Room currentRoom, double px, double py, double heroSize,
-                                        double doorStart, double doorEnd) {
-        if (px + heroSize >= currentDimensions.getBoundaryRight() + heroSize && currentRoom.hasEastDoor() &&
-                py + heroSize / 2 >= doorStart && py + heroSize / 2 <= doorEnd) {
-            getController().getGameController().movePlayerEast();
-            getController().getPlayer().setPixelPosition(currentDimensions.getBoundaryLeft() + 1, py);
-            return true;
-        }
-        return false;
-    }
-
-    private void constrainPlayerToBoundaries(Hero player) {
-        double px = Math.max(currentDimensions.getBoundaryLeft(),
-                Math.min(currentDimensions.getBoundaryRight(), player.getPixelX()));
-        double py = Math.max(currentDimensions.getBoundaryTop(),
-                Math.min(currentDimensions.getBoundaryBottom(), player.getPixelY()));
-        player.setPixelPosition(px, py);
-    }
-
-    // ====== RENDERING ======
+    // ====== ADVANCED RENDERING LOGIC ======
     private void renderRoom() {
         if (graphicsContext == null) return;
 
@@ -666,19 +776,12 @@ public class GameScreen extends Screen {
     private void drawFloor() {
         Color darkStone = Color.rgb(40, 40, 45);
         Color lightStone = Color.rgb(50, 50, 55);
-
         int tilesPerSide = (int)(currentDimensions.getSize() / currentDimensions.getTileSize());
-
         for (int y = 0; y < tilesPerSide; y++) {
             for (int x = 0; x < tilesPerSide; x++) {
-                Color tileColor = ((x + y) % 2 == 0) ? darkStone : lightStone;
-                graphicsContext.setFill(tileColor);
-                graphicsContext.fillRect(
-                        x * currentDimensions.getTileSize(),
-                        y * currentDimensions.getTileSize(),
-                        currentDimensions.getTileSize(),
-                        currentDimensions.getTileSize()
-                );
+                graphicsContext.setFill(((x + y) % 2 == 0) ? darkStone : lightStone);
+                graphicsContext.fillRect(x * currentDimensions.getTileSize(), y * currentDimensions.getTileSize(),
+                        currentDimensions.getTileSize(), currentDimensions.getTileSize());
             }
         }
     }
@@ -688,177 +791,113 @@ public class GameScreen extends Screen {
         if (currentRoom == null) return;
 
         Color wallColor = Color.rgb(80, 85, 100);
-        Color doorColor = Color.rgb(25, 25, 30);
+        Color doorColor = Color.rgb(25, 25, 30); // The "empty" space of the door
 
         double size = currentDimensions.getSize();
         double thickness = currentDimensions.getWallThickness();
         double doorWidth = currentDimensions.getDoorWidth();
 
-        // Draw walls with doors
         drawWall(0, 0, size, thickness, currentRoom.hasNorthDoor(), true, doorWidth, wallColor, doorColor);
         drawWall(0, size - thickness, size, thickness, currentRoom.hasSouthDoor(), true, doorWidth, wallColor, doorColor);
         drawWall(0, 0, thickness, size, currentRoom.hasWestDoor(), false, doorWidth, wallColor, doorColor);
         drawWall(size - thickness, 0, thickness, size, currentRoom.hasEastDoor(), false, doorWidth, wallColor, doorColor);
     }
 
-    private void drawWall(double x, double y, double width, double height,
-                          boolean hasDoor, boolean isHorizontal, double doorSize,
-                          Color wallColor, Color doorColor) {
+    private void drawWall(double x, double y, double width, double height, boolean hasDoor, boolean isHorizontal,
+                          double doorSize, Color wallColor, Color doorColor) {
         if (hasDoor) {
-            drawWallWithDoor(x, y, width, height, isHorizontal, doorSize, wallColor, doorColor);
+            double doorStart;
+            if (isHorizontal) {
+                doorStart = x + (width - doorSize) / 2;
+                graphicsContext.setFill(wallColor);
+                graphicsContext.fillRect(x, y, doorStart - x, height); // Left part
+                graphicsContext.setFill(doorColor);
+                graphicsContext.fillRect(doorStart, y, doorSize, height); // Door opening
+                graphicsContext.setFill(wallColor);
+                graphicsContext.fillRect(doorStart + doorSize, y, x + width - (doorStart + doorSize), height); // Right part
+            } else {
+                doorStart = y + (height - doorSize) / 2;
+                graphicsContext.setFill(wallColor);
+                graphicsContext.fillRect(x, y, width, doorStart - y); // Top part
+                graphicsContext.setFill(doorColor);
+                graphicsContext.fillRect(x, doorStart, width, doorSize); // Door opening
+                graphicsContext.setFill(wallColor);
+                graphicsContext.fillRect(x, doorStart + doorSize, width, y + height - (doorStart + doorSize)); // Bottom part
+            }
         } else {
-            drawSolidWall(x, y, width, height, wallColor);
+            graphicsContext.setFill(wallColor);
+            graphicsContext.fillRect(x, y, width, height);
         }
-    }
-
-    private void drawWallWithDoor(double x, double y, double width, double height,
-                                  boolean isHorizontal, double doorSize,
-                                  Color wallColor, Color doorColor) {
-        double doorStart;
-
-        if (isHorizontal) {
-            doorStart = x + (width - doorSize) / 2;
-
-            // Wall before door
-            graphicsContext.setFill(wallColor);
-            graphicsContext.fillRect(x, y, doorStart - x, height);
-
-            // Door opening
-            graphicsContext.setFill(doorColor);
-            graphicsContext.fillRect(doorStart, y, doorSize, height);
-
-            // Wall after door
-            graphicsContext.setFill(wallColor);
-            graphicsContext.fillRect(doorStart + doorSize, y,
-                    x + width - (doorStart + doorSize), height);
-        } else {
-            doorStart = y + (height - doorSize) / 2;
-
-            // Wall before door
-            graphicsContext.setFill(wallColor);
-            graphicsContext.fillRect(x, y, width, doorStart - y);
-
-            // Door opening
-            graphicsContext.setFill(doorColor);
-            graphicsContext.fillRect(x, doorStart, width, doorSize);
-
-            // Wall after door
-            graphicsContext.setFill(wallColor);
-            graphicsContext.fillRect(x, doorStart + doorSize, width,
-                    y + height - (doorStart + doorSize));
-        }
-    }
-
-    private void drawSolidWall(double x, double y, double width, double height, Color wallColor) {
-        graphicsContext.setFill(wallColor);
-        graphicsContext.fillRect(x, y, width, height);
     }
 
     private void drawPlayer() {
         Hero player = getController().getPlayer();
         if (player == null) return;
 
-        double px = player.getPixelX();
-        double py = player.getPixelY();
         double heroSize = currentDimensions.getHeroSize();
-
         Image spriteSheet = player.getSpriteSheet();
-        if (spriteSheet != null) {
-            double sx = player.getCurrentFrameX() * Hero.SPRITE_FRAME_WIDTH;
-            double sy = player.getAnimationRow() * Hero.SPRITE_FRAME_HEIGHT;
 
-            graphicsContext.drawImage(
-                    spriteSheet,
-                    sx, sy,
+        if (spriteSheet != null) {
+            graphicsContext.drawImage(spriteSheet,
+                    player.getCurrentFrameX() * Hero.SPRITE_FRAME_WIDTH,
+                    player.getAnimationRow() * Hero.SPRITE_FRAME_HEIGHT,
                     Hero.SPRITE_FRAME_WIDTH, Hero.SPRITE_FRAME_HEIGHT,
-                    px, py,
-                    heroSize, heroSize
-            );
+                    player.getPixelX(), player.getPixelY(), heroSize, heroSize);
         } else {
-            drawFallbackPlayer(px, py, heroSize);
+            // Fallback rendering if sprite is missing
+            graphicsContext.setFill(Color.BLUE);
+            graphicsContext.fillRect(player.getPixelX(), player.getPixelY(), heroSize, heroSize);
         }
     }
 
-    private void drawFallbackPlayer(double px, double py, double heroSize) {
-        // Body
-        graphicsContext.setFill(Color.rgb(200, 150, 100));
-        graphicsContext.fillRect(px + heroSize*0.3, py + heroSize*0.4,
-                heroSize*0.4, heroSize*0.5);
-
-        // Head
-        graphicsContext.setFill(Color.rgb(200, 150, 100));
-        graphicsContext.fillRect(px + heroSize*0.25, py + heroSize*0.1,
-                heroSize*0.5, heroSize*0.35);
-
-        // Tunic
-        graphicsContext.setFill(Color.rgb(100, 80, 60));
-        graphicsContext.fillRect(px + heroSize*0.2, py + heroSize*0.35,
-                heroSize*0.6, heroSize*0.4);
-
-        // Legs
-        graphicsContext.setFill(Color.rgb(80, 60, 40));
-        graphicsContext.fillRect(px + heroSize*0.25, py + heroSize*0.7,
-                heroSize*0.2, heroSize*0.25);
-        graphicsContext.fillRect(px + heroSize*0.55, py + heroSize*0.7,
-                heroSize*0.2, heroSize*0.25);
-    }
-
-    // ====== PORTRAIT CANVAS RENDERING ======
     private void updatePortraitCanvas() {
         if (portraitGraphics == null) return;
 
         Hero player = getController().getPlayer();
         if (player == null) return;
 
-        // Clear the portrait canvas
-        portraitGraphics.setFill(Color.rgb(40, 40, 45));
-        portraitGraphics.fillRect(0, 0, 70, 70);
+        Canvas canvas = portraitGraphics.getCanvas();
+        double w = canvas.getWidth(), h = canvas.getHeight();
 
-        // Draw the player centered in the portrait canvas
-        double centerX = 35 - 20; // Center horizontally (35 - half of player size)
-        double centerY = 35 - 20; // Center vertically
-        double portraitHeroSize = 40; // Size of hero in portrait
+        portraitGraphics.setFill(Color.rgb(40, 40, 45));
+        portraitGraphics.fillRect(0, 0, w, h);
+
+        double size = Math.min(w, h) * 0.8;
+        double x = (w - size) / 2;
+        double y = (h - size) / 2;
 
         Image spriteSheet = player.getSpriteSheet();
         if (spriteSheet != null) {
-            // Use the same sprite frame that's currently being displayed in the main game
-            double sx = player.getCurrentFrameX() * Hero.SPRITE_FRAME_WIDTH;
-            double sy = player.getAnimationRow() * Hero.SPRITE_FRAME_HEIGHT;
-
-            portraitGraphics.drawImage(
-                    spriteSheet,
-                    sx, sy,
+            portraitGraphics.drawImage(spriteSheet,
+                    player.getCurrentFrameX() * Hero.SPRITE_FRAME_WIDTH,
+                    player.getAnimationRow() * Hero.SPRITE_FRAME_HEIGHT,
                     Hero.SPRITE_FRAME_WIDTH, Hero.SPRITE_FRAME_HEIGHT,
-                    centerX, centerY,
-                    portraitHeroSize, portraitHeroSize
-            );
-        } else {
-            // Use the same fallback rendering as the main canvas
-            drawFallbackPlayer(centerX, centerY, portraitHeroSize);
+                    x, y, size, size);
         }
     }
 
-    // ====== MINIMAP RENDERING ======
+    // ====== ADVANCED MINIMAP LOGIC ======
     public void updateMinimap() {
         if (getController() == null || getController().getDungeon() == null || minimapGraphics == null) {
             return;
         }
-
         clearMinimap();
         drawMinimapBorder();
         drawMinimapRooms();
     }
 
     private void clearMinimap() {
-        minimapGraphics.clearRect(0, 0, Config.MINIMAP_SIZE, Config.MINIMAP_SIZE);
+        double size = minimapCanvas.getWidth();
+        minimapGraphics.clearRect(0, 0, size, size);
         minimapGraphics.setFill(Color.BLACK);
-        minimapGraphics.fillRect(0, 0, Config.MINIMAP_SIZE, Config.MINIMAP_SIZE);
+        minimapGraphics.fillRect(0, 0, size, size);
     }
 
     private void drawMinimapBorder() {
-        minimapGraphics.setStroke(Color.rgb(139, 69, 19));
+        double size = minimapCanvas.getWidth();
+        minimapGraphics.setStroke(Color.rgb(139, 69, 19)); // Same as panel border color
         minimapGraphics.setLineWidth(2);
-        minimapGraphics.strokeRect(1, 1, Config.MINIMAP_SIZE - 2, Config.MINIMAP_SIZE - 2);
+        minimapGraphics.strokeRect(1, 1, size - 2, size - 2);
     }
 
     private void drawMinimapRooms() {
@@ -869,138 +908,71 @@ public class GameScreen extends Screen {
         Point playerPos = player.getPosition();
         int gridSize = (int) Config.MINIMAP_GRID_SIZE;
 
-        int startX = Math.max(0, playerPos.getX() - gridSize / 2);
-        int endX = Math.min(dungeon.getWidth() - 1, playerPos.getX() + gridSize / 2);
-        int startY = Math.max(0, playerPos.getY() - gridSize / 2);
-        int endY = Math.min(dungeon.getHeight() - 1, playerPos.getY() + gridSize / 2);
+        double canvasSize = minimapCanvas.getWidth();
+        double roomDisplaySize = canvasSize / (gridSize + 2); // Dynamic room size
+        double totalGridSize = roomDisplaySize * gridSize;
+        double startDrawX = (canvasSize - totalGridSize) / 2;
+        double startDrawY = (canvasSize - totalGridSize) / 2;
 
-        for (int y = startY; y <= endY; y++) {
-            for (int x = startX; x <= endX; x++) {
-                Room room = dungeon.getRoom(x, y);
-                if (room != null) {
-                    boolean isPlayerPosition = (x == playerPos.getX() && y == playerPos.getY());
-                    drawMinimapRoom(room, x - startX, y - startY, isPlayerPosition);
+        int startX = playerPos.getX() - gridSize / 2;
+        int startY = playerPos.getY() - gridSize / 2;
+
+        for (int y = 0; y < gridSize; y++) {
+            for (int x = 0; x < gridSize; x++) {
+                int mapX = startX + x;
+                int mapY = startY + y;
+                Room room = dungeon.getRoom(mapX, mapY);
+
+                if (room != null && room.isVisited()) {
+                    boolean isPlayerHere = (mapX == playerPos.getX() && mapY == playerPos.getY());
+                    double roomDrawX = startDrawX + x * roomDisplaySize;
+                    double roomDrawY = startDrawY + y * roomDisplaySize;
+                    drawMinimapRoom(room, roomDrawX, roomDrawY, roomDisplaySize, isPlayerHere);
                 }
             }
         }
     }
 
-    private void drawMinimapRoom(Room room, int gridX, int gridY, boolean isPlayerPosition) {
-        double roomSize = Config.MINIMAP_ROOM_SIZE;
-        double roomX = 8 + gridX * roomSize + gridX * 1;
-        double roomY = 8 + gridY * roomSize + gridY * 1;
-
+    private void drawMinimapRoom(Room room, double x, double y, double size, boolean isPlayerPosition) {
         Color roomColor = getMinimapRoomColor(room, isPlayerPosition);
-        Color borderColor = isPlayerPosition ? Color.WHITE : Color.rgb(100, 100, 100);
-
-        // Draw room
         minimapGraphics.setFill(roomColor);
-        minimapGraphics.fillRect(roomX, roomY, roomSize, roomSize);
+        minimapGraphics.fillRect(x, y, size, size);
 
-        // Draw border
-        minimapGraphics.setStroke(borderColor);
-        minimapGraphics.setLineWidth(1);
-        minimapGraphics.strokeRect(roomX, roomY, roomSize, roomSize);
-
-        // Draw doors
-        drawMinimapRoomDoors(room, roomX, roomY, roomSize, roomColor);
+        if (isPlayerPosition) {
+            minimapGraphics.setStroke(Color.WHITE);
+            minimapGraphics.setLineWidth(1.5);
+            minimapGraphics.strokeRect(x, y, size, size);
+        }
     }
 
     private Color getMinimapRoomColor(Room room, boolean isPlayerPosition) {
-        if (isPlayerPosition) {
-            return Color.LIME;
-        }
-
-        if (!room.isVisited()) {
-            return Color.DARKGRAY;
-        }
+        if (isPlayerPosition) return Color.LIME;
+        if (!room.isVisited()) return Color.TRANSPARENT; // Don't draw if not visited
 
         switch (room.getRoomType()) {
             case ENTRANCE: return Color.LIGHTGREEN;
             case EXIT: return Color.ORANGE;
             case BOSS: return Color.DARKRED;
-            case PILLAR:
-                return (room.hasPillar() && room.getPillar().isActivated())
-                        ? Color.PURPLE : Color.MEDIUMPURPLE;
-            case MONSTER:
-                return room.getMonsters().isEmpty() ? Color.LIGHTGRAY : Color.RED;
-            case TREASURE:
-                return room.getItems().isEmpty() ? Color.LIGHTGRAY : Color.GOLD;
-            case TRAP:
-                return (room.hasTrap() && room.getTrap().isSprung())
-                        ? Color.LIGHTGRAY : Color.ORANGERED;
+            case PILLAR: return room.hasPillar() && room.getPillar().isActivated() ? Color.PURPLE : Color.MEDIUMPURPLE;
+            case MONSTER: return room.getMonsters().isEmpty() ? Color.LIGHTGRAY : Color.RED;
+            case TREASURE: return room.getItems().isEmpty() ? Color.LIGHTGRAY : Color.GOLD;
+            case TRAP: return room.hasTrap() && room.getTrap().isSprung() ? Color.LIGHTGRAY : Color.ORANGERED;
             case EMPTY:
-            default:
-                return Color.LIGHTGRAY;
+            default: return Color.LIGHTGRAY;
         }
     }
 
-    private void drawMinimapRoomDoors(Room room, double roomX, double roomY, double roomSize, Color roomColor) {
-        minimapGraphics.setStroke(roomColor);
-        minimapGraphics.setLineWidth(2);
-
-        if (room.hasNorthDoor()) {
-            minimapGraphics.strokeLine(roomX + roomSize/2 - 1, roomY, roomX + roomSize/2 + 1, roomY);
-        }
-        if (room.hasSouthDoor()) {
-            minimapGraphics.strokeLine(roomX + roomSize/2 - 1, roomY + roomSize, roomX + roomSize/2 + 1, roomY + roomSize);
-        }
-        if (room.hasWestDoor()) {
-            minimapGraphics.strokeLine(roomX, roomY + roomSize/2 - 1, roomX, roomY + roomSize/2 + 1);
-        }
-        if (room.hasEastDoor()) {
-            minimapGraphics.strokeLine(roomX + roomSize, roomY + roomSize/2 - 1, roomX + roomSize, roomY + roomSize/2 + 1);
-        }
-    }
-
-    // ====== UTILITY METHODS ======
-    private Room getCurrentRoom() {
-        if (getController() == null || getController().getPlayer() == null ||
-                getController().getDungeon() == null) {
-            return null;
-        }
-        return getController().getDungeon().getRoom(getController().getPlayer().getPosition());
-    }
-
-    // ====== PUBLIC UPDATE METHODS ======
+    // ====== UTILITY AND UPDATE METHODS ======
     public void updatePlayerStats() {
-        if (getController() != null && getController().getPlayer() != null) {
-            Hero player = getController().getPlayer();
-            playerHealthLabel.setText("Health: " + player.getHealth() + "/" + player.getMaxHealth());
-            playerAttackLabel.setText("Attack: " + player.getType().getBaseAttack());
-            playerGoldLabel.setText("Gold: " + player.getGold());
+        Hero player = getController().getPlayer();
+        if (player != null) {
+            Platform.runLater(() -> {
+                playerHealthLabel.setText("HP: " + player.getHealth() + "/" + player.getMaxHealth());
+                playerAttackLabel.setText("ATK: " + player.getType().getBaseAttack());
+                playerGoldLabel.setText("Gold: " + player.getGold());
+                playerPillarsLabel.setText("Pillars: " + player.getPillarsActivated() + "/4" );
+            });
         }
-    }
-
-    public void addGameMessage(final String message) {
-        if (messagesArea != null && messageScrollPane != null) {
-            double scale = calculateFontScale();
-            Font messageFont = Font.font(Config.FONT_FAMILY, FontWeight.NORMAL, 11 * scale);
-
-            Label messageLabel = new Label("• " + message);
-            messageLabel.setFont(messageFont);
-            messageLabel.setTextFill(Color.WHITE);
-            messageLabel.setWrapText(true);
-            messageLabel.setPadding(new Insets(2, 0, 2, 0));
-            messageLabel.setMaxWidth(300);
-
-            messagesArea.getChildren().add(messageLabel);
-
-            // Keep only last MAX_MESSAGES
-            while (messagesArea.getChildren().size() > Config.MAX_MESSAGES) {
-                messagesArea.getChildren().remove(0);
-            }
-
-            // Auto-scroll to bottom
-            messageScrollPane.applyCss();
-            messageScrollPane.layout();
-            messageScrollPane.setVvalue(1.0);
-        }
-    }
-
-    private double calculateFontScale() {
-        double scale = Math.min(scene.getWidth() / 1000.0, scene.getHeight() / 750.0);
-        return Math.max(0.8, Math.min(scale, 1.2));
     }
 
     public void onRoomChanged() {
@@ -1011,10 +983,149 @@ public class GameScreen extends Screen {
         }
     }
 
-    public void displayRoomDescription() {
-        if (getController() != null && getController().getGameController() != null &&
-                getController().getGameController().getCurrentRoomDescription() != null) {
-            addGameMessage(getController().getGameController().getCurrentRoomDescription());
+    private Room getCurrentRoom() {
+        Controller c = getController();
+        if (c == null || c.getPlayer() == null || c.getDungeon() == null) {
+            return null;
         }
+        return c.getDungeon().getRoom(c.getPlayer().getPosition());
+    }
+
+    // ====== CONFIGURATION AND DIMENSION CLASSES ======
+    private static final class Config {
+        // Canvas
+        static final double DEFAULT_CANVAS_SIZE = 480.0;
+        static final double CANVAS_MIN_SIZE = 300.0;
+        static final double CANVAS_MAX_SIZE = 800.0;
+        // Game Elements
+        static final double TILES_PER_CANVAS = 30.0;
+        static final double HERO_SIZE_MULTIPLIER = 2.0;
+        static final double DOOR_WIDTH_MULTIPLIER = 2.0;
+        // UI Panels
+        static final double PANEL_PREF_WIDTH_RATIO = 0.14;
+        static final double PANEL_MIN_WIDTH_ABSOLUTE = 160.0;
+        static final double PANEL_MAX_WIDTH_ABSOLUTE = 220.0;
+        static final double PANEL_PADDING_RATIO = 0.008;
+        // UI Buttons
+        static final double BUTTON_HEIGHT_RATIO = 0.045;
+        static final double BUTTON_MIN_HEIGHT = 30.0;
+        static final double BUTTON_MAX_HEIGHT = 45.0;
+        static final double BUTTON_WIDTH_RATIO = 0.95;
+        // Minimap
+        static final double MINIMAP_SIZE_RATIO = 0.08;
+        static final double MINIMAP_MIN_SIZE = 70.0;
+        static final double MINIMAP_MAX_SIZE = 120.0; // Increased max size slightly
+        static final double MINIMAP_GRID_SIZE = 7.0; // For detailed minimap
+        // Message Area
+        static final double MESSAGE_AREA_HEIGHT_RATIO = 0.08;
+        static final double MESSAGE_AREA_MIN_HEIGHT = 50.0;
+        static final double MESSAGE_AREA_MAX_HEIGHT = 100.0;
+        static final int MAX_MESSAGES = 20;
+        // Fonts
+        static final double STATS_FONT_SIZE_RATIO = 0.012;
+        static final double STATS_FONT_MIN_SIZE = 10.0; // Added min font size
+        static final double STATS_FONT_MAX_SIZE = 20.0; // Added max font size
+        static final double STATS_ICON_SIZE_RATIO = 0.009; // New: for icon scaling
+        static final double STATS_ICON_MIN_SIZE = 12.0; // Min icon size
+        static final double STATS_ICON_MAX_SIZE = 20.0; // Max icon size
+        static final double TITLE_FONT_SIZE_RATIO = 0.020;
+        static final double MESSAGE_FONT_SIZE_RATIO = 0.007;
+        static final double BUTTON_FONT_SIZE_RATIO = 0.018;
+        static final double BUTTON_FONT_MIN_SIZE = 8.0;
+        static final double BUTTON_FONT_MAX_SIZE = 16.0;
+
+        // Colors
+        static final String PANEL_BORDER_COLOR = "#DAA520";
+    }
+
+    private static class CanvasDimensions {
+        private final double size, tileSize, heroSize, wallThickness, doorWidth;
+
+        public CanvasDimensions(double canvasSize) {
+            this.size = Math.max(Config.CANVAS_MIN_SIZE, Math.min(Config.CANVAS_MAX_SIZE, canvasSize));
+            this.tileSize = this.size / Config.TILES_PER_CANVAS;
+            this.heroSize = tileSize * Config.HERO_SIZE_MULTIPLIER;
+            this.wallThickness = tileSize;
+            this.doorWidth = wallThickness * Config.DOOR_WIDTH_MULTIPLIER;
+        }
+
+        double getSize() { return size; }
+        double getTileSize() { return tileSize; }
+        double getHeroSize() { return heroSize; }
+        double getWallThickness() { return wallThickness; }
+        double getDoorWidth() { return doorWidth; }
+        double getBoundaryTop() { return wallThickness; }
+        double getBoundaryBottom() { return size - wallThickness - heroSize; }
+        double getBoundaryLeft() { return wallThickness; }
+        double getBoundaryRight() { return size - wallThickness - heroSize; }
+    }
+
+    private static class ResponsiveDimensions {
+        private final NumberBinding panelWidthBinding, panelPaddingBinding, buttonHeightBinding, minimapSizeBinding;
+        private final NumberBinding statsFontSizeBinding, titleFontSizeBinding, messageFontSizeBinding, buttonFontSizeBinding, statsIconSizeBinding;
+
+        public ResponsiveDimensions(Scene scene) {
+            panelWidthBinding = Bindings.createDoubleBinding(() -> {
+                double sceneWidth = scene.getWidth();
+                double calculated = sceneWidth * Config.PANEL_PREF_WIDTH_RATIO;
+                return Math.max(Config.PANEL_MIN_WIDTH_ABSOLUTE, Math.min(Config.PANEL_MAX_WIDTH_ABSOLUTE, calculated));
+            }, scene.widthProperty());
+
+            panelPaddingBinding = Bindings.createDoubleBinding(() -> {
+                double basePadding = scene.getWidth() * Config.PANEL_PADDING_RATIO;
+                return Math.max(5.0, Math.min(15.0, basePadding));
+            }, scene.widthProperty());
+
+            buttonHeightBinding = Bindings.createDoubleBinding(() -> {
+                double calculated = scene.getHeight() * Config.BUTTON_HEIGHT_RATIO;
+                return Math.max(Config.BUTTON_MIN_HEIGHT, Math.min(Config.BUTTON_MAX_HEIGHT, calculated));
+            }, scene.heightProperty());
+
+            minimapSizeBinding = Bindings.createDoubleBinding(() -> {
+                double smallerDimension = Math.min(scene.getWidth(), scene.getHeight());
+                double calculated = smallerDimension * Config.MINIMAP_SIZE_RATIO;
+                return Math.max(Config.MINIMAP_MIN_SIZE, Math.min(Config.MINIMAP_MAX_SIZE, calculated));
+            }, scene.widthProperty(), scene.heightProperty());
+
+            // FIX: Added min/max bounds for statsFontSizeBinding
+            statsFontSizeBinding = Bindings.createDoubleBinding(() -> {
+                double calculated = scene.getHeight() * Config.STATS_FONT_SIZE_RATIO;
+                return Math.max(Config.STATS_FONT_MIN_SIZE, Math.min(Config.STATS_FONT_MAX_SIZE, calculated));
+            }, scene.heightProperty());
+
+            // FIX: Added statsIconSizeBinding
+            statsIconSizeBinding = Bindings.createDoubleBinding(() -> {
+                double calculated = scene.getHeight() * Config.STATS_ICON_SIZE_RATIO;
+                return Math.max(Config.STATS_ICON_MIN_SIZE, Math.min(Config.STATS_ICON_MAX_SIZE, calculated));
+            }, scene.heightProperty());
+
+
+            titleFontSizeBinding = Bindings.createDoubleBinding(() -> Math.max(20.0, scene.getHeight() * Config.TITLE_FONT_SIZE_RATIO), scene.heightProperty());
+            messageFontSizeBinding = Bindings.createDoubleBinding(() -> Math.max(9.0, scene.getHeight() * Config.MESSAGE_FONT_SIZE_RATIO), scene.heightProperty());
+            buttonFontSizeBinding = Bindings.createDoubleBinding(() -> {
+                double sceneHeight = scene.getHeight();
+                double sceneWidth = scene.getWidth();
+
+                // Base font size on both dimensions for better scaling
+                double heightBasedSize = sceneHeight * Config.BUTTON_FONT_SIZE_RATIO;
+                double widthBasedSize = sceneWidth * (Config.BUTTON_FONT_SIZE_RATIO * 0.5);
+
+                // Use the smaller of the two to ensure text fits
+                double calculated = Math.min(heightBasedSize, widthBasedSize);
+
+                return Math.max(Config.BUTTON_FONT_MIN_SIZE,
+                        Math.min(Config.BUTTON_FONT_MAX_SIZE, calculated));
+            }, scene.heightProperty(), scene.widthProperty());
+        }
+
+        public NumberBinding getPanelWidthBinding() { return panelWidthBinding; }
+        public NumberBinding getPanelPaddingBinding() { return panelPaddingBinding; }
+        public NumberBinding getButtonHeightBinding() { return buttonHeightBinding; }
+        public NumberBinding getMinimapSizeBinding() { return minimapSizeBinding; }
+        public NumberBinding getStatsFontSizeBinding() { return statsFontSizeBinding; }
+        public NumberBinding getStatsIconSizeBinding() { return statsIconSizeBinding; } // New getter
+        public NumberBinding getTitleFontSizeBinding() { return titleFontSizeBinding; }
+        public NumberBinding getMessageFontSizeBinding() { return messageFontSizeBinding; }
+        public NumberBinding getButtonFontSizeBinding() { return buttonFontSizeBinding; }
     }
 }

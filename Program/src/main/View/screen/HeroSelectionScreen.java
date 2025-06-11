@@ -28,8 +28,7 @@ import java.io.InputStream;
  */
 public class HeroSelectionScreen extends Screen {
 
-    private static final double BASE_WIDTH = 800.0;
-    private static final double BASE_HEIGHT = 600.0;
+    // Removed BASE_WIDTH and BASE_HEIGHT - using parent's constants instead
     private static final double MIN_SCALE = 0.5;
     private static final double MAX_SCALE = 2.0;
 
@@ -44,8 +43,8 @@ public class HeroSelectionScreen extends Screen {
     private static final int BASE_BUTTON_WIDTH = 280;
     private static final int BASE_BUTTON_HEIGHT = 45;
     private static final int BASE_SPRITE_SIZE = 64;
-    private static final int BASE_DESCRIPTION_WIDTH = 600;
-    private static final int BASE_DESCRIPTION_HEIGHT = 40;
+    private static final int BASE_DESCRIPTION_WIDTH = 700;
+    private static final int BASE_DESCRIPTION_HEIGHT = 60;
 
     private static final int BASE_CONTENT_SPACING = 20;
     private static final int BASE_TOP_PADDING = 30;
@@ -73,14 +72,10 @@ public class HeroSelectionScreen extends Screen {
     private static final String SHADOW_STYLE = "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0.5, 4, 4);";
     private static final String TEXT_FIELD_BASE_STYLE =
             "-fx-background-color: #2C2C2C; -fx-text-fill: #E0E0E0; -fx-border-color: #DAA520; -fx-border-width: 3px; -fx-prompt-text-fill: #888888;";
-    private static final String BUTTON_BASE_STYLE =
-            "-fx-text-fill: #E0E0E0; -fx-border-width: 4px; -fx-padding: 15px 40px; -fx-background-radius: 0; -fx-border-radius: 0;";
-    private static final String VALID_BUTTON_STYLE =
-            BUTTON_BASE_STYLE + "-fx-background-color: #2C2C2C; -fx-border-color: #DAA520; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 5, 0, 2, 2);";
-    private static final String INVALID_BUTTON_STYLE =
-            BUTTON_BASE_STYLE + "-fx-background-color: linear-gradient(to bottom, #1A1A1A, #0D0D0D); -fx-border-color: #333333; -fx-text-fill: #666666;";
+
+    // Removed button styles - using parent's createStyledButton method instead
     private static final String FLASH_BUTTON_STYLE =
-            BUTTON_BASE_STYLE + "-fx-background-color: linear-gradient(to bottom, #2A2A2A, #000000); -fx-text-fill: #888888; -fx-border-color: #444444;";
+            "-fx-background-color: linear-gradient(to bottom, #2A2A2A, #000000); -fx-text-fill: #888888; -fx-border-color: #444444; -fx-border-width: 4px; -fx-padding: 15px 40px; -fx-background-radius: 0; -fx-border-radius: 0;";
 
     private HeroType selectedHeroType;
     private ImageView selectedHeroView;
@@ -88,7 +83,6 @@ public class HeroSelectionScreen extends Screen {
     private Button startGameBtn;
     private TextField nameBox;
     private Scene scene;
-    private double currentScale = 1.0;
 
     public HeroSelectionScreen(final Stage thePrimaryStage, final Controller theController) {
         super(thePrimaryStage, theController);
@@ -108,7 +102,10 @@ public class HeroSelectionScreen extends Screen {
 
         setupBackground(root);
         setupComponents(root, theUI);
-        setupScaling(root);
+
+        // Use parent's scaling method instead of custom implementation
+        applyScaling(root, scene);
+
         setupResponsiveBindings();
 
         boolean wasFullScreen = currentStage.isFullScreen();
@@ -153,17 +150,7 @@ public class HeroSelectionScreen extends Screen {
                 "-fx-background-position: center center;";
     }
 
-    private void setupScaling(VBox root) {
-        var scaleBinding = Bindings.createDoubleBinding(() -> {
-            double widthScale = scene.getWidth() / BASE_WIDTH;
-            double heightScale = scene.getHeight() / BASE_HEIGHT;
-            double scale = Math.min(widthScale, heightScale);
-            return Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
-        }, scene.widthProperty(), scene.heightProperty());
-
-        root.scaleXProperty().bind(scaleBinding);
-        root.scaleYProperty().bind(scaleBinding);
-    }
+    // Removed custom setupScaling method - using parent's applyScaling instead
 
     private void setupResponsiveBindings() {
         if (nameBox != null) {
@@ -202,24 +189,15 @@ public class HeroSelectionScreen extends Screen {
 
     private FontBundle loadFonts() {
         return new FontBundle(
-                loadFont(BASE_TITLE_FONT_SIZE, "Impact"),
-                loadFont(BASE_LABEL_FONT_SIZE, "Arial"),
-                loadFont(BASE_BUTTON_FONT_SIZE, "Courier New"),
-                loadFont(BASE_TEXT_FIELD_FONT_SIZE, "Courier New")
+                // Use parent's loadFont method instead of custom implementation
+                loadFont(FONT_PATH, BASE_TITLE_FONT_SIZE, "Impact"),
+                loadFont(FONT_PATH, BASE_LABEL_FONT_SIZE, "Arial"),
+                loadFont(FONT_PATH, BASE_BUTTON_FONT_SIZE, "Courier New"),
+                loadFont(FONT_PATH, BASE_TEXT_FIELD_FONT_SIZE, "Courier New")
         );
     }
 
-    private Font loadFont(int baseSize, String fallbackFamily) {
-        try (InputStream fontStream = getResourceStream(FONT_PATH)) {
-            if (fontStream != null) {
-                Font customFont = Font.loadFont(fontStream, baseSize);
-                if (customFont != null) return customFont;
-            }
-        } catch (Exception e) {
-            logError("Failed to load custom font " + FONT_PATH + ". Using fallback. Error: " + e.getMessage());
-        }
-        return Font.font(fallbackFamily, baseSize);
-    }
+    // Removed custom loadFont method - using parent's method instead
 
     private VBox createTitle(Font titleFont) {
         VBox titleBox = new VBox(BASE_TITLE_SPACING);
@@ -317,7 +295,7 @@ public class HeroSelectionScreen extends Screen {
         heroBox.setAlignment(Pos.CENTER);
 
         ImageView heroSprite = createHeroSprite(spritePath, heroType);
-        Font heroNameFont = loadFont(BASE_HERO_NAME_FONT_SIZE, labelFont.getFamily());
+        Font heroNameFont = loadFont(FONT_PATH, BASE_HERO_NAME_FONT_SIZE, labelFont.getFamily());
         Label nameLabel = createStyledLabel(heroName, heroNameFont, TAN_COLOR);
 
         heroBox.getChildren().addAll(heroSprite, nameLabel);
@@ -466,11 +444,14 @@ public class HeroSelectionScreen extends Screen {
     }
 
     private Button createStartButton(Font buttonFont, GameUI theUI) {
-        startGameBtn = new Button("START");
-        startGameBtn.setFont(buttonFont);
+        // Use parent's createStyledButton method for consistency
+        startGameBtn = createStyledButton("START", buttonFont);
         startGameBtn.setOnAction(event -> handleStartGameAction(theUI));
+
+        // Override specific dimensions for this button
         startGameBtn.setPrefWidth(BASE_BUTTON_WIDTH);
         startGameBtn.setPrefHeight(BASE_BUTTON_HEIGHT);
+
         return startGameBtn;
     }
 
@@ -537,22 +518,24 @@ public class HeroSelectionScreen extends Screen {
 
     private void updateButtonStyle(boolean isValid) {
         if (isValid) {
-            applyValidButtonStyle();
+            // Reset to parent's default styling when valid
+            startGameBtn.setStyle("");
+            startGameBtn.setOnMouseEntered(e -> {});
+            startGameBtn.setOnMouseExited(e -> {});
         } else {
             applyInvalidButtonStyle();
         }
     }
 
-    private void applyValidButtonStyle() {
-        startGameBtn.setStyle(VALID_BUTTON_STYLE);
-        startGameBtn.setOnMouseEntered(e ->
-                startGameBtn.setStyle(VALID_BUTTON_STYLE + "-fx-background-color: #3C3C3C;"));
-        startGameBtn.setOnMouseExited(e ->
-                startGameBtn.setStyle(VALID_BUTTON_STYLE));
-    }
-
     private void applyInvalidButtonStyle() {
-        startGameBtn.setStyle(INVALID_BUTTON_STYLE);
+        String invalidStyle = "-fx-background-color: linear-gradient(to bottom, #1A1A1A, #0D0D0D); " +
+                "-fx-border-color: #333333; " +
+                "-fx-text-fill: #666666; " +
+                "-fx-border-width: 4px; " +
+                "-fx-padding: 15px 40px; " +
+                "-fx-background-radius: 0; " +
+                "-fx-border-radius: 0;";
+        startGameBtn.setStyle(invalidStyle);
         startGameBtn.setOnMouseEntered(e -> {});
         startGameBtn.setOnMouseExited(e -> {});
     }

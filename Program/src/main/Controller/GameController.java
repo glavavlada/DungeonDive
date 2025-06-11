@@ -54,6 +54,15 @@ public class GameController {
         this.myGameUI = theGameUI;
         this.myStateController = theStateController;
         System.out.println("GameController initialized with model, UI, and state controller");
+
+        Hero player = myGameModel.getPlayer();
+        if (player != null) {
+            Room startingRoom = myGameModel.getDungeon().getRoom(player.getPosition());
+            if (startingRoom != null) {
+                // Use the existing enterRoom logic to handle all initial room effects consistently.
+                enterRoom(startingRoom);
+            }
+        }
     }
     // Add this method to prevent room transitions during combat
     private boolean canMovePlayer() {

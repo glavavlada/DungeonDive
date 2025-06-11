@@ -1,52 +1,40 @@
 package main.View.screen;
 
-import main.Controller.Controller;
-import main.View.GameUI;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.NumberBinding;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
+import main.Controller.Controller;
+import main.View.GameUI;
+import java.io.InputStream;
 
 /**
  * An abstract class for the various Screens.
- * Each screen is associated with the primary stage and a shared controller.
+ * Includes common functionality for creating scalable and responsive UIs.
  *
  * @author Jacob Hilliker
  * @author Emanuel Feria
  * @author Vladyslav Glavatskyi
- * @version 5/13/2025
+ * @version 6/10/2025
  */
-public abstract class Screen { // Changed to public if accessed from other packages like GameUI
-    /**
-     * Primary Stage needed to show every scene.
-     * Made protected so subclasses can access if absolutely needed, though getStage() is preferred.
-     */
-    protected final Stage MY_PRIMARY_STAGE; // Renamed for convention
-    /**
-     * Controller used for event handlers. Passed in, not created here.
-     * Made protected so subclasses can access if absolutely needed, though getController() is preferred.
-     */
-    protected final Controller MY_CONTROLLER; // Renamed for convention
+public abstract class Screen {
+    protected final Stage MY_PRIMARY_STAGE;
+    protected final Controller MY_CONTROLLER;
 
-    /**
-     * Width for consistent button widths.
-     */
-    private static final double BUTTON_WIDTH = 100; // Made static as it's a constant for all screens
-    /**
-     * Height for consistent button heights.
-     */
-    private static final double BUTTON_HEIGHT = 20; // Made static
+    // Base dimensions for scaling calculations
+    protected static final double BASE_WIDTH = 800.0;
+    protected static final double BASE_HEIGHT = 600.0;
+    private static final double MIN_SCALE = 0.7;
+    private static final double MAX_SCALE = 2.0;
 
-    /**
-     * Assigns Stage and Controller used by Screen subclasses.
-     * The Controller instance is shared across screens and typically created in GameUI or Main.
-     *
-     * @param thePrimaryStage The primary Stage for the application.
-     * @param theController   The main application Controller instance.
-     */
-    protected Screen(final Stage thePrimaryStage, final Controller theController) { // Changed to protected or public
+    protected Screen(final Stage thePrimaryStage, final Controller theController) {
         if (thePrimaryStage == null) {
             throw new IllegalArgumentException("Primary stage cannot be null.");
         }
@@ -54,92 +42,110 @@ public abstract class Screen { // Changed to public if accessed from other packa
             throw new IllegalArgumentException("Controller cannot be null.");
         }
         this.MY_PRIMARY_STAGE = thePrimaryStage;
-        this.MY_PRIMARY_STAGE.setTitle("DungeonDive"); // Setting title can be done once
         this.MY_CONTROLLER = theController;
     }
 
-    /**
-     * Abstract method for showing the current screen.
-     *
-     * @param theUI The GameUI instance, used for managing screen transitions and UI updates.
-     */
-    public abstract void showScreen(final GameUI theUI); // Changed to public
+    public abstract void showScreen(final GameUI theUI);
 
     /**
-     * Method for all screen classes to create button sizes quickly
-     * and consistently.
-     *
-     * @param theButton the Button to be given a size.
+     * Applies a scaling transformation to the root pane to make the UI responsive.
+     * @param root The root pane of the scene (e.g., StackPane).
+     * @param scene The scene containing the root pane.
      */
-    public void setButtonSize(final Button theButton) {
-        if (theButton != null) {
-            theButton.setPrefWidth(BUTTON_WIDTH);
-            theButton.setPrefHeight(BUTTON_HEIGHT);
-        }
+    protected void applyScaling(Pane root, Scene scene) {
+        NumberBinding scaleBinding = Bindings.createDoubleBinding(() -> {
+            double widthScale = scene.getWidth() / BASE_WIDTH;
+            double heightScale = scene.getHeight() / BASE_HEIGHT;
+            double scale = Math.min(widthScale, heightScale);
+            return Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
+        }, scene.widthProperty(), scene.heightProperty());
+
+        root.scaleXProperty().bind(scaleBinding);
+        root.scaleYProperty().bind(scaleBinding);
     }
 
     /**
-     * Gives a VBox of buttons that are given text for the win and
-     * lose screens.
-     * Note: Event handlers for these buttons would need to be set, likely using MY_CONTROLLER.
-     *
-     * @return A VBox of buttons.
+     * Loads a custom font from the resources, with a fallback to a system font.
+     * @param path The resource path to the font file.
+     * @param size The desired font size.
+     * @param fallbackFamily The name of the fallback font family.
+     * @return The loaded Font object.
      */
-    public VBox tripleButtonVBox(final GameUI theUI) { // Pass GameUI for actions
-        VBox buttons = new VBox(10);
+    protected Font loadFont(String path, int size, String fallbackFamily) {
+        try (InputStream fontStream = getClass().getResourceAsStream(path)) {
+            if (fontStream != null) {
+                Font customFont = Font.loadFont(fontStream, size);
+                if (customFont != null) return customFont;
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to load custom font " + path + ". Using fallback. Error: " + e.getMessage());
+        }
+        return Font.font(fallbackFamily, size);
+    }
+
+    /**
+     * Creates a standardized VBox for screens with a title and three buttons.
+     * @param theUI The GameUI instance.
+     * @return A VBox containing the standard button layout.
+     */
+    public VBox tripleButtonVBox(final GameUI theUI) {
+        VBox buttons = new VBox(20); // Increased spacing
         buttons.setAlignment(Pos.CENTER);
 
-        Button newGameBtn = new Button("New Game");
-        Button savedGamesBtn = new Button("Saved Games"); // Placeholder, needs save/load screen
-        Button quitToMenuBtn = new Button("Quit to Menu");
+        Font buttonFont = loadFont("/main/View/fonts/PixelFont.ttf", 24, "Courier New");
 
-        setButtonSize(newGameBtn);
-        setButtonSize(savedGamesBtn);
-        setButtonSize(quitToMenuBtn);
+        Button newGameBtn = createStyledButton("New Game", buttonFont);
+        Button savedGamesBtn = createStyledButton("Load Game", buttonFont);
+        Button quitToMenuBtn = createStyledButton("Quit to Menu", buttonFont);
 
-        // Example event handlers (these would need to be adapted)
-        newGameBtn.setOnAction(event -> MY_CONTROLLER.newGame(event, theUI)); // Assuming Controller has newGame
-        savedGamesBtn.setOnAction(event -> MY_CONTROLLER.savedGames(event, theUI)); // Assuming Controller has savedGames
-        quitToMenuBtn.setOnAction(event -> MY_CONTROLLER.quitToMenu(theUI)); // Assuming Controller has quitToMenu
+        newGameBtn.setOnAction(event -> MY_CONTROLLER.newGame(event, theUI));
+        savedGamesBtn.setOnAction(event -> MY_CONTROLLER.savedGames(event, theUI));
+        quitToMenuBtn.setOnAction(event -> MY_CONTROLLER.quitToMenu(theUI));
 
         buttons.getChildren().addAll(newGameBtn, savedGamesBtn, quitToMenuBtn);
         return buttons;
     }
 
     /**
-     * Sets the placements of buttons and title for the intro, win and
-     * lose screens.
-     *
-     * @param theTitle The title Text node.
-     * @param theButtons The VBox containing buttons.
-     * @param theRoot The BorderPane root layout.
+     * Creates a styled button with a consistent look and feel.
      */
-    public void tripleButtonStructure(final Text theTitle, final VBox theButtons,
-                                      final BorderPane theRoot) {
-        if (theTitle != null) {
-            BorderPane.setAlignment(theTitle, Pos.TOP_CENTER);
-            theRoot.setTop(theTitle);
-        }
-        if (theButtons != null) {
-            BorderPane.setAlignment(theButtons, Pos.CENTER);
-            theRoot.setCenter(theButtons);
-        }
+    protected Button createStyledButton(String text, Font font) {
+        Button button = new Button(text);
+        button.setFont(font);
+
+        String buttonStyle = "-fx-background-color: #2C2C2C; " +
+                "-fx-text-fill: #E0E0E0; " +
+                "-fx-border-color: #8B4513; " +
+                "-fx-border-width: 4px; " +
+                "-fx-padding: 15px 40px; " +
+                "-fx-background-radius: 0; " +
+                "-fx-border-radius: 0; " +
+                "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 5, 0, 2, 2);";
+
+        button.setStyle(buttonStyle);
+        button.setMinWidth(300);
+        button.setMinHeight(60);
+
+        // Add hover effects
+        button.setOnMouseEntered(e ->
+                button.setStyle(buttonStyle + "-fx-background-color: #3C3C3C;"));
+        button.setOnMouseExited(e ->
+                button.setStyle(buttonStyle));
+
+        return button;
     }
 
-    /**
-     * Getter for PRIMARY_STAGE.
-     *
-     * @return PRIMARY_STAGE.
-     */
+
+    public void tripleButtonStructure(final Text theTitle, final VBox theButtons, final BorderPane theRoot) {
+        VBox content = new VBox(80, theTitle, theButtons);
+        content.setAlignment(Pos.CENTER);
+        theRoot.setCenter(content);
+    }
+
     public Stage getStage() {
         return MY_PRIMARY_STAGE;
     }
 
-    /**
-     * Getter for CONTROLLER.
-     *
-     * @return CONTROLLER.
-     */
     public Controller getController() {
         return MY_CONTROLLER;
     }
