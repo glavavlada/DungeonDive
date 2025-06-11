@@ -6,6 +6,7 @@ import main.Model.dungeon.Room;
 import main.Model.element.HealthPotion;
 import main.Model.element.Item;
 import main.Model.element.Pillar;
+import main.Model.element.VisionPotion;
 import main.Model.util.HeroType;
 import javafx.scene.image.Image;
 
@@ -488,7 +489,13 @@ public class Hero extends Character {
 
             // Restore inventory
             for (String itemName : saveData.inventoryItems) {
-                hero.addItem(new HealthPotion("Health Potion", "Heals 50", 50));
+                if (itemName.equals("Health Potion")) {
+                    hero.addItem(new HealthPotion("Health Potion", "Heals 50", 50));
+                } else {
+                    // Because a dungeon object is reloaded after Hero, and a dungeon is needed for the vision potion,
+                    // a placeholder is put here then replaced at GameController loadGameFromSave.
+                    hero.addItem(new HealthPotion("VisionPlaceholder", "Description", 0));
+                }
             }
 
             // CRITICAL: Reload sprite sheet since it's transient

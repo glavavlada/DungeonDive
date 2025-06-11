@@ -197,10 +197,12 @@ public class HelpScreen extends Screen {
 
         // Use the createStyledButton method from the Screen superclass
         Font buttonFont = loadFont(FONT_PATH, BUTTON_FONT_SIZE, "Courier New");
-        Button resumeGameButton = createStyledButton("RESUME GAME", buttonFont);
+        Button resumeGameButton = createStyledButton("RESUME GAME ", buttonFont);
+        Button activateCheatButton = createStyledButton("VISION CHEAT", buttonFont);
         resumeGameButton.setOnAction(event -> getController().resumeCurrentGame(theUI));
+        activateCheatButton.setOnAction(event -> getController().getGameController().activateDungeonVisionCheat());
 
-        buttonSection.getChildren().add(resumeGameButton);
+        buttonSection.getChildren().addAll(resumeGameButton, activateCheatButton);
         return buttonSection;
     }
 }

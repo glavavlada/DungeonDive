@@ -613,7 +613,8 @@ public class CombatScreen extends Screen {
         playMonsterAttackAnimation(monsterSprite, heroSprite, () -> {
             getController().getGameController().monsterAttacks();
             boolean isGameOver = getController().getGameController().getStateController().isInState(GameState.GAME_OVER);
-
+            updateCombatDisplay();
+            updateCombatStats();
             if (isGameOver) {
                 endCombat(false);
             } else if (combatActive) {
