@@ -323,6 +323,15 @@ public class GameController {
         myGameUI.updateRoomDescription(theRoom);
     }
 
+    public void activateDungeonVisionCheat() {
+        Dungeon dungeon = myGameModel.getDungeon();
+        for (int row = 0; row < dungeon.getHeight(); row++) {
+            for (int col = 0; col < dungeon.getWidth(); col++) {
+                dungeon.getRoom(row, col).setVisited(true);
+            }
+        }
+    }
+
     /**
      * Activates a trap in the room and applies its effects.
      *
@@ -612,7 +621,6 @@ public class GameController {
 
         // Monsters' turn to attack (only if combat continues)
         if (myStateController.isInState(GameState.COMBAT)) {
-            //monsterAttacks();
             myGameUI.updateCombatScreen(currentRoom.getMonsters());
             myGameUI.updatePlayerStats(); // Update mana/energy display
         }
@@ -671,7 +679,6 @@ public class GameController {
 
         // Monsters' turn to attack (only if combat continues)
         if (myStateController.isInState(GameState.COMBAT)) {
-            //monsterAttacks();
             myGameUI.updateCombatScreen(currentRoom.getMonsters());
             myGameUI.updatePlayerStats(); // Update mana/energy display
         }
@@ -701,6 +708,7 @@ public class GameController {
         //only update combat screen if still in combat
         if (myStateController.isInState(GameState.COMBAT)) {
             myGameUI.updateCombatScreen(currentRoom.getMonsters());
+            myGameUI.updatePlayerStats();
         }
 
         checkPlayerStatus();
@@ -957,6 +965,7 @@ public class GameController {
                 }
                 inventorySize--;
             }
+
 
             // DON'T restore the saved game state - always start in EXPLORING
             // The saved state might be PAUSED, COMBAT, etc. which we don't want

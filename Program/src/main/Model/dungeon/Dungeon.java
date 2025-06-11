@@ -16,6 +16,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 /**
  * Represents the entire dungeon, composed of multiple rooms.
  * Uses DFS to generate a randomized layout.
+ * IMPORTANT: FULL DUNGEON PRINT MENU OPTION IS IN HELP MENU, BUTTON CALLED "VISION CHEAT"
+ * THIS VISION CHEAT SHOWS FULL DUNGEON ON THE MINIMAP.
  */
 public class Dungeon {
     private final Room[][] myRooms;
@@ -128,7 +130,7 @@ public class Dungeon {
         int monsterCount = (myWidth * myHeight) / 5; // Adjust density as needed
         int trapCount = (myWidth * myHeight) / 10;
         int chestCount = (myWidth * myHeight) / 10;
-        int potionCount = (myWidth * myHeight) / 5;
+        int potionCount = (myWidth * myHeight) / 10;
 
         while ((monsterCount > 0 || trapCount > 0 || chestCount > 0) && !availableSpots.isEmpty()) {
             Point spot = availableSpots.remove(0); // Pick another random spot

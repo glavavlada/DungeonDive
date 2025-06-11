@@ -10,6 +10,8 @@ import main.Model.util.Point;
  * Manages the core game logic and data for DungeonDive.
  * This class acts as a facade for the model components,
  * handling game initialization, and providing access to the player and dungeon.
+ * IMPORTANT: FULL DUNGEON PRINT MENU OPTION IS IN HELP MENU, BUTTON CALLED "VISION CHEAT"
+ * THIS VISION CHEAT SHOWS FULL DUNGEON ON THE MINIMAP.
  *
  * @author Jacob Hilliker
  * @author Emanuel Feria
@@ -45,8 +47,7 @@ public class Model {
         Point startPosition = new Point(0, 0); // Default, will be overridden by dungeon spawn
         this.myPlayer = myHeroFactory.getHero(theHeroName, theHeroType, startPosition);
 
-        //this.myDungeon = new Dungeon(DEFAULT_DUNGEON_WIDTH, DEFAULT_DUNGEON_HEIGHT, DEFAULT_DIFFICULTY);
-        this.myDungeon = new Dungeon(5, 5, DEFAULT_DIFFICULTY, true);
+        this.myDungeon = new Dungeon(DEFAULT_DUNGEON_WIDTH, DEFAULT_DUNGEON_HEIGHT, DEFAULT_DIFFICULTY, true);
 
         if (this.myDungeon.getHeroSpawnPoint() != null) {
             this.myPlayer.setPosition(this.myDungeon.getHeroSpawnPoint());
