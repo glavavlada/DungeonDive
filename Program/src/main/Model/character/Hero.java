@@ -55,7 +55,7 @@ public class Hero extends Character {
         this.myHeroType = theHeroBuilder.myHeroType;
         this.myInventory = new ArrayList<>();
         this.myPillarsActivated = 0;
-        this.myGold = 30;
+        this.myGold = 0;
         this.myMovementState = new MovementState();
         this.myAnimationState = new AnimationState();
         loadSpriteSheet();
@@ -424,9 +424,9 @@ public class Hero extends Character {
             saveData.heroType = myHeroType.name();
             saveData.health = getHealth();
             saveData.maxHealth = getMaxHealth();
-//            saveData.attackBuff = ; // You were going to fix up factory for hero to add these things
-//            saveData.mana = ;
-//            saveData.manaBuff = ;
+            saveData.attackBuff = myAttackBuff; // You were going to fix up factory for hero to add these things
+            saveData.specialMana = mySpecialMana;
+            saveData.manaBuff = myManaBuff;
             saveData.gold = myGold;
             saveData.pillarsActivated = myPillarsActivated;
             saveData.positionX = getPosition().getX();
@@ -473,6 +473,9 @@ public class Hero extends Character {
             hero.myPillarsActivated = saveData.pillarsActivated;
             hero.myPixelX = saveData.pixelX;
             hero.myPixelY = saveData.pixelY;
+            hero.myAttackBuff = saveData.attackBuff;
+            hero.mySpecialMana = saveData.specialMana;
+            hero.myManaBuff = saveData.manaBuff;
 
             // Restore inventory (you'll need to implement item recreation)
             for (String itemName : saveData.inventoryItems) {
@@ -493,9 +496,9 @@ public class Hero extends Character {
         public String heroType;
         public int health;
         public int maxHealth;
-//        public int attackBuff;
-//        public int mana;
-//        public boolean manaBuff;
+        public int attackBuff;
+        public int specialMana;
+        public boolean manaBuff;
         public int gold;
         public int pillarsActivated;
         public int positionX;

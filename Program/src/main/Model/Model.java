@@ -46,7 +46,7 @@ public class Model {
         this.myPlayer = myHeroFactory.getHero(theHeroName, theHeroType, startPosition);
 
         //this.myDungeon = new Dungeon(DEFAULT_DUNGEON_WIDTH, DEFAULT_DUNGEON_HEIGHT, DEFAULT_DIFFICULTY);
-        this.myDungeon = new Dungeon(3, 3, DEFAULT_DIFFICULTY);
+        this.myDungeon = new Dungeon(5, 5, DEFAULT_DIFFICULTY);
 
         if (this.myDungeon.getHeroSpawnPoint() != null) {
             this.myPlayer.setPosition(this.myDungeon.getHeroSpawnPoint());

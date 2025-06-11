@@ -2,10 +2,7 @@ package main.Model.dungeon;
 
 import main.Model.character.Monster;
 import main.Model.character.MonsterFactory;
-import main.Model.element.HealthPotion;
-import main.Model.element.Item;
-import main.Model.element.Pillar;
-import main.Model.element.Trap;
+import main.Model.element.*;
 import main.Model.util.MonsterType;
 import main.Model.util.PillarType;
 import main.Model.util.Point;
@@ -128,6 +125,7 @@ public class Dungeon {
         int monsterCount = (myWidth * myHeight) / 5; // Adjust density as needed
         int trapCount = (myWidth * myHeight) / 10;
         int chestCount = (myWidth * myHeight) / 10;
+        int potionCount = (myWidth * myHeight) / 10;
 
         while ((monsterCount > 0 || trapCount > 0 || chestCount > 0) && !availableSpots.isEmpty()) {
             Point spot = availableSpots.remove(0); // Pick another random spot
@@ -137,7 +135,7 @@ public class Dungeon {
                 if (monsterCount > 0 && random.nextBoolean()) { // Alternate placing monsters/traps
                     room.setRoomType(RoomType.MONSTER);
                     // Add an actual monster (using constructor like in spawnBoss)
-                    //addMonsterToRoom(room, spot);
+                    addMonsterToRoom(room, spot);
                     monsterCount--;
                 } else if (trapCount > 0) {
                     room.setTrap(new Trap("Floor Spikes", "Sharp spikes emerge from the floor.", 5 + random.nextInt(10)));
@@ -150,12 +148,15 @@ public class Dungeon {
             }
         }
 
-        int potionCount = (myWidth * myHeight) / 10;
-
         while (potionCount > 0) {
             Point spot = availableSpots.remove(0);
             Room room = getRoom(spot);
-            room.addItem(new HealthPotion("Health Potion", "Heals 50", 50));
+            if (potionCount % 2 == 0) {
+                room.addItem(new HealthPotion("Health Potion", "Heals 50", 50));
+            } else {
+                room.addItem(new VisionPotion("Vision Potion", "Reveals nearby tiles", this));
+            }
+
             potionCount--;
         }
 
@@ -446,10 +447,10 @@ public class Dungeon {
                         PillarType pillarType = PillarType.valueOf(roomSave.pillarType);
                         Pillar pillar = new Pillar(pillarType);
                         if (roomSave.pillarActivated) {
-                            //implement a way to set pillar as activated
-                            // pillar.setActivated(true);
+                            room.removePillar();
+                        } else {
+                            room.setPillar(pillar);
                         }
-                        room.setPillar(pillar);
                     }
 
                     //restore trap if present
@@ -500,7 +501,12 @@ public class Dungeon {
         int itemAmount = rand.nextInt(5) + 1;
         List<Item> chestItems = new ArrayList<>();
         while (itemAmount != 0) {
-            chestItems.add(new HealthPotion("Health Potion", "Heals 50", 50));
+            if (itemAmount % 2 == 0) {
+                chestItems.add(new HealthPotion("Health Potion", "Heals 50", 50));
+            } else {
+                chestItems.add(new VisionPotion("Vision Potion", "Reveals nearby tiles", this));
+            }
+
             itemAmount--;
         }
         theRoom.setChest(chestItems);
