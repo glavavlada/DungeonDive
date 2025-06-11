@@ -1,5 +1,19 @@
 /* ============================================================================ */
-/* BASIC SETUP & BACKGROUND                                                     */
+/* FONT DEFINITION & DEFAULTS                                                   */
+/* ============================================================================ */
+@font-face {
+    font-family: 'PixelFont';
+    src: url('../fonts/PixelFont.ttf');
+}
+
+/* Default text color for labels not specifically styled */
+.label {
+    -fx-text-fill: #DEB887; /* Tan Color */
+    -fx-font-family: 'PixelFont';
+}
+
+/* ============================================================================ */
+/* BACKGROUND (UNCHANGED per your request)                                      */
 /* ============================================================================ */
 .combat-root {
     -fx-background-color: #000000;
@@ -12,156 +26,117 @@
     -fx-background-repeat: no-repeat;
 }
 
-.label {
-    -fx-text-background-color: transparent;
-    -fx-text-fill: #333333;
-}
-
-.text {
-    -fx-text-background-color: transparent;
-    -fx-fill: #333333;
-}
-
-
 /* ============================================================================ */
-/* BOTTOM INTERFACE (The Main Text Box)                                         */
+/* BOTTOM INTERFACE & MESSAGE LOG (UPDATED)                                     */
 /* ============================================================================ */
 .bottom-interface {
-    -fx-background-color: #F8F8F8; /* Very light gray/white */
-    -fx-border-color: #00008B; /* Dark Blue */
-    -fx-border-width: 5px 6px 6px 5px; /* Thicker bottom/right for pseudo-3D */
-    -fx-border-radius: 10px;
+    -fx-background-color: rgba(42, 42, 42, 0.9);
+    -fx-border-color: #8B4513; /* SaddleBrown */
+    -fx-border-width: 4px;
     -fx-background-radius: 10px;
-    -fx-padding: 10px; /* Padding inside the blue border */
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.4), 8, 0.2, 2, 3);
+    -fx-border-radius: 10px;
 }
 
-/* ============================================================================ */
-/* COMBAT MESSAGE AREA (Inner Box)                                              */
-/* ============================================================================ */
 .combat-message-area {
-    -fx-background-color: #FFFFFF; /* White inner box */
-    -fx-border-color: #4682B4; /* Steel Blue border */
-    -fx-border-width: 3px;
+    -fx-background-color: rgba(0,0,0,0.7);
+    -fx-border-color: #8B4513;
+    -fx-border-width: 2px;
     -fx-border-radius: 5px;
     -fx-background-radius: 5px;
     -fx-padding: 10px;
-    -fx-pref-height: 120px; /* Ensure consistent height */
-    -fx-margin-bottom: 15px; /* Space between messages and buttons */
+    -fx-pref-height: 120px;
+}
+
+/* This rule ensures the text in the message log uses PixelFont. */
+.combat-message {
+    -fx-font-family: 'PixelFont';
+    -fx-font-size: 18px;
+    -fx-text-fill: #E0E0E0; /* Light Gray/White for readability */
+    -fx-wrap-text: true;
 }
 
 /* Make ScrollPane holding messages transparent */
-.scroll-pane {
+.scroll-pane, .scroll-pane .viewport {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
 }
 
-.scroll-pane .viewport {
-    -fx-background-color: transparent;
-}
-
-/* --- Combat Messages (Text) --- */
-.combat-message {
-    -fx-text-fill: #1E1E1E; /* Dark Gray / Black text */
-    -fx-font-family: "Consolas", "Courier New", monospace; /* Pixel-friendly font */
-    -fx-font-size: 15px;
-    -fx-font-weight: bold;
-    -fx-wrap-text: true;
-}
-
 /* ============================================================================ */
-/* BUTTONS                                                                      */
+/* BUTTONS (UPDATED)                                                            */
 /* ============================================================================ */
-.pokemon-style-buttons {
-    -fx-alignment: center;
-    -fx-spacing: 20px;
-}
-
 .combat-button {
-    -fx-background-color: #E8E8E8; /* Light gray base */
-    -fx-text-fill: #333333; /* Dark text */
-    -fx-font-family: "Arial", sans-serif;
-    -fx-font-size: 15px;
-    -fx-font-weight: bold;
-    -fx-border-color: #666666; /* Medium Gray border */
-    -fx-border-width: 1px 2px 2px 1px; /* Pseudo-3D border */
-    -fx-border-radius: 5px;
-    -fx-background-radius: 5px;
-    -fx-padding: 10px 20px;
-    -fx-min-width: 100px; /* Give buttons some width */
-    -fx-cursor: hand; /* Show hand cursor on hover */
+    -fx-background-color: #2C2C2C;
+    -fx-text-fill: #E0E0E0;
+    -fx-border-color: #8B4513;
+    -fx-border-width: 4px;
+    -fx-padding: 15px 40px;
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-font-family: 'PixelFont';
+    -fx-font-size: 24px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 5, 0, 2, 2);
+    -fx-cursor: hand;
 }
 
 .combat-button:hover {
-    -fx-background-color: #FFFFFF; /* White on hover */
-    -fx-border-color: #000000;
+    -fx-background-color: #3C3C3C; /* Slightly lighter on hover */
 }
 
 .combat-button:pressed {
-    -fx-background-color: #D0D0D0; /* Darker when pressed */
-    -fx-border-width: 2px 1px 1px 2px; /* Invert border for pressed effect */
+    -fx-background-color: #1C1C1C; /* Darker when pressed */
+    -fx-border-width: 4px; /* Maintain border on press */
 }
 
-/* --- Specific Button Colors --- */
-.attack-button { -fx-background-color: #FF7F7F; } /* Lighter Red */
-.attack-button:hover { -fx-background-color: #FF5555; }
-.special-button { -fx-background-color: #BF7FFF; } /* Lighter Purple */
-.special-button:hover { -fx-background-color: #AA55FF; }
-.item-button { -fx-background-color: #7FFF7F; } /* Lighter Green */
-.item-button:hover { -fx-background-color: #55FF55; }
-.run-button { -fx-background-color: #FFFF7F; } /* Lighter Yellow */
-.run-button:hover { -fx-background-color: #FFFF55; }
-
 /* ============================================================================ */
-/* INFO & HEALTH BARS                                                           */
+/* STAT BOXES (INFO PANEL) & HEALTH BARS (UPDATED)                              */
 /* ============================================================================ */
 .combat-info-panel {
-    -fx-background-color: rgba(245, 245, 245, 0.85); /* Slightly transparent white */
-    -fx-border-color: #555555;
+    -fx-background-color: rgba(42, 42, 42, 0.9);
+    -fx-border-color: #8B4513;
     -fx-border-width: 3px;
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
     -fx-padding: 8px 12px;
-    -fx-effect: dropshadow(two-pass-box, rgba(0,0,0,0.3), 5, 0.1, 1, 1);
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.6), 5, 0.1, 2, 2);
 }
 
+/* This rule ensures the character names in the stat box use PixelFont. */
 .combat-name {
-    -fx-font-size: 16px;
-    -fx-font-weight: bold;
-    -fx-fill: #111111;
-    -fx-text-background-color: transparent;
+    -fx-font-family: 'PixelFont';
+    -fx-font-size: 28px;
+    -fx-fill: #FFA500; /* Orange */
 }
 
+/* This rule ensures the subtitles (HP, Level) in the stat box use PixelFont. */
 .combat-subtitle {
-    -fx-font-size: 12px;
-    -fx-font-style: italic;
-    -fx-fill: #333333;
-    -fx-text-background-color: transparent;
+    -fx-font-family: 'PixelFont';
+    -fx-font-size: 16px;
+    -fx-fill: #DEB887; /* Tan Color */
 }
 
 /* Health Bar Styling */
 .progress-bar {
-    -fx-background-color: #FFFFFF; /* White background */
-    -fx-border-color: #444444;
-    -fx-border-radius: 5px;
-    -fx-background-radius: 5px;
-    -fx-padding: 1px; /* Small padding to show border */
-    -fx-pref-height: 12px; /* Thinner health bar */
+    -fx-background-color: #2C2C2C;
+    -fx-border-color: #8B4513;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 2px;
+    -fx-pref-height: 20px;
 }
 
 .progress-bar .bar {
     -fx-background-insets: 0;
-    -fx-padding: 0; /* No padding on the bar itself */
-    -fx-border-radius: 4px; /* Slightly less than parent */
-    -fx-background-radius: 4px;
+    -fx-padding: 0;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
 }
 
 .health-bar-green .bar {
-    -fx-background-color: #00FF00; /* Bright Green */
+    -fx-background-color: linear-gradient(to right, #228B22, #32CD32);
 }
 .health-bar-orange .bar {
-    -fx-background-color: #FFA500; /* Bright Orange */
+    -fx-background-color: linear-gradient(to right, #FF8C00, #FFA500);
 }
 .health-bar-red .bar {
-    -fx-background-color: #FF0000; /* Bright Red */
+    -fx-background-color: linear-gradient(to right, #B22222, #DC143C);
 }
