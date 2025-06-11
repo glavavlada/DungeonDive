@@ -54,6 +54,7 @@ public class HeroFactory {
             return new Hero.HeroBuilder().setName(theHeroName).
                     setPosition(theStartingPoint).
                     setHealth(theRS.getInt("base_health")).
+                    setMaxHealth(theRS.getInt("base_health")).
                     setBaseAttackDamage(theRS.getInt("base_attack")).
                     setSpecialAttackDamage(theRS.getInt("special_attack_damage")).
                     setSpecialAttackName(theRS.getString("special_attack_name")).

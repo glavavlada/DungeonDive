@@ -127,12 +127,21 @@ public abstract class Character {
 
         public BuilderType setHealth(final int theHealth) {
             if (theHealth > 0) {
-                myMaxHealth = theHealth;
                 myHealth = theHealth;
                 return self();
             } else {
                 throw new IllegalArgumentException("Health cannot be zero or less" +
                                                    " Character Builder setHealth()");
+            }
+        }
+
+        public BuilderType setMaxHealth(final int theMaxHealth) {
+            if (theMaxHealth > 0) {
+                myMaxHealth = theMaxHealth;
+                return self();
+            } else {
+                throw new IllegalArgumentException("Health cannot be zero or less" +
+                        " Character Builder setHealth()");
             }
         }
 

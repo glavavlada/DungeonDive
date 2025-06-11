@@ -137,21 +137,18 @@ public class Dungeon {
                 if (monsterCount > 0 && random.nextBoolean()) { // Alternate placing monsters/traps
                     room.setRoomType(RoomType.MONSTER);
                     // Add an actual monster (using constructor like in spawnBoss)
-                    addMonsterToRoom(room, spot);
+                    //addMonsterToRoom(room, spot);
                     monsterCount--;
                 } else if (trapCount > 0) {
                     room.setTrap(new Trap("Floor Spikes", "Sharp spikes emerge from the floor.", 5 + random.nextInt(10)));
                     trapCount--;
-                } else if (chestCount > 0) {
+                } else if (chestCount > 0 && !room.hasPillar()) {
                     createChest(room);
                     room.setRoomType(RoomType.TREASURE);
                     chestCount--;
                 }
-                // Could add Treasure rooms here too
             }
         }
-
-        // TODO: place health potions make other items give monsters items
 
         int potionCount = (myWidth * myHeight) / 10;
 
@@ -375,6 +372,7 @@ public class Dungeon {
                     roomSave.y = y;
                     roomSave.roomType = room.getRoomType().name();
                     roomSave.visited = room.isVisited();
+                    roomSave.chestOpened = room.getChestOpened();
                     roomSave.hasNorthDoor = room.hasNorthDoor();
                     roomSave.hasEastDoor = room.hasEastDoor();
                     roomSave.hasSouthDoor = room.hasSouthDoor();
@@ -436,6 +434,8 @@ public class Dungeon {
 
                     room.setRoomType(RoomType.valueOf(roomSave.roomType));
                     room.setVisited(roomSave.visited);
+                    room.setChestOpened(roomSave.chestOpened);
+                    room.setItemsCollected(roomSave.itemsCollected);
                     room.setNorthDoor(roomSave.hasNorthDoor);
                     room.setEastDoor(roomSave.hasEastDoor);
                     room.setSouthDoor(roomSave.hasSouthDoor);
@@ -460,6 +460,12 @@ public class Dungeon {
                             // trap.setSprung(true);
                         }
                         room.setTrap(trap);
+                    }
+
+                    // Restore boss if spawned
+                    if (room.getRoomType() == RoomType.BOSS && dungeon.myBossSpawned) {
+                        dungeon.myBossSpawned = false;
+                        dungeon.spawnBoss();
                     }
                 }
             }
@@ -520,6 +526,8 @@ public class Dungeon {
         public int y;
         public String roomType;
         public boolean visited;
+        public boolean chestOpened;
+        public boolean itemsCollected;
         public boolean hasNorthDoor;
         public boolean hasEastDoor;
         public boolean hasSouthDoor;

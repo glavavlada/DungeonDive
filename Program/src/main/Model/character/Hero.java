@@ -2,6 +2,7 @@ package main.Model.character;
 
 import java.util.*;
 
+import main.Model.dungeon.Room;
 import main.Model.element.HealthPotion;
 import main.Model.element.Item;
 import main.Model.element.Pillar;
@@ -54,11 +55,13 @@ public class Hero extends Character {
         this.myHeroType = theHeroBuilder.myHeroType;
         this.myInventory = new ArrayList<>();
         this.myPillarsActivated = 0;
-        this.myGold = 0;
+        this.myGold = 30;
         this.myMovementState = new MovementState();
         this.myAnimationState = new AnimationState();
         loadSpriteSheet();
     }
+
+
 
     private void loadSpriteSheet() {
         try {
@@ -145,6 +148,7 @@ public class Hero extends Character {
         }
 
         myInventory.add(theItem);
+
         System.out.println(getName() + " picked up " + theItem.getName() + ".");
         return true;
     }
@@ -420,6 +424,9 @@ public class Hero extends Character {
             saveData.heroType = myHeroType.name();
             saveData.health = getHealth();
             saveData.maxHealth = getMaxHealth();
+//            saveData.attackBuff = ; // You were going to fix up factory for hero to add these things
+//            saveData.mana = ;
+//            saveData.manaBuff = ;
             saveData.gold = myGold;
             saveData.pillarsActivated = myPillarsActivated;
             saveData.positionX = getPosition().getX();
@@ -458,6 +465,7 @@ public class Hero extends Character {
                     .setName(saveData.name)
                     .setHeroType(heroType)
                     .setHealth(saveData.health)
+                    .setMaxHealth(saveData.maxHealth)
                     .setPosition(new Point(saveData.positionX, saveData.positionY))
                     .build();
 
@@ -485,6 +493,9 @@ public class Hero extends Character {
         public String heroType;
         public int health;
         public int maxHealth;
+//        public int attackBuff;
+//        public int mana;
+//        public boolean manaBuff;
         public int gold;
         public int pillarsActivated;
         public int positionX;
