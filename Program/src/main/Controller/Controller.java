@@ -131,18 +131,21 @@ public class Controller {
         theUI.showPauseMenu();
     }
 
+
     public void resumeCurrentGame(final GameUI theUI) {
-        // This checks if boss is defeated so it does not go back to game screen after win.
         if (myGameModel.getPlayer().getBossSlain()) {
             myGameController.checkWinCondition();
         } else {
-            theUI.showGameScreen(); // This will re-attach key listeners via GameUI.showGameScreen()
+            //debug player movement when resuming
+            if (myGameController != null) {
+                myGameController.debugPlayerMovement();
+            }
+            theUI.showGameScreen();
         }
     }
 
     public void quitToMenu(final GameUI theUI) {
         myGameModel.resetGame();
-        // Nullify game-specific controllers as they are tied to a game session
         myGameController = null;
         myInputController = null;
         myStateController = null;
@@ -172,26 +175,39 @@ public class Controller {
      * @param theUI GameUI reference.
      */
     private void initializeGameControllers(final GameUI theUI) {
-        // Initialize StateController first
-        myStateController = new StateController();
+        try {
+            //initialize StateController first
+            myStateController = new StateController();
 
-        // Then initialize GameController with Model, UI, and StateController
-        myGameController = new GameController(myGameModel, theUI, myStateController);
+            //then initialize GameController with Model, UI, and StateController
+            myGameController = new GameController(myGameModel, theUI, myStateController);
 
-        // Initialize InputController with GameController and StateController
-        myInputController = new InputController(myGameController, myStateController);
+            //initialize InputController with GameController and StateController
+            myInputController = new InputController(myGameController, myStateController);
 
-        System.out.println("Game controllers initialized.");
+            System.out.println("Game controllers initialized.");
 
-        if (theUI != null) {
-            theUI.setInputController(myInputController);
+            //set input controller in the UI
+            if (theUI != null) {
+                theUI.setInputController(myInputController);
+            } else {
+                System.err.println("Warning: GameUI is null when setting InputController");
+            }
+
+            //verify the setup
+            if (myGameController != null && myInputController != null && myStateController != null) {
+                System.out.println("All controllers properly initialized");
+            } else {
+                System.err.println("Error: One or more controllers failed to initialize");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error initializing game controllers: " + e.getMessage());
+            e.printStackTrace();
         }
-
-        // For testing - remove later
-        // myGameController.printStatus();
     }
 
-    // Delegate methods to access model data
+    //delegate methods to access model data
     public Hero getPlayer() {
         return myGameModel.getPlayer();
     }
@@ -204,13 +220,18 @@ public class Controller {
         return myGameController;
     }
 
-    /**
-     * public method to initialize game controllers for a loaded game
-     * This is called when loading a game from the SavesScreen.
-     */
     public void initializeGameControllersForLoadedGame(final GameUI theUI) {
+        System.out.println("Initializing controllers for loaded game...");
+
+        //initialize controllers
         initializeGameControllers(theUI);
+
+        //verify everything is connected
+        if (myInputController != null && theUI != null) {
+            theUI.setInputController(myInputController);
+            System.out.println("InputController connected to UI");
+        } else {
+            System.err.println("ERROR: Failed to connect InputController to UI");
+        }
     }
-
-
 }

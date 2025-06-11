@@ -29,9 +29,18 @@ public class InputController {
         System.out.println("InputController initialized with GameController and StateController.");
     }
 
+    // Add this method to test if InputController is working
+    public void testInputController() {
+        System.out.println("InputController is active and ready");
+        System.out.println("Current game state: " + myStateController.getCurrentState());
+    }
+
     public void handleKeyPress(final KeyEvent theEvent) {
         KeyCode code = theEvent.getCode();
         GameState currentState = myStateController.getCurrentState();
+
+        // ADD THIS DEBUG LINE
+        System.out.println("DEBUG: InputController received key: " + code + " in state: " + currentState);
 
         //check if state changed and stop all movement if transitioning from EXPLORING
         if (myPreviousState != currentState) {
