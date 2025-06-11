@@ -245,37 +245,42 @@ public class GameUI {
      */
     public void showItemCollectionMessage(final List<Item> theItems) {
         // Display a message about collected items
-        StringBuilder message = new StringBuilder("Collected items: ");
-        for (Item item : theItems) {
-            message.append(item.getName()).append(", ");
+        StringBuilder message = new StringBuilder("Collected: ");
+        for (int i = 0; i < theItems.size(); i++) {
+            message.append(theItems.get(i).getName());
+            if (i < theItems.size() - 1) {
+                message.append(", ");
+            }
         }
-        System.out.println(message.toString());
+        System.out.println(message.toString()); // For now, just print to console
+        // TODO: Add visual feedback in the game screen
     }
 
     /**
      * Shows the inventory screen.
      */
     public void showInventoryScreen() {
-        // Display inventory interface
+        myInventoryScreen.onScreenActivated(); // Refresh inventory display
         myInventoryScreen.showScreen(this);
-        System.out.println("Inventory screen shown");
+        System.out.println("Switched to inventory screen");
     }
 
     /**
      * Hides the inventory screen.
      */
     public void hideInventoryScreen() {
-        // Hide inventory interface
-        myInventoryScreen.closeScreen();
-        System.out.println("Inventory screen hidden");
+        // Return to game screen
+        showGameScreen();
+        System.out.println("Returned to game screen from inventory");
     }
 
     /**
      * Updates the inventory display.
      */
     public void updateInventory() {
-        // Refresh inventory display with current items
-        System.out.println("Inventory display updated");
+        if (myInventoryScreen != null) {
+            myInventoryScreen.updateInventory();
+        }
     }
 
     /**
@@ -284,8 +289,9 @@ public class GameUI {
      * @param theSelectedIndex The index of the selected item
      */
     public void updateInventorySelection(final int theSelectedIndex) {
-        // Highlight the selected inventory item
-        System.out.println("Inventory selection updated to index " + theSelectedIndex);
+        if (myInventoryScreen != null) {
+            myInventoryScreen.updateSelection(theSelectedIndex);
+        }
     }
 
     /**
