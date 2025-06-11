@@ -4,13 +4,21 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import main.Controller.Controller;
 import main.View.GameUI;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+
+// Additional imports needed for the blur effect and image processing
+import javafx.scene.effect.GaussianBlur;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 
 import java.sql.ResultSet;
 import java.util.Optional;
@@ -18,13 +26,24 @@ import java.util.Optional;
 /**
  * Class for the PauseScreen.
  * Shown when the player pauses the game.
+ * Now with responsive scaling and consistent styling.
  *
  * @author Jacob Hilliker
  * @author Emanuel Feria
  * @author Vladyslav Glavatskyi
- * @version 5/13/2025
+ * @version 6/11/2025
  */
 public class PauseScreen extends Screen {
+
+    // Constants for styling
+    private static final int TITLE_FONT_SIZE = 45;
+    private static final int BUTTON_FONT_SIZE = 22;
+    private static final int CONTENT_SPACING = 40;
+    private static final int BUTTON_SPACING = 20;
+    private static final int TOP_PADDING = 50;
+
+    private static final String FONT_PATH = "/main/View/fonts/PixelFont.ttf";
+    private static final String SHADOW_STYLE = "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0.5, 4, 4);";
 
     /**
      * Constructor for PauseScreen.
@@ -36,64 +55,126 @@ public class PauseScreen extends Screen {
         super(thePrimaryStage, theController);
     }
 
-    /**
-     * showScreen for the PauseScreen.
-     *
-     * @param theUI GameUI used for Observer ActionEvent stuff and screen transitions.
-     */
     @Override
     public void showScreen(final GameUI theUI) {
-        BorderPane root = new BorderPane();
-        root.setStyle("-fx-padding: 20;");
-        Scene pauseScene = new Scene(root, 600, 500);
+        // Use a StackPane as the root for proper layering and scaling
+        StackPane root = new StackPane();
 
-        Text title = new Text("Game Paused");
-        title.setFont(Font.font("Verdana", 30));
+        // Get current scene dimensions, or use defaults for adaptability
+        double currentWidth = getStage().getScene() != null ? getStage().getScene().getWidth() : BASE_WIDTH;
+        double currentHeight = getStage().getScene() != null ? getStage().getScene().getHeight() : BASE_HEIGHT;
+        Scene pauseScene = new Scene(root, currentWidth, currentHeight);
 
-        VBox buttons = new VBox(15);
-        buttons.setAlignment(Pos.CENTER);
+        // 1. Create and add the blurred background
+        ImageView backgroundView = createBlurredBackground(theUI);
+        if (backgroundView != null) {
+            backgroundView.fitWidthProperty().bind(root.widthProperty());
+            backgroundView.fitHeightProperty().bind(root.heightProperty());
+            root.getChildren().add(backgroundView);
+        } else {
+            root.setStyle("-fx-background-color: #2C2C2C;");
+        }
 
-        Button resumeBtn = new Button("Resume Game");
-        Button saveBtn = new Button("Save Game");
-        Button loadBtn = new Button("Load Game");
-        Button quitToMenuBtn = new Button("Quit to Menu");
+        // 2. Create and add a dark overlay for text readability
+        Pane overlay = new Pane();
+        overlay.setStyle("-fx-background-color: rgba(0, 0, 0, 0.6);");
+        root.getChildren().add(overlay);
 
-        setButtonSize(resumeBtn);
-        setButtonSize(saveBtn);
-        setButtonSize(loadBtn);
-        setButtonSize(quitToMenuBtn);
+        // 3. Create the menu content
+        VBox centerContent = new VBox(CONTENT_SPACING);
+        centerContent.setAlignment(Pos.CENTER);
+        centerContent.setPadding(new Insets(TOP_PADDING, 50, 50, 50));
+        centerContent.setMaxWidth(BASE_WIDTH);
 
-        resumeBtn.setOnAction(event -> getController().resumeCurrentGame(theUI));
+        VBox titleBox = createTitle();
+        VBox buttonBox = createButtons(theUI);
 
-        saveBtn.setOnAction(event -> {
-            showSaveDialog(theUI);
-        });
+        centerContent.getChildren().addAll(titleBox, buttonBox);
+        root.getChildren().add(centerContent);
 
-        loadBtn.setOnAction(event -> {
-            theUI.showSavesScreen();
-        });
+        // 4. Apply parent's scaling logic for responsiveness
+        applyScaling(root, pauseScene);
 
-        quitToMenuBtn.setOnAction(event -> getController().quitToMenu(theUI));
-
-        buttons.getChildren().addAll(resumeBtn, saveBtn, loadBtn, quitToMenuBtn);
-
-        BorderPane.setAlignment(title, Pos.CENTER);
-        root.setTop(title);
-        BorderPane.setMargin(title, new javafx.geometry.Insets(50,0,0,0));
-
-        root.setCenter(buttons);
-
+        // 5. Set the scene and show the stage
         getStage().setScene(pauseScene);
-        getStage().setTitle("Dungeon Dive - Paused");
+        getStage().setTitle("Dungeon Dive - Game Paused");
         getStage().show();
     }
 
     /**
-     * Shows save dialog with custom naming
-     * Prompts the user to enter custom save name and handles overwrite confirmation
-     * if save exists
-     *
-     * @param theUI GameUI instance for screen transitions and UI updates
+     * Creates a blurred snapshot of the current game scene.
+     * @param theUI The GameUI instance to get the current scene from.
+     * @return An ImageView containing the blurred snapshot, or null if it fails.
+     */
+    private ImageView createBlurredBackground(GameUI theUI) {
+        try {
+            if (theUI != null && theUI.getPrimaryStage() != null) {
+                Scene gameScene = theUI.getPrimaryStage().getScene();
+                if (gameScene != null) {
+                    WritableImage snapshot = gameScene.snapshot(null);
+                    ImageView backgroundImage = new ImageView(snapshot);
+                    GaussianBlur blur = new GaussianBlur();
+                    blur.setRadius(20);
+                    backgroundImage.setEffect(blur);
+                    return backgroundImage;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Could not create blurred game screen background: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Creates the title section using themed fonts and styles.
+     */
+    private VBox createTitle() {
+        Font titleFont = loadFont(FONT_PATH, TITLE_FONT_SIZE, "Impact");
+
+        VBox titleBox = new VBox(10);
+        titleBox.setAlignment(Pos.CENTER);
+
+        Text gameText = new Text("GAME");
+        gameText.setFont(titleFont);
+        gameText.setFill(Color.ORANGE);
+        gameText.setStyle(SHADOW_STYLE);
+
+        Text pausedText = new Text("PAUSED");
+        pausedText.setFont(titleFont);
+        pausedText.setFill(Color.ORANGE);
+        pausedText.setStyle(SHADOW_STYLE);
+
+        titleBox.getChildren().addAll(gameText, pausedText);
+        return titleBox;
+    }
+
+    /**
+     * Creates the button section using the parent's styled buttons.
+     */
+    private VBox createButtons(GameUI theUI) {
+        Font buttonFont = loadFont(FONT_PATH, BUTTON_FONT_SIZE, "Courier New");
+
+        VBox buttonBox = new VBox(BUTTON_SPACING);
+        buttonBox.setAlignment(Pos.CENTER);
+
+        // Use the standardized createStyledButton from the Screen superclass
+        Button resumeBtn = createStyledButton("RESUME GAME", buttonFont);
+        Button saveBtn = createStyledButton("SAVE GAME", buttonFont);
+        Button loadBtn = createStyledButton("LOAD GAME", buttonFont);
+        Button quitToMenuBtn = createStyledButton("QUIT TO MENU", buttonFont);
+
+        // Set button actions
+        resumeBtn.setOnAction(event -> getController().resumeCurrentGame(theUI));
+        saveBtn.setOnAction(event -> showSaveDialog(theUI));
+        loadBtn.setOnAction(event -> theUI.showSavesScreen());
+        quitToMenuBtn.setOnAction(event -> getController().quitToMenu(theUI));
+
+        buttonBox.getChildren().addAll(resumeBtn, saveBtn, loadBtn, quitToMenuBtn);
+        return buttonBox;
+    }
+
+    /**
+     * Shows save dialog with custom naming.
      */
     private void showSaveDialog(GameUI theUI) {
         TextInputDialog dialog = new TextInputDialog("My Save");
@@ -106,13 +187,10 @@ public class PauseScreen extends Screen {
         if (result.isPresent() && !result.get().trim().isEmpty()) {
             String saveName = result.get().trim();
 
-            //check if name already exists
             if (saveNameExists(saveName)) {
-                //show confirmation for overwrite
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Overwrite Save");
-                alert.setHeaderText("Save name already exists");
-                alert.setContentText("A save with the name '" + saveName + "' already exists. Overwrite it?");
+                alert.setHeaderText("A save with the name '" + saveName + "' already exists. Overwrite it?");
                 alert.initOwner(getStage());
 
                 Optional<ButtonType> confirmResult = alert.showAndWait();
@@ -128,11 +206,10 @@ public class PauseScreen extends Screen {
     }
 
     /**
-     *checks if a save name already exists
+     * Checks if a save name already exists in the database.
      */
     private boolean saveNameExists(String saveName) {
-        try {
-            ResultSet rs = getController().getGameModel().getDatabase().loadGameData(saveName);
+        try (ResultSet rs = getController().getGameModel().getDatabase().loadGameData(saveName)) {
             return rs != null && rs.next();
         } catch (Exception e) {
             System.err.println("Error checking if save exists: " + e.getMessage());
@@ -141,144 +218,17 @@ public class PauseScreen extends Screen {
     }
 
     /**
-     * Formats the save date for display
-     */
-    private String formatSaveDate(String saveDate) {
-        try {
-            java.time.LocalDateTime dateTime = java.time.LocalDateTime.parse(saveDate);
-            java.time.format.DateTimeFormatter formatter =
-                    java.time.format.DateTimeFormatter.ofPattern("MMM dd - HH:mm");
-            return dateTime.format(formatter);
-        } catch (Exception e) {
-            return saveDate;
-        }
-    }
-
-    /**
-     * Shows a load dialog similar to SavesScreen but for pause menu
-     */
-    private void showLoadDialog(GameUI theUI) {
-        Stage loadStage = new Stage();
-        loadStage.setTitle("Load Game");
-        loadStage.initOwner(getStage());
-
-        VBox loadRoot = new VBox(15);
-        loadRoot.setAlignment(Pos.CENTER);
-        loadRoot.setStyle("-fx-padding: 20;");
-
-        Label loadTitle = new Label("Load Game");
-        loadTitle.setFont(Font.font("Verdana", 18));
-        loadRoot.getChildren().add(loadTitle);
-
-        // Create a scrollable area for save files
-        VBox savesList = new VBox(10);
-        savesList.setAlignment(Pos.CENTER);
-
-        ScrollPane scrollPane = new ScrollPane(savesList);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setPrefHeight(300);
-        scrollPane.setStyle("-fx-background-color: transparent;");
-
-        //get actual save games from database
-        try {
-            ResultSet saves = getController().getGameModel().getDatabase().getAllSaveGames();
-            boolean hasSaves = false;
-
-            while (saves != null && saves.next()) {
-                hasSaves = true;
-                String saveName = saves.getString("save_name");
-                String saveDate = saves.getString("save_date");
-
-                //format the date
-                String formattedDate = formatSaveDate(saveDate);
-
-                //create a horizontal box for each save (load button and delete button)
-                HBox saveRow = new HBox(10);
-                saveRow.setAlignment(Pos.CENTER);
-
-                Button loadButton = new Button(saveName + "\n" + formattedDate);
-                loadButton.setPrefWidth(250);
-                loadButton.setPrefHeight(60);
-                loadButton.setStyle("-fx-font-size: 12px; -fx-alignment: center; -fx-background-color: #4caf50; -fx-text-fill: white;");
-
-                Button deleteButton = new Button("Delete");
-                deleteButton.setPrefWidth(80);
-                deleteButton.setPrefHeight(60);
-                deleteButton.setStyle("-fx-background-color: #ff6b6b; -fx-text-fill: white;");
-
-                loadButton.setOnAction(event -> {
-                    if (loadGameFromDatabase(saveName, theUI)) {
-                        loadStage.close(); // Close load dialog
-                        theUI.showGameScreen(); // Show game screen
-                    } else {
-                        System.err.println("Failed to load game: " + saveName);
-                    }
-                });
-
-                deleteButton.setOnAction(event -> {
-                    //confirm deletion
-                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("Delete Save");
-                    alert.setHeaderText("Delete save file?");
-                    alert.setContentText("Are you sure you want to delete '" + saveName + "'?");
-
-                    Optional<ButtonType> result = alert.showAndWait();
-                    if (result.isPresent() && result.get() == ButtonType.OK) {
-                        if (getController().getGameModel().getDatabase().deleteSaveGame(saveName)) {
-                            System.out.println("Save deleted: " + saveName);
-                            //refresh the dialog
-                            loadStage.close();
-                            showLoadDialog(theUI);
-                        } else {
-                            System.err.println("Failed to delete save: " + saveName);
-                        }
-                    }
-                });
-
-                saveRow.getChildren().addAll(loadButton, deleteButton);
-                savesList.getChildren().add(saveRow);
-            }
-
-            if (!hasSaves) {
-                Label noSavesLabel = new Label("No saved games found");
-                noSavesLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: gray;");
-                savesList.getChildren().add(noSavesLabel);
-            }
-
-        } catch (Exception e) {
-            System.err.println("Error loading save games: " + e.getMessage());
-            Label errorLabel = new Label("Error loading save games");
-            errorLabel.setStyle("-fx-font-size: 16px; -fx-text-fill: red;");
-            savesList.getChildren().add(errorLabel);
-        }
-
-        Button cancelButton = new Button("Cancel");
-        cancelButton.setPrefWidth(150);
-        cancelButton.setOnAction(event -> loadStage.close());
-
-        loadRoot.getChildren().addAll(loadTitle, scrollPane, cancelButton);
-
-        Scene loadScene = new Scene(loadRoot, 400, 450);
-        loadStage.setScene(loadScene);
-        loadStage.show();
-    }
-
-    /**
      * Loads a game directly from the database and initializes the game state
      */
     private boolean loadGameFromDatabase(String saveName, GameUI theUI) {
-        try {
-            ResultSet rs = getController().getGameModel().getDatabase().loadGameData(saveName);
-
+        try (ResultSet rs = getController().getGameModel().getDatabase().loadGameData(saveName)) {
             if (rs != null && rs.next()) {
                 String playerData = rs.getString("player_data");
                 String dungeonData = rs.getString("dungeon_data");
                 String gameStateData = rs.getString("game_state");
 
-                //initialize game controllers first with GameUI
-                initializeGameControllersForLoad(theUI);
+                getController().initializeGameControllersForLoadedGame(theUI);
 
-                //now load game data using GameController
                 boolean loaded = getController().getGameController().loadGameFromSaveData(
                         playerData, dungeonData, gameStateData);
 
@@ -291,17 +241,6 @@ public class PauseScreen extends Screen {
             System.err.println("Error loading game from PauseScreen: " + e.getMessage());
             e.printStackTrace();
         }
-
         return false;
     }
-
-    /**
-     * Initialize game controllers for a loaded game
-     */
-    private void initializeGameControllersForLoad(GameUI theUI) {
-        //pass GameUI to Controller's method
-        getController().initializeGameControllersForLoadedGame(theUI);
-    }
-
-
 }
