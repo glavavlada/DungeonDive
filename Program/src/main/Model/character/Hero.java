@@ -469,23 +469,38 @@ public class Hero extends Character {
                     .setPosition(new Point(saveData.positionX, saveData.positionY))
                     .build();
 
+            // Restore all the saved data
             hero.myGold = saveData.gold;
             hero.myPillarsActivated = saveData.pillarsActivated;
+
+            // CRITICAL: Restore pixel position
             hero.myPixelX = saveData.pixelX;
             hero.myPixelY = saveData.pixelY;
             hero.myAttackBuff = saveData.attackBuff;
             hero.mySpecialMana = saveData.specialMana;
             hero.myManaBuff = saveData.manaBuff;
 
-            // Restore inventory (you'll need to implement item recreation)
+            // CRITICAL: Reset movement state to ensure clean state
+            hero.myMovementState.setMovingNorth(false);
+            hero.myMovementState.setMovingSouth(false);
+            hero.myMovementState.setMovingEast(false);
+            hero.myMovementState.setMovingWest(false);
+
+            // Restore inventory
             for (String itemName : saveData.inventoryItems) {
-                // hero.addItem(ItemFactory.createItem(itemName));
                 hero.addItem(new HealthPotion("Health Potion", "Heals 50", 50));
             }
+
+            // CRITICAL: Reload sprite sheet since it's transient
+            hero.loadSpriteSheet();
+
+            System.out.println("Hero loaded - Position: " + hero.getPosition() +
+                              ", Pixel: (" + hero.myPixelX + "," + hero.myPixelY + ")");
 
             return hero;
         } catch (Exception e) {
             System.err.println("Error deserializing hero: " + e.getMessage());
+            e.printStackTrace();
             return null;
         }
     }
@@ -508,4 +523,27 @@ public class Hero extends Character {
         public List<String> inventoryItems;
     }
 
+    /**
+     * synchronizes pixel position with room position
+     * Call this after loading to ensure pixel and room positions match
+     */
+    public void synchronizePositions(double roomPixelWidth, double roomPixelHeight) {
+        Point roomPos = getPosition();
+        myPixelX = roomPos.getX() * roomPixelWidth + (roomPixelWidth / 2);
+        myPixelY = roomPos.getY() * roomPixelHeight + (roomPixelHeight / 2);
+
+        System.out.println("Synchronized positions - Room: " + roomPos +
+                          ", Pixel: (" + myPixelX + "," + myPixelY + ")");
+    }
+
+    /**
+     *reset all movement flags to ensure clean state
+     */
+    public void resetMovementState() {
+        myMovementState.setMovingNorth(false);
+        myMovementState.setMovingSouth(false);
+        myMovementState.setMovingEast(false);
+        myMovementState.setMovingWest(false);
+        System.out.println("Movement state reset");
+    }
 }

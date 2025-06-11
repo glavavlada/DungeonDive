@@ -675,7 +675,7 @@ public class GameController {
         Room currentRoom = myGameModel.getDungeon().getRoom(player.getPosition());
         List<Monster> monsters = currentRoom.getMonsters();
 
-        // Create a copy to iterate over, as monsters might die and be removed
+        //create a copy to iterate over, as monsters might die and be removed
         List<Monster> attackers = new ArrayList<>(monsters);
 
         for (Monster monster : attackers) {
@@ -688,7 +688,7 @@ public class GameController {
 
         myGameUI.updatePlayerStats();
 
-        // Only update combat screen if still in combat
+        //only update combat screen if still in combat
         if (myStateController.isInState(GameState.COMBAT)) {
             myGameUI.updateCombatScreen(currentRoom.getMonsters());
         }
@@ -936,12 +936,16 @@ public class GameController {
             Dungeon loadedDungeon = Dungeon.fromJson(dungeonData);
             myGameModel.setDungeon(loadedDungeon);
 
-            // Restore game state
-            ObjectMapper mapper = new ObjectMapper();
-            GameStateData stateData = mapper.readValue(gameStateData, GameStateData.class);
-            myStateController.changeState(GameState.valueOf(stateData.currentState));
+            // DON'T restore the saved game state - always start in EXPLORING
+            // The saved state might be PAUSED, COMBAT, etc. which we don't want
+            // ObjectMapper mapper = new ObjectMapper();
+            // GameStateData stateData = mapper.readValue(gameStateData, GameStateData.class);
+            // myStateController.changeState(GameState.valueOf(stateData.currentState));
 
-            System.out.println("Game loaded successfully from save data");
+            // INSTEAD: Always set to EXPLORING when loading
+            myStateController.changeState(GameState.EXPLORING);
+
+            System.out.println("Game loaded successfully from save data - State set to EXPLORING");
             return true;
         } catch (Exception e) {
             System.err.println("Error loading game from save data: " + e.getMessage());
@@ -990,6 +994,57 @@ public class GameController {
         }
     }
 
-}
+    /**
+     * Call this method after loading a game to ensure everything is properly initialized
+     */
+    public void initializeLoadedGame() {
+        System.out.println("Initializing loaded game...");
 
+        // Reset combat flags
+        myEnteringCombat = false;
+        myLastCombatEndTime = 0;
+
+        // Reset inventory selection
+        mySelectedInventoryIndex = 0;
+
+        // Ensure player movement state is clean
+        Hero player = myGameModel.getPlayer();
+        if (player != null) {
+            player.resetMovementState();
+
+            // Synchronize positions (you may need to adjust these values based on your room size)
+            player.synchronizePositions(480.0, 480.0); // Adjust based on your actual room pixel size
+
+            System.out.println("Player initialized - Position: " + player.getPosition() +
+                              ", Pixel: (" + player.getPixelX() + "," + player.getPixelY() + ")");
+        }
+
+        // Ensure we're in the correct state
+        myStateController.changeState(GameState.EXPLORING);
+
+        // Update UI
+        if (myGameUI != null) {
+            myGameUI.updatePlayerStats();
+            notifyRoomChanged();
+        }
+
+        System.out.println("Loaded game initialization complete");
+    }
+
+    // Add debug method to check movement
+    public void debugPlayerMovement() {
+        Hero player = myGameModel.getPlayer();
+        if (player != null) {
+            System.out.println("=== PLAYER MOVEMENT DEBUG ===");
+            System.out.println("Room Position: " + player.getPosition());
+            System.out.println("Pixel Position: (" + player.getPixelX() + "," + player.getPixelY() + ")");
+            System.out.println("Is Moving: " + player.isMoving());
+            System.out.println("Can Move: " + canMovePlayer());
+            System.out.println("Game State: " + myStateController.getCurrentState());
+            System.out.println("Entering Combat: " + myEnteringCombat);
+            System.out.println("==============================");
+        }
+    }
+
+}
 
