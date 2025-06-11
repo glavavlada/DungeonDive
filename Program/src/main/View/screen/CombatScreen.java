@@ -315,6 +315,7 @@ public class CombatScreen extends Screen {
         HBox battleArea = new HBox();
         battleArea.setAlignment(Pos.CENTER);
 
+        // This is safe now because createBindings() was called before this method.
         battleArea.paddingProperty().bind(Bindings.createObjectBinding(() ->
                         new Insets(paddingBinding.getValue().doubleValue()),
                 paddingBinding));
@@ -386,18 +387,20 @@ public class CombatScreen extends Screen {
 
     private VBox createNameSection(boolean isHero) {
         VBox nameSection = new VBox();
-        nameSection.setAlignment(Pos.CENTER);
+        nameSection.setAlignment(isHero ? Pos.CENTER_LEFT : Pos.CENTER_RIGHT);
         nameSection.spacingProperty().bind(spacingBinding.divide(6));
 
         if (isHero) {
             heroNameDisplay = new Text(getHeroName());
             heroNameDisplay.getStyleClass().add("combat-name");
+            // MODIFICATION: Use PixelFont to allow CSS to be overridden by responsive size.
             heroNameDisplay.fontProperty().bind(Bindings.createObjectBinding(() ->
                             Font.font("PixelFont", FontWeight.BOLD, nameFontSizeBinding.getValue().doubleValue()),
                     nameFontSizeBinding));
 
             Text classText = new Text(getHeroClass());
             classText.getStyleClass().add("combat-subtitle");
+            // MODIFICATION: Use PixelFont
             classText.fontProperty().bind(Bindings.createObjectBinding(() ->
                             Font.font("PixelFont", subtitleFontSizeBinding.getValue().doubleValue()),
                     subtitleFontSizeBinding));

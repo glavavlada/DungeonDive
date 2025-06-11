@@ -495,6 +495,10 @@ public class InventoryScreen extends Screen {
     }
 
     private void closeInventory() {
+        // Close the inventory window first
+        myInventoryStage.close();
+
+        // Then notify the controller if available
         if (MY_CONTROLLER.getGameController() != null) {
             MY_CONTROLLER.getGameController().closeInventory();
         }
