@@ -14,6 +14,7 @@ public class Monster extends Character {
     private final MonsterType myMonsterType;
     private final int myGoldReward;
     private ArrayList<Item> myRewards;
+    private boolean myIsDefeated;
 
 
     /**
@@ -30,6 +31,7 @@ public class Monster extends Character {
         myIsElite = theMonsterBuilder.myIsElite;
         myGoldReward = theMonsterBuilder.myGoldReward;
         this.myRewards = new ArrayList<>();
+        myIsDefeated = false;
     }
 
     /**
@@ -105,7 +107,13 @@ public class Monster extends Character {
     }
 
     public int getGoldReward() {
+        // This assumes this method is only used when monster is defeated.
+        myIsDefeated = true;
         return myGoldReward;
+    }
+
+    public boolean getIsDefeated() {
+        return myIsDefeated;
     }
 
     /**

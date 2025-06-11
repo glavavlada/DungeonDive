@@ -29,7 +29,7 @@ public class Dungeon {
     private String myDifficulty;
     private final MonsterFactory myMonsterFactory;
 
-    public Dungeon(final int theWidth, final int theHeight, final String theDifficulty) {
+    public Dungeon(final int theWidth, final int theHeight, final String theDifficulty, final boolean theNewDungeon) {
         if (theWidth <= 0 || theHeight <= 0) {
             throw new IllegalArgumentException("Dungeon dimensions must be positive.");
         }
@@ -41,7 +41,10 @@ public class Dungeon {
         this.myActivatedPillars = 0;
         this.myBossSpawned = false;
         this.myMonsterFactory = new MonsterFactory();
-        generateLayout();
+        // This stops a load from save file from creating new random placements.
+        if (theNewDungeon) {
+            generateLayout();
+        }
     }
 
     /**
@@ -125,7 +128,7 @@ public class Dungeon {
         int monsterCount = (myWidth * myHeight) / 5; // Adjust density as needed
         int trapCount = (myWidth * myHeight) / 10;
         int chestCount = (myWidth * myHeight) / 10;
-        int potionCount = (myWidth * myHeight) / 10;
+        int potionCount = (myWidth * myHeight) / 5;
 
         while ((monsterCount > 0 || trapCount > 0 || chestCount > 0) && !availableSpots.isEmpty()) {
             Point spot = availableSpots.remove(0); // Pick another random spot
@@ -341,6 +344,40 @@ public class Dungeon {
         return sb.toString();
     }
 
+    private void addMonsterToRoom(final Room theRoom, final Point theSpot) {
+        Random rand = new Random();
+        double percentChance = rand.nextDouble(1);
+        if (percentChance < .3) {
+            theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.GOBLIN, theSpot));
+        } else if (percentChance < .5) {
+            theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.SKELETON, theSpot));
+        } else if (percentChance < .7) {
+            theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.SLIME, theSpot));
+        } else if (percentChance < .8) {
+            theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.ORC, theSpot));
+        } else if (percentChance < .9) {
+            theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.BIG_SLIME, theSpot));
+        } else {
+            theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.WIZARD, theSpot));
+        }
+    }
+
+    private void createChest(final Room theRoom) {
+        Random rand = new Random();
+        int itemAmount = rand.nextInt(5) + 1;
+        List<Item> chestItems = new ArrayList<>();
+        while (itemAmount != 0) {
+            if (itemAmount % 2 == 0) {
+                chestItems.add(new HealthPotion("Health Potion", "Heals 50", 50));
+            } else {
+                chestItems.add(new VisionPotion("Vision Potion", "Reveals nearby tiles", this));
+            }
+
+            itemAmount--;
+        }
+        theRoom.setChest(chestItems);
+    }
+
     /**
      * serializes dungeon to JSON format for saving
      * Converts entire dungeon state including dimensions, pillar status,
@@ -392,6 +429,29 @@ public class Dungeon {
                         roomSave.trapSprung = room.getTrap().isSprung();
                     }
 
+                    // If it has a monster save it
+                    if (room.getRoomType() == RoomType.MONSTER && !room.getMonsters().isEmpty()) {
+                        // Assuming here that there is only one monster per room
+                        roomSave.monster = room.getMonsters().getFirst().getType();
+                        roomSave.isDefeated = false;
+                    } else {
+                        // Otherwise just assign goblin to monster to avoid null errors.
+                        // isDefeated being true should stop monster from being spawned.
+                        roomSave.monster = MonsterType.GOBLIN;
+                        roomSave.isDefeated = true;
+                    }
+
+                    if (room.getRoomType() == RoomType.TREASURE && !room.getChest().isEmpty()) {
+                        roomSave.itemCount = 0;
+                        for (Item item : room.getChest()) {
+                            roomSave.itemCount++;
+                        }
+                        roomSave.potionType = "Chest";
+                    } else if (!room.getItems().isEmpty()) {
+                        roomSave.itemCount = 1;
+                        roomSave.potionType = room.getItems().getFirst().getName();
+                    }
+
                     saveData.roomData[y][x] = roomSave;
                 }
             }
@@ -418,7 +478,7 @@ public class Dungeon {
             DungeonSaveData saveData = mapper.readValue(json, DungeonSaveData.class);
 
             //create new dungeon with saved dimensions and difficulty
-            Dungeon dungeon = new Dungeon(saveData.width, saveData.height, saveData.difficulty);
+            Dungeon dungeon = new Dungeon(saveData.width, saveData.height, saveData.difficulty, false);
 
             //restore dungeon state
             dungeon.myTotalPillars = saveData.totalPillars;
@@ -426,6 +486,13 @@ public class Dungeon {
             dungeon.myBossSpawned = saveData.bossSpawned;
             dungeon.myHeroSpawnPoint = new Point(saveData.heroSpawnX, saveData.heroSpawnY);
             dungeon.myExitPoint = new Point(saveData.exitX, saveData.exitY);
+
+
+            for (int y = 0; y < dungeon.getHeight(); y++) {
+                for (int x = 0; x < dungeon.getWidth(); x++) {
+                    dungeon.myRooms[y][x] = new Room(new Point(x, y), RoomType.EMPTY);
+                }
+            }
 
             //restore room data
             for (int y = 0; y < saveData.height; y++) {
@@ -450,6 +517,29 @@ public class Dungeon {
                             room.removePillar();
                         } else {
                             room.setPillar(pillar);
+                        }
+                    }
+
+                    if (room.getRoomType() == RoomType.MONSTER && !roomSave.isDefeated) {
+                        MonsterFactory m = new MonsterFactory();
+                        room.addMonster(m.getMonster(roomSave.monster, room.getPosition()));
+                    }
+
+                    if (room.getRoomType() == RoomType.TREASURE) {
+                        int itemsLeft = roomSave.itemCount;
+                        while (itemsLeft != 0) {
+                            if (itemsLeft % 2 == 0) {
+                                room.getChest().add(new HealthPotion("Health Potion", "Heals 50", 50));
+                            } else {
+                                room.getChest().add(new VisionPotion("Vision Potion", "Reveals nearby tiles", dungeon));
+                            }
+                            itemsLeft--;
+                        }
+                    } else if (roomSave.itemCount == 1 && !roomSave.potionType.equals("Chest")) {
+                        if (roomSave.potionType.equals("Health Potion")) {
+                            room.addItem(new HealthPotion("Health Potion", "Heals 50", 50));
+                        } else {
+                            room.addItem(new VisionPotion("Vision Potion", "Reveals nearby tiles", dungeon));
                         }
                     }
 
@@ -478,39 +568,7 @@ public class Dungeon {
         }
     }
 
-    private void addMonsterToRoom(final Room theRoom, final Point theSpot) {
-      Random rand = new Random();
-      double percentChance = rand.nextDouble(1);
-      if (percentChance < .3) {
-          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.GOBLIN, theSpot));
-      } else if (percentChance < .5) {
-          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.SKELETON, theSpot));
-      } else if (percentChance < .7) {
-          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.SLIME, theSpot));
-      } else if (percentChance < .8) {
-          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.ORC, theSpot));
-      } else if (percentChance < .9) {
-          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.BIG_SLIME, theSpot));
-      } else {
-          theRoom.addMonster(myMonsterFactory.getMonster(MonsterType.WIZARD, theSpot));
-      }
-    }
 
-    private void createChest(final Room theRoom) {
-        Random rand = new Random();
-        int itemAmount = rand.nextInt(5) + 1;
-        List<Item> chestItems = new ArrayList<>();
-        while (itemAmount != 0) {
-            if (itemAmount % 2 == 0) {
-                chestItems.add(new HealthPotion("Health Potion", "Heals 50", 50));
-            } else {
-                chestItems.add(new VisionPotion("Vision Potion", "Reveals nearby tiles", this));
-            }
-
-            itemAmount--;
-        }
-        theRoom.setChest(chestItems);
-    }
 
     //inner classes for save data
     private static class DungeonSaveData {
@@ -543,6 +601,10 @@ public class Dungeon {
         public String trapName;
         public int trapDamage;
         public boolean trapSprung;
+        public MonsterType monster;
+        public boolean isDefeated;
+        public int itemCount;
+        public String potionType;
     }
 
 

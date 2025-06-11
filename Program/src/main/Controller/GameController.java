@@ -9,6 +9,7 @@ import main.Model.dungeon.Dungeon;
 import main.Model.dungeon.Room;
 import main.Model.element.Item;
 import main.Model.element.Pillar;
+import main.Model.element.VisionPotion;
 import main.Model.util.Direction;
 import main.View.GameUI;
 import main.Controller.StateController.GameState;
@@ -935,6 +936,18 @@ public class GameController {
             // Restore dungeon
             Dungeon loadedDungeon = Dungeon.fromJson(dungeonData);
             myGameModel.setDungeon(loadedDungeon);
+
+            // Right here VisonPlaceholder potions are replaced with vision. Getting the dungeon needed for
+            // vision potion parameters was hard in the reload hero stuff, so a placeholders were put into
+            // the inventory for replacing here.
+            int inventorySize = loadedPlayer.getInventory().size() - 1;
+            while (inventorySize >= 0) {
+                if (loadedPlayer.getInventory().get(inventorySize).getName().equals("VisionPlaceholder")) {
+                    loadedPlayer.useItem(loadedPlayer.getInventory().get(inventorySize));
+                    loadedPlayer.addItem(new VisionPotion("Vision Potion", "Reveals nearby tiles", loadedDungeon));
+                }
+                inventorySize--;
+            }
 
             // DON'T restore the saved game state - always start in EXPLORING
             // The saved state might be PAUSED, COMBAT, etc. which we don't want

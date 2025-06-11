@@ -39,6 +39,12 @@ public class VisionPotion extends Item {
                     myDungeon.getRoom(currX, currY).setVisited(true);
                 }
             }
+
+            for (int a = 0; a < myDungeon.getHeight(); a++) {
+                for (int b = 0; b < myDungeon.getWidth(); b++) {
+                    myDungeon.getRoom(a, b).setVisited(true);
+                }
+            }
         }
     }
 }
