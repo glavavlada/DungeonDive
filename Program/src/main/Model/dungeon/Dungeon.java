@@ -89,7 +89,7 @@ public class Dungeon {
             int randY = random.nextInt(myHeight);
             Point roomPoint = new Point(randX, randY);
             List<Point> allNeighbors = getAllNeighbors(roomPoint);
-            if(!allNeighbors.isEmpty()) {
+            if (!allNeighbors.isEmpty()) {
                 removeWall(roomPoint, allNeighbors.get(random.nextInt(allNeighbors.size())));
             }
         }
@@ -114,11 +114,19 @@ public class Dungeon {
         }
         Collections.shuffle(availableSpots, random); // Randomize potential spots
 
-        int pillarsToPlace = 4;
+        int pillarsToPlace = Math.min(4, pillarTypes.length); // Ensure we don't exceed available pillar types
+        Set<Point> pillarLocations = new HashSet<>(); // Track pillar locations
         for (int i = 0; i < pillarsToPlace && !availableSpots.isEmpty(); i++) {
             Point pillarPoint = availableSpots.remove(0); // Pick a random spot
-            getRoom(pillarPoint).setPillar(new Pillar(pillarTypes[i % pillarTypes.length]));
+            Room room = getRoom(pillarPoint);
+
+            // Place the pillar
+            room.setPillar(new Pillar(pillarTypes[i]));
+            pillarLocations.add(pillarPoint); // Track this location
             myTotalPillars++;
+
+            System.out.println("Placed pillar " + (i + 1) + ": " + pillarTypes[i].getDisplayName() +
+                    " at " + pillarPoint);
         }
 
         // 5. Place Other Rooms (Monsters, Traps)
@@ -127,20 +135,25 @@ public class Dungeon {
         int chestCount = (myWidth * myHeight) / 10;
         int potionCount = (myWidth * myHeight) / 10;
 
+        availableSpots.removeIf(point -> {
+            Room room = getRoom(point);
+            return room.getRoomType() != RoomType.EMPTY || pillarLocations.contains(point);
+        });
+
         while ((monsterCount > 0 || trapCount > 0 || chestCount > 0) && !availableSpots.isEmpty()) {
             Point spot = availableSpots.remove(0); // Pick another random spot
             Room room = getRoom(spot);
-            // Only place if it's currently empty (not Start, Exit, or Pillar)
-            if (room.getRoomType() == RoomType.EMPTY) {
+
+            if (room.getRoomType() == RoomType.EMPTY && !room.hasPillar()) {
                 if (monsterCount > 0 && random.nextBoolean()) { // Alternate placing monsters/traps
                     room.setRoomType(RoomType.MONSTER);
-                    // Add an actual monster (using constructor like in spawnBoss)
+                    // Add an actual monster
                     addMonsterToRoom(room, spot);
                     monsterCount--;
                 } else if (trapCount > 0) {
                     room.setTrap(new Trap("Floor Spikes", "Sharp spikes emerge from the floor.", 5 + random.nextInt(10)));
                     trapCount--;
-                } else if (chestCount > 0 && !room.hasPillar()) {
+                } else if (chestCount > 0) {
                     createChest(room);
                     room.setRoomType(RoomType.TREASURE);
                     chestCount--;
@@ -148,9 +161,25 @@ public class Dungeon {
             }
         }
 
-        while (potionCount > 0) {
-            Point spot = availableSpots.remove(0);
+        // 6. Place potions in remaining empty rooms
+        // Get remaining empty spots (avoiding all special rooms)
+        List<Point> potionSpots = new ArrayList<>();
+        for (int y = 0; y < myHeight; y++) {
+            for (int x = 0; x < myWidth; x++) {
+                Point p = new Point(x, y);
+                Room room = getRoom(p);
+                if (room.getRoomType() == RoomType.EMPTY && !room.hasPillar()) {
+                    potionSpots.add(p);
+                }
+            }
+        }
+        Collections.shuffle(potionSpots, random);
+
+        int potionsPlaced = 0;
+        while (potionCount > 0 && potionsPlaced < potionSpots.size()) {
+            Point spot = potionSpots.get(potionsPlaced);
             Room room = getRoom(spot);
+
             if (potionCount % 2 == 0) {
                 room.addItem(new HealthPotion("Health Potion", "Heals 50", 50));
             } else {
@@ -158,9 +187,27 @@ public class Dungeon {
             }
 
             potionCount--;
+            potionsPlaced++;
         }
 
-        System.out.println("Randomized Dungeon generated. Pillars: " + myTotalPillars);
+        System.out.println("Dungeon generation complete:");
+        System.out.println("- Total Pillars: " + myTotalPillars);
+        System.out.println("- Expected Pillars: 4");
+
+        // Debug: Count actual pillars in dungeon
+        int actualPillars = 0;
+        for (int y = 0; y < myHeight; y++) {
+            for (int x = 0; x < myWidth; x++) {
+                if (getRoom(x, y).hasPillar()) {
+                    actualPillars++;
+                }
+            }
+        }
+        System.out.println("- Actual Pillars in Dungeon: " + actualPillars);
+
+        if (actualPillars != 4) {
+            System.err.println("WARNING: Pillar count mismatch! Expected 4, found " + actualPillars);
+        }
     }
 
     /**

@@ -50,6 +50,7 @@ public class GameScreen extends Screen {
 
     // Player Stats
     private Label playerHealthLabel;
+    private Label playerManaLabel;
     private Label playerAttackLabel;
     private Label playerGoldLabel;
     private Label playerPillarsLabel;
@@ -229,13 +230,16 @@ public class GameScreen extends Screen {
         playerAttackLabel = createThemedStatLabel();
         HBox attackBox = createStatBox("/sprites/icons/sword.png", playerAttackLabel);
 
+        playerManaLabel = createThemedStatLabel();
+        HBox manaBox = createStatBox("/sprites/icons/mana.png", playerManaLabel);
+
         playerGoldLabel = createThemedStatLabel();
         HBox goldBox = createStatBox("/sprites/icons/coin.png", playerGoldLabel);
 
         playerPillarsLabel = createThemedStatLabel();
         HBox pillarsBox = createStatBox("/sprites/icons/pillar.png", playerPillarsLabel);
 
-        statsBox.getChildren().addAll(healthBox, attackBox, goldBox, pillarsBox);
+        statsBox.getChildren().addAll(healthBox, manaBox, attackBox, goldBox, pillarsBox);
         return statsBox;    }
 
     // FIX: Modified createStatBox to bind icon size and add padding for text fitting
@@ -968,6 +972,7 @@ public class GameScreen extends Screen {
         if (player != null) {
             Platform.runLater(() -> {
                 playerHealthLabel.setText("HP: " + player.getHealth() + "/" + player.getMaxHealth());
+                playerManaLabel.setText("MP: " + player.getSpecialMana() + "/4");
                 playerAttackLabel.setText("ATK: " + player.getType().getBaseAttack());
                 playerGoldLabel.setText("Gold: " + player.getGold());
                 playerPillarsLabel.setText("Pillars: " + player.getPillarsActivated() + "/4" );
