@@ -30,6 +30,7 @@ public class GameUI {
     private InputController myInputController; // Field to store the InputController
     private GameScreen myGameScreen;
     private CombatScreen myCombatScreen;
+    private WinScreen myWinScreen;
 
     /**
      * This is here because the inventory screen worked differently than others.
@@ -326,8 +327,11 @@ public class GameUI {
      * Shows the victory screen.
      */
     public void showVictoryScreen() {
-        WinScreen winScreen = new WinScreen(myPrimaryStage, myController);
-        winScreen.showScreen(this);
+        if (myWinScreen == null) {
+            myWinScreen = new WinScreen(myPrimaryStage, myController);
+        }
+        myWinScreen.showScreen(this);
+        System.out.println("Victory screen displayed!");
     }
 
     /**

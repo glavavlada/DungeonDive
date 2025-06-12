@@ -1,34 +1,24 @@
-package main.View.screen;
+package main.View.screen; // Ensure this is your package structure
 
-import javafx.beans.binding.Bindings;
-import javafx.geometry.Pos;
+import main.Controller.Controller; // Ensure correct import
+import main.View.GameUI;           // Ensure correct import
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import main.Controller.Controller;
-import main.View.GameUI;
 
 /**
  * Class for the WinScreen.
  * Displayed when the player successfully completes the game.
- * Now with responsive scaling and enhanced visual design.
  *
  * @author Jacob Hilliker
  * @author Emanuel Feria
  * @author Vladyslav Glavatskyi
- * @version 6/10/2025
+ * @version 5/13/2025
  */
 public class WinScreen extends Screen {
-
-    private static final int TITLE_FONT_SIZE = 40;
-    private static final int BUTTON_FONT_SIZE = 24;
-    private static final int CONTENT_SPACING = 60;
 
     /**
      * Constructor for WinScreen.
@@ -47,48 +37,23 @@ public class WinScreen extends Screen {
      */
     @Override
     public void showScreen(final GameUI theUI) {
-        // Use a StackPane to hold the content and apply scaling
-        StackPane scalableRoot = new StackPane();
+        BorderPane root = new BorderPane();
+        Scene winScene = new Scene(root, 600, 500);
+        // Apply a stylesheet (option in the future)
+        // winScene.getStylesheets().add(getClass().getResource("/main/View/css/style.css").toExternalForm());
 
-        // The actual content pane
-        BorderPane contentPane = new BorderPane();
-        contentPane.setStyle("-fx-padding: 50;");
+        Text title = new Text("Congratulations! You Won!");
+        title.setFont(Font.font("Verdana", 30));
+        title.setStyle("-fx-fill: green;"); // Make it stand out
 
-        setupBackground(contentPane);
-
-        Text title = createTitle();
-        VBox buttons = tripleButtonVBox(theUI);
+        // Use the tripleButtonVBox from Screen superclass
+        VBox buttons = tripleButtonVBox(theUI); // Pass theUI for button actions
 
         // Use the tripleButtonStructure from Screen superclass
-        tripleButtonStructure(title, buttons, contentPane);
-
-        scalableRoot.getChildren().add(contentPane);
-
-        Scene winScene = new Scene(scalableRoot, getStage().getScene().getWidth(), getStage().getScene().getHeight());
-        applyScaling(scalableRoot, winScene);
+        tripleButtonStructure(title, buttons, root);
 
         getStage().setScene(winScene);
         getStage().setTitle("Dungeon Dive - Victory!");
         getStage().show();
-    }
-
-    private void setupBackground(BorderPane root) {
-        // Bright, celebratory background for victory screen
-        root.setStyle("-fx-background-color: linear-gradient(to bottom, #003300, #001100); " +
-                "-fx-border-color: #228B22; " +
-                "-fx-border-width: 3px;");
-    }
-
-    private Text createTitle() {
-        Font titleFont = loadFont("/main/View/fonts/PixelFont.ttf", TITLE_FONT_SIZE, "Impact");
-
-        Text title = new Text("CONGRATULATIONS! YOU WON!");
-        title.setFont(titleFont);
-        title.setFill(Color.LIGHTGREEN);
-        title.setStyle("-fx-effect: dropshadow(three-pass-box, rgba(34,139,34,0.8), 10, 0.5, 4, 4); " +
-                "-fx-stroke: #228B22; " +
-                "-fx-stroke-width: 2px;");
-
-        return title;
     }
 }

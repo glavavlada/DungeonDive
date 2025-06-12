@@ -257,10 +257,21 @@ public class GameController {
             return;
         }
 
-        System.out.println("DEBUG: Entering room - myEnteringCombat: " + myEnteringCombat);
-        System.out.println("DEBUG: Current state: " + myStateController.getCurrentState());
-        System.out.println("DEBUG: Room has monsters: " + !theRoom.getMonsters().isEmpty());
-        System.out.println("DEBUG: Monster count: " + theRoom.getMonsters().size());
+        System.out.println("DEBUG: Entering room at " + theRoom.getPosition());
+        System.out.println("DEBUG: Room has pillar: " + theRoom.hasPillar());
+
+        // Check for pillar FIRST before combat
+        if (theRoom.hasPillar()) {
+            Pillar pillar = theRoom.getPillar();
+            System.out.println("DEBUG: Found pillar - Type: " + pillar.getType() + ", Activated: " + pillar.isActivated());
+
+            if (!pillar.isActivated()) {
+                System.out.println("DEBUG: Activating pillar...");
+                activatePillar(theRoom);
+            } else {
+                System.out.println("DEBUG: Pillar already activated");
+            }
+        }
 
         // Prevent multiple rapid combat entries
         if (myEnteringCombat) {
@@ -384,16 +395,29 @@ public class GameController {
     private void activatePillar(final Room theRoom) {
         if (theRoom.hasPillar() && !theRoom.getPillar().isActivated()) {
             Pillar pillar = theRoom.getPillar();
-            boolean activated = myGameModel.getPlayer().activatePillar(pillar);
+            Hero player = myGameModel.getPlayer();
+
+            System.out.println("DEBUG: Before activation - Player pillars: " + player.getPillarsActivated());
+
+            boolean activated = player.activatePillar(pillar);
 
             if (activated) {
-                myGameModel.getPlayer().setPillarsActivated(myGameModel.getPlayer().getPillarsActivated() + 1);
-                //update UI to show pillar activation and stat changes
+                System.out.println("DEBUG: After activation - Player pillars: " + player.getPillarsActivated());
+
+                // Record pillar activation in dungeon
+                myGameModel.getDungeon().recordPillarActivation();
+
+                // Update UI to show pillar activation and stat changes
                 myGameUI.showPillarActivated(pillar);
                 myGameUI.updatePlayerStats();
 
-                //check if all pillars activated (win condition)
+                System.out.println("Pillar of " + pillar.getType().getDisplayName() + " activated!");
+                System.out.println("Player now has " + player.getPillarsActivated() + "/4 pillars");
+
+                // Check if all pillars activated (win condition)
                 checkWinCondition();
+            } else {
+                System.out.println("DEBUG: Failed to activate pillar");
             }
         }
     }
@@ -402,14 +426,41 @@ public class GameController {
      * Checks if the player has met the win condition (activated all pillars and in exit).
      */
     public void checkWinCondition() {
-        if (myGameModel.getPlayer().hasActivatedAllPillars() &&
-            myGameModel.getPlayer().getPosition().equals(myGameModel.getDungeon().getExitPoint()) &&
-            myGameModel.getPlayer().getBossSlain()) {
+        Hero player = myGameModel.getPlayer();
+        Point exitPoint = myGameModel.getDungeon().getExitPoint();
+        Point playerPos = player.getPosition();
 
-            System.out.println("Player has activated all pillars! Victory!");
+        System.out.println("=== CHECKING WIN CONDITION ===");
+        System.out.println("Player position: " + playerPos);
+        System.out.println("Exit position: " + exitPoint);
+        System.out.println("Pillars activated: " + player.getPillarsActivated() + "/4");
+        System.out.println("Boss slain: " + player.getBossSlain());
+        System.out.println("All pillars activated: " + player.hasActivatedAllPillars());
+        System.out.println("At exit: " + playerPos.equals(exitPoint));
+
+        // Check all win conditions
+        boolean allPillarsActivated = player.hasActivatedAllPillars();
+        boolean atExit = playerPos.equals(exitPoint);
+        boolean bossDefeated = player.getBossSlain();
+
+        System.out.println("Win conditions:");
+        System.out.println("- All pillars: " + allPillarsActivated);
+        System.out.println("- At exit: " + atExit);
+        System.out.println("- Boss defeated: " + bossDefeated);
+
+        // For now, let's make it so you only need pillars and exit (not boss)
+        // You can add boss requirement later
+        if (allPillarsActivated && atExit) {
+            System.out.println("🎉 WIN CONDITION MET! 🎉");
             myStateController.changeState(GameState.VICTORY);
             myGameUI.showVictoryScreen();
+        } else {
+            System.out.println("Win condition not yet met:");
+            if (!allPillarsActivated) System.out.println("- Need to activate all 4 pillars");
+            if (!atExit) System.out.println("- Need to reach the exit");
+            if (!bossDefeated) System.out.println("- Need to defeat the boss (if required)");
         }
+        System.out.println("===============================");
     }
 
     /**
@@ -434,33 +485,29 @@ public class GameController {
         Hero player = myGameModel.getPlayer();
         Room currentRoom = myGameModel.getDungeon().getRoom(player.getPosition());
 
-        // Check for items on the ground FIRST (before other interactions)
-        if (!currentRoom.getItems().isEmpty()) {
-            collectItems(currentRoom);
-            return; // Exit after collecting items
+        System.out.println("DEBUG: Interacting in room at " + currentRoom.getPosition());
+
+        // Check for pillar interaction FIRST
+        if (currentRoom.hasPillar() && !currentRoom.getPillar().isActivated()) {
+            System.out.println("DEBUG: Manually activating pillar via interaction");
+            activatePillar(currentRoom);
+            return;
         }
 
         // Check for chest interaction
         if (currentRoom.hasChest()) {
-            if (currentRoom.isChestOpened()) {
-                System.out.println("This chest has already been opened.");
-            } else {
-                myStateController.changeState(GameState.CHEST);
-                myGameUI.showChestInteraction();
-                System.out.println("Interacting with chest - costs 5 gold");
-            }
+            myStateController.changeState(GameState.CHEST);
+            myGameUI.showChestInteraction();
+            System.out.println("Interacting with chest");
             return;
         }
 
-        // Check for pillar interaction
-        if (currentRoom.hasPillar() && !currentRoom.getPillar().isActivated()) {
-            activatePillar(currentRoom);
-            myGameModel.getDungeon().recordPillarActivation();
-            System.out.println("Activated pillar in room");
+        // Check for items on the ground
+        if (!currentRoom.getItems().isEmpty()) {
+            collectItems(currentRoom);
             return;
         }
 
-        // If nothing to interact with
         System.out.println("Nothing to interact with in this room");
     }
 
