@@ -52,10 +52,12 @@ class CharacterTest {
     void setUp() {
         character = new ConcreteCharacter.ConcreteBuilder().
                                           setHealth(100).
+                                          setMaxHealth(100).
                                           setPosition(new Point(0, 0)).
                                           build();
         targetCharacter = new ConcreteCharacter.ConcreteBuilder().
                                                 setHealth(50).
+                                                setMaxHealth(50).
                                                 setPosition(new Point(1, 1)).
                                                 build();
     }
