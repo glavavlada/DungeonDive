@@ -1,24 +1,33 @@
-# IntelliJ IDEA
+# =============================================================================
+# JetBrains IntelliJ IDEA
+# User-specific and project-specific settings.
+# =============================================================================
 .idea/
 *.iml
 *.iws
 modules.xml
 workspace.xml
 tasks.xml
-project.iml
 
-# Build output
-out/
-build/
-target/
+# =============================================================================
+# Build & Package Artifacts
+# Compiled Java classes, build tool outputs, and packaged applications.
+# =============================================================================
+/out/
+/build/
+/target/
 
-# JavaFX SDK (better to manage as an external dependency)
-# If you have the SDK folder inside your project and don't want to commit it:
-javafx-sdk-*/
-# Or be more specific if you know the exact name:
-# javafx-sdk-21.0.7/
+# Packaged archives
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
 
-# SQLite Database file
+# =============================================================================
+# Runtime & Dependency Files
+# =============================================================================
+# Database files - these change constantly during development.
 *.db
 *.sqlite
 *.sqlite3
@@ -27,10 +36,15 @@ dungeondive.db
 # Log files
 *.log
 
-# Temporary files
-*.tmp
-*~
+# JavaFX SDK (if manually included in the project folder)
+# It's better to manage this via Maven/Gradle dependencies.
+# javafx-sdk-*/
 
-# OS generated files
+# =============================================================================
+# System & Editor Caches
+# OS-specific and temporary editor files.
+# =============================================================================
 .DS_Store
 Thumbs.db
+*.tmp
+*~

@@ -166,12 +166,33 @@ public class GameScreen extends Screen {
         scaleCanvas();
 
         Platform.runLater(() -> {
-            initializeHeroMovementSpeed();
-            renderRoom();
-            updatePlayerStats();
-            updateMinimap();
-            startGameLoop();
-            displayWelcomeMessages();
+            if (getController() != null && getController().getPlayer() != null && getController().getDungeon() != null) {
+                initializeHeroMovementSpeed();
+                renderRoom();
+                updatePlayerStats();
+                updateMinimap();
+                startGameLoop();
+                displayWelcomeMessages();
+            } else {
+                System.err.println("GameScreen: Model not fully initialized yet, retrying...");
+                // Retry after a short delay
+                Platform.runLater(() -> {
+                    if (getController() != null && getController().getPlayer() != null && getController().getDungeon() != null) {
+                        initializeHeroMovementSpeed();
+                        renderRoom();
+                        updatePlayerStats();
+                        updateMinimap();
+                        startGameLoop();
+                        displayWelcomeMessages();
+                    } else {
+                        System.err.println("GameScreen: Model still not initialized, skipping welcome messages");
+                        // Initialize what we can without accessing the dungeon
+                        initializeHeroMovementSpeed();
+                        updatePlayerStats();
+                        startGameLoop();
+                    }
+                });
+            }
         });
     }
 
