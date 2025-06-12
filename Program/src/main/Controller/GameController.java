@@ -478,7 +478,6 @@ public class GameController {
      * Opens the player's inventory.
      */
     public void openInventory() {
-        mySelectedInventoryIndex = 0; // Reset selection to first item
         myStateController.changeState(GameState.INVENTORY);
         myGameUI.showInventoryScreen();
         System.out.println("Opened inventory");
@@ -863,6 +862,10 @@ public class GameController {
         }
 
         return description.toString();
+    }
+
+    public void setInventoryIndex(final int theIndex) {
+        mySelectedInventoryIndex = theIndex;
     }
 
     /**

@@ -332,7 +332,7 @@ public class Room {
             if (myChestOpened) {
                 description.append(". There is an empty chest here that has already been opened.");
             } else {
-                description.append(". There is a chest here. Press 'E' to open it for 5 gold.");
+                description.append(". There is a chest here. Double click 'E' to open it for 5 gold.");
             }
         }
 

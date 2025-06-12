@@ -483,6 +483,7 @@ public class InventoryScreen extends Screen {
     public void updateSelection(int newIndex) {
         if (myCurrentInventory != null && !myCurrentInventory.isEmpty()) {
             mySelectedIndex = Math.max(0, Math.min(newIndex, myCurrentInventory.size() - 1));
+            MY_CONTROLLER.getGameController().setInventoryIndex(mySelectedIndex);
             updateInventory(); // Refresh the whole display to update selection style
         }
     }
