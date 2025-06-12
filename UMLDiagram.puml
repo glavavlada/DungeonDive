@@ -1,0 +1,377 @@
+@startuml DungeonDive_Complete
+
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 10
+skinparam packageStyle rectangle
+
+package "main.Controller" {
+
+    class Controller {
+        -myGameModel: Model
+        -myGameController: GameController
+        -myInputController: InputController
+        -myStateController: StateController
+
+        +Controller()
+        +startGame(): void
+        +pauseGame(): void
+        +resumeGame(): void
+        +getGameController(): GameController
+    }
+
+    class GameController {
+        -myGameModel: Model
+        -myGameUI: GameUI
+        -myStateController: StateController
+
+        +GameController(Model, GameUI, StateController)
+        +movePlayer*(): void
+        +playerAttack(): void
+        +interact(): void
+        +openInventory(): void
+        +checkWinCondition(): void
+    }
+
+    class InputController {
+        -myGameController: GameController
+        -myStateController: StateController
+
+        +InputController(GameController, StateController)
+        +handleKeyPress(KeyEvent): void
+        +handleKeyRelease(KeyEvent): void
+    }
+
+    class StateController {
+        -myCurrentState: GameState
+
+        +changeState(GameState): void
+        +getCurrentState(): GameState
+        +isInState(GameState): boolean
+    }
+
+    enum GameState {
+        EXPLORING
+        COMBAT
+        INVENTORY
+        PAUSED
+        GAME_OVER
+        VICTORY
+    }
+}
+
+package "main.View" {
+
+    class GameUI {
+        -myController: Controller
+        -myInputController: InputController
+
+        +GameUI(Stage, Controller)
+        +showScreen*(): void
+        +updatePlayerStats(): void
+        +setInputController(InputController): void
+    }
+
+    class UIConstants {
+        +MY_GAME_UI: GameUI
+        +UIConstants(Stage, Controller)
+        +getGameUI(): GameUI
+    }
+
+    package "main.View.screen" {
+        abstract class Screen {
+            -myController: Controller
+            +Screen(Stage, Controller)
+            +{abstract} showScreen(GameUI): void
+        }
+
+        class IntroScreen {
+            +showScreen(GameUI): void
+        }
+
+        class HeroSelectionScreen {
+            +showScreen(GameUI): void
+        }
+
+        class GameScreen {
+            +showScreen(GameUI): void
+            +stopGameLoop(): void
+        }
+
+        class CombatScreen {
+            +showScreen(GameUI, List<Monster>): void
+            +updateCombatDisplay(): void
+        }
+
+        class InventoryScreen {
+            +showScreen(GameUI): void
+            +updateInventory(): void
+        }
+
+        class HelpScreen {
+            +showScreen(GameUI): void
+        }
+
+        class PauseScreen {
+            +showScreen(GameUI): void
+        }
+
+        class SavesScreen {
+            +showScreen(GameUI): void
+        }
+
+        class WinScreen {
+            +showScreen(GameUI): void
+        }
+
+        class LoseScreen {
+            +showScreen(GameUI): void
+        }
+    }
+}
+
+package "main.Model" {
+
+    class Database {
+        -myConnection: Connection
+        +Database()
+        +executeQuery(String): ResultSet
+        +executeUpdate(String): void
+        +saveGameData(): boolean
+        +loadGameData(): ResultSet
+        +closeConnection(): void
+    }
+
+    class Model {
+        -myPlayer: Hero
+        -myDungeon: Dungeon
+        -myDatabase: Database
+        -myHeroFactory: HeroFactory
+
+        +Model()
+        +initializeNewGame(HeroType, String): void
+        +resetGame(): void
+        +getPlayer(): Hero
+        +getDungeon(): Dungeon
+        +saveGame(String): boolean
+        +loadGame(String): boolean
+    }
+
+    package "main.Model.character" {
+        abstract class Character {
+            -myName: String
+            -myHealth: int
+            -myPosition: Point
+
+            +Character(CharacterBuilder)
+            +{abstract} attack(Character): int
+            +takeDamage(int): void
+            +move(Direction): void
+            +isAlive(): boolean
+        }
+
+        class Hero {
+            -myHeroType: HeroType
+            -myInventory: List<Item>
+            -myGold: int
+            -myPillarsActivated: int
+
+            +Hero(HeroBuilder)
+            +attack(Character): int
+            +useItem(Item): void
+            +pickupItem(Item): boolean
+            +activatePillar(Pillar): boolean
+            +specialAttack(): int
+        }
+
+        class Monster {
+            -myMonsterType: MonsterType
+            -myGoldReward: int
+
+            +Monster(MonsterBuilder)
+            +attack(Character): int
+            +getGoldReward(): int
+        }
+
+        class HeroFactory {
+            +getHero(String, HeroType, Point): Hero
+        }
+
+        class MonsterFactory {
+            +getMonster(MonsterType, Point): Monster
+        }
+    }
+
+    package "main.Model.dungeon" {
+        class Dungeon {
+            -myRooms: Room[][]
+            -myWidth: int
+            -myHeight: int
+            -myHeroSpawnPoint: Point
+
+            +Dungeon(int, int, String, boolean)
+            +getRoom(int, int): Room
+            +getRoom(Point): Room
+            +recordPillarActivation(): void
+            +areAllPillarsActivated(): boolean
+            +toJson(): String
+            +fromJson(String): Dungeon
+        }
+
+        class Room {
+            -myPosition: Point
+            -myRoomType: RoomType
+            -myMonsters: List<Monster>
+            -myItems: List<Item>
+            -myPillar: Pillar
+            -myTrap: Trap
+
+            +Room(Point, RoomType)
+            +enter(Hero): void
+            +addMonster(Monster): void
+            +addItem(Item): void
+            +setPillar(Pillar): void
+            +setTrap(Trap): void
+        }
+    }
+
+    package "main.Model.element" {
+        abstract class DungeonElement {
+            +{abstract} interact(Hero): void
+        }
+
+        abstract class Item {
+            -myName: String
+            -myDescription: String
+
+            +Item(String, String)
+            +{abstract} use(Hero): void
+            +interact(Hero): void
+        }
+
+        class HealthPotion {
+            -myHealingAmount: int
+            +HealthPotion(String, String, int)
+            +use(Hero): void
+        }
+
+        class VisionPotion {
+            -myDungeon: Dungeon
+            +VisionPotion(String, String, Dungeon)
+            +use(Hero): void
+        }
+
+        class Pillar {
+            -myType: PillarType
+            -myIsActivated: boolean
+
+            +Pillar(PillarType)
+            +activate(Hero): void
+            +interact(Hero): void
+        }
+
+        class Trap {
+            -myDamageAmount: int
+            -myIsSprung: boolean
+
+            +Trap(String, String, int)
+            +trigger(Hero): void
+            +interact(Hero): void
+        }
+    }
+
+    package "main.Model.util" {
+        enum Direction {
+            NORTH, EAST, SOUTH, WEST
+            +opposite(): Direction
+        }
+
+        enum HeroType {
+            WARRIOR, PRIESTESS, THIEF
+            +getDisplayName(): String
+            +getBaseHealth(): int
+            +getBaseAttack(): int
+        }
+
+        enum MonsterType {
+            GOBLIN, SKELETON, SLIME, ORC, BIG_SLIME, WIZARD, GIANT
+            +getName(): String
+            +getBaseHealth(): int
+            +getBaseAttack(): int
+        }
+
+        enum PillarType {
+            ABSTRACTION, ENCAPSULATION, INHERITANCE, POLYMORPHISM
+            +getDisplayName(): String
+            +getDescription(): String
+        }
+
+        enum RoomType {
+            EMPTY, TRAP, TREASURE, MONSTER, PILLAR, ENTRANCE, EXIT, BOSS
+            +getDisplayName(): String
+        }
+
+        class Point {
+            -myX: int
+            -myY: int
+
+            +Point(int, int)
+            +getX(): int
+            +getY(): int
+            +distance(Point): double
+        }
+    }
+}
+
+' Controller relationships
+Controller *-- GameController
+Controller *-- InputController
+Controller *-- StateController
+Controller *-- Model
+GameController *-- StateController
+GameController *-- GameUI
+InputController --> GameController
+StateController *-- GameState
+
+' View relationships
+GameUI *-- Controller
+UIConstants *-- GameUI
+Screen <|-- IntroScreen
+Screen <|-- HeroSelectionScreen
+Screen <|-- GameScreen
+Screen <|-- CombatScreen
+Screen <|-- InventoryScreen
+Screen <|-- HelpScreen
+Screen <|-- PauseScreen
+Screen <|-- SavesScreen
+Screen <|-- WinScreen
+Screen <|-- LoseScreen
+GameUI --> Screen
+
+' Model relationships
+Model *-- Database
+Model *-- Hero
+Model *-- Dungeon
+Model *-- HeroFactory
+Character <|-- Hero
+Character <|-- Monster
+HeroFactory --> Hero
+MonsterFactory --> Monster
+Dungeon *-- Room
+Room *-- Monster
+Room *-- Item
+Room *-- Pillar
+Room *-- Trap
+DungeonElement <|-- Item
+DungeonElement <|-- Pillar
+DungeonElement <|-- Trap
+Item <|-- HealthPotion
+Item <|-- VisionPotion
+Hero *-- HeroType
+Monster *-- MonsterType
+Pillar *-- PillarType
+Room *-- RoomType
+Character *-- Point
+Character *-- Direction
+
+@enduml
