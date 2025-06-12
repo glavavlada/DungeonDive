@@ -45,7 +45,8 @@ public class Dungeon {
         this.myMonsterFactory = new MonsterFactory();
         // This stops a load from save file from creating new random placements.
         if (theNewDungeon) {
-            generateLayout();
+            generateDemoLayout(); // Demo purposes
+            // generateLayout();
         }
     }
 
@@ -615,6 +616,160 @@ public class Dungeon {
             System.err.println("Error deserializing dungeon: " + e.getMessage());
             return null;
         }
+    }
+
+    // DEMO DUNGEON FOR PRESENTATION
+    // Add this method to your Dungeon.java class
+
+    // Add this method to your Dungeon.java class
+
+    /**
+     * Creates a simple linear demo dungeon in a straight line.
+     * Layout: START -> CHEST -> PILLAR1 -> ITEM -> PILLAR2 -> TRAP -> PILLAR3 -> MONSTER -> PILLAR4 -> BOSS
+     * Total: 10 rooms in a straight horizontal line
+     */
+    private void generateDemoLayout() {
+        // Force dungeon to be 10x1 for straight line
+        if (myWidth < 10) {
+            System.err.println("Warning: Demo dungeon needs at least 10 width. Current: " + myWidth);
+        }
+
+        // 1. Initialize all rooms as EMPTY
+        for (int y = 0; y < myHeight; y++) {
+            for (int x = 0; x < myWidth; x++) {
+                myRooms[y][x] = new Room(new Point(x, y), RoomType.EMPTY);
+            }
+        }
+
+        // 2. Create straight line path (horizontal)
+        for (int x = 0; x < Math.min(10, myWidth) - 1; x++) {
+            removeWall(new Point(x, 0), new Point(x + 1, 0));
+        }
+
+        // 3. Set up the linear demo sequence
+        myHeroSpawnPoint = new Point(0, 0);
+        myExitPoint = new Point(9, 0);
+
+        setupLinearDemo();
+
+        System.out.println("=== LINEAR DEMO DUNGEON CREATED ===");
+        System.out.println("Path: START -> CHEST -> PILLAR1 -> ITEM -> PILLAR2 -> TRAP -> PILLAR3 -> MONSTER -> PILLAR4 -> BOSS");
+        printDemoLayout();
+    }
+
+    /**
+     * Sets up the linear demo with features in sequence
+     */
+    private void setupLinearDemo() {
+        // Room 0: START (0,0)
+        getRoom(0, 0).setRoomType(RoomType.ENTRANCE);
+
+        // Room 1: CHEST (1,0)
+        Room chestRoom = getRoom(1, 0);
+        createDemoChest(chestRoom);
+
+        // Room 2: PILLAR 1 - Abstraction (2,0)
+        Room pillar1Room = getRoom(2, 0);
+        pillar1Room.setPillar(new Pillar(PillarType.ABSTRACTION));
+        myTotalPillars++;
+
+        // Room 3: HEALTH POTION ITEM (3,0)
+        Room itemRoom = getRoom(3, 0);
+        itemRoom.addItem(new HealthPotion("Health Potion", "Restores 50 health", 50));
+
+        // Room 4: PILLAR 2 - Encapsulation (4,0)
+        Room pillar2Room = getRoom(4, 0);
+        pillar2Room.setPillar(new Pillar(PillarType.ENCAPSULATION));
+        myTotalPillars++;
+
+        // Room 5: TRAP (5,0)
+        Room trapRoom = getRoom(5, 0);
+        Trap spikeTrap = new Trap("Demo Spike Trap", "Sharp spikes emerge from the floor", 10);
+        trapRoom.setTrap(spikeTrap);
+
+        // Room 6: PILLAR 3 - Inheritance (6,0)
+        Room pillar3Room = getRoom(6, 0);
+        pillar3Room.setPillar(new Pillar(PillarType.INHERITANCE));
+        myTotalPillars++;
+
+        // Room 7: MONSTER (7,0)
+        Room monsterRoom = getRoom(7, 0);
+        monsterRoom.setRoomType(RoomType.MONSTER);
+        Monster goblin = myMonsterFactory.getMonster(MonsterType.GOBLIN, new Point(7, 0));
+        monsterRoom.addMonster(goblin);
+
+        // Room 8: PILLAR 4 - Polymorphism (8,0)
+        Room pillar4Room = getRoom(8, 0);
+        pillar4Room.setPillar(new Pillar(PillarType.POLYMORPHISM));
+        myTotalPillars++;
+
+        // Room 9: BOSS ROOM (9,0)
+        Room bossRoom = getRoom(9, 0);
+        bossRoom.setRoomType(RoomType.BOSS);
+        Monster boss = myMonsterFactory.getMonster(MonsterType.GIANT, new Point(9, 0));
+        bossRoom.addMonster(boss);
+        myBossSpawned = true;
+
+        System.out.println("Linear demo setup complete:");
+        System.out.println("Room 0: START");
+        System.out.println("Room 1: CHEST");
+        System.out.println("Room 2: PILLAR (Abstraction)");
+        System.out.println("Room 3: HEALTH POTION");
+        System.out.println("Room 4: PILLAR (Encapsulation)");
+        System.out.println("Room 5: TRAP");
+        System.out.println("Room 6: PILLAR (Inheritance)");
+        System.out.println("Room 7: MONSTER (Goblin)");
+        System.out.println("Room 8: PILLAR (Polymorphism)");
+        System.out.println("Room 9: BOSS (Giant)");
+    }
+
+    /**
+     * Creates a chest with demo items - gives player gold and useful items
+     */
+    private void createDemoChest(Room room) {
+        List<Item> chestItems = new ArrayList<>();
+
+        // Add helpful items for the demo
+        chestItems.add(new HealthPotion("Chest Health Potion", "Restores 75 health", 75));
+        chestItems.add(new VisionPotion("Vision Potion", "Reveals nearby rooms", this));
+
+        room.setChest(chestItems);
+        System.out.println("Demo chest created with 2 items");
+    }
+
+    // Simplified layout printer for linear dungeon
+    public void printDemoLayout() {
+        System.out.println("\n=== LINEAR DEMO DUNGEON ===");
+        System.out.print("Layout: ");
+
+        for (int x = 0; x < Math.min(10, myWidth); x++) {
+            Room room = getRoom(x, 0);
+            String symbol = getLinearRoomSymbol(room, x);
+            System.out.print(symbol);
+            if (x < Math.min(9, myWidth - 1)) {
+                System.out.print(" -> ");
+            }
+        }
+
+        System.out.println("\n");
+        System.out.println("Legend:");
+        System.out.println("S = Start, C = Chest, P = Pillar, H = Health Potion");
+        System.out.println("T = Trap, M = Monster, B = Boss");
+        System.out.println("===========================\n");
+    }
+
+    private String getLinearRoomSymbol(Room room, int x) {
+        if (x == 0) return "S";  // Start
+        if (x == 1) return "C";  // Chest
+        if (x == 2) return "P1"; // Pillar 1
+        if (x == 3) return "H";  // Health Potion
+        if (x == 4) return "P2"; // Pillar 2
+        if (x == 5) return "T";  // Trap
+        if (x == 6) return "P3"; // Pillar 3
+        if (x == 7) return "M";  // Monster
+        if (x == 8) return "P4"; // Pillar 4
+        if (x == 9) return "B";  // Boss
+        return "?";
     }
 
 

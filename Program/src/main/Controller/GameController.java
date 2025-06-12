@@ -345,24 +345,48 @@ public class GameController {
 
     /**
      * Activates a trap in the room and applies its effects.
+     * Trap only triggers once per room.
      *
      * @param theRoom The room containing the trap
      */
     private void activateTrap(final Room theRoom) {
-        Hero player = myGameModel.getPlayer();
-        int damage = theRoom.getTrap().getDamage();
+        // Check if trap exists and hasn't been sprung yet
+        if (theRoom.hasTrap() && !theRoom.getTrap().isSprung()) {
+            Hero player = myGameModel.getPlayer();
+            int damage = theRoom.getTrap().getDamage();
 
-        // Apply trap damage to player
-        player.takeDamage(damage);
-        System.out.println("Player triggered a trap and took " + damage + " damage!");
+            // Apply trap damage to player
+            player.takeDamage(damage);
+            System.out.println("Player triggered a trap and took " + damage + " damage!");
 
-        // Update UI to show trap effect
-        myGameUI.showTrapEffect(theRoom.getTrap());
+            // Mark the trap as sprung so it won't trigger again
+            theRoom.getTrap().trigger(player); // This should set isSprung to true
 
-        // Check if player died from trap
-        checkPlayerStatus();
+            // Trigger the damage flash effect
+            triggerDamageFlash();
+
+            // Update UI to show trap effect
+            myGameUI.showTrapEffect(theRoom.getTrap());
+
+            // Check if player died from trap
+            checkPlayerStatus();
+        } else if (theRoom.hasTrap() && theRoom.getTrap().isSprung()) {
+            // Trap has already been triggered
+            System.out.println("The trap here has already been sprung.");
+        }
     }
 
+    /**
+     * Triggers the damage flash effect on the game screen
+     */
+    private void triggerDamageFlash() {
+        if (myGameUI != null && myGameUI.getGameScreen() != null) {
+            myGameUI.getGameScreen().flashDamageEffect();
+            System.out.println("GameController triggered damage flash effect");
+        } else {
+            System.err.println("Cannot trigger damage flash: GameUI or GameScreen is null");
+        }
+    }
     /**
      *activates pillar in room
      *
