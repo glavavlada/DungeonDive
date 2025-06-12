@@ -158,12 +158,20 @@ public class Hero extends Character {
         if (thePillar == null || thePillar.isActivated()) {
             return false;
         }
+
         thePillar.activate(this);
+
+        // Increment pillars activated count
+        myPillarsActivated++;
+        System.out.println("Pillar activated! Total: " + myPillarsActivated + "/4");
+
         return true;
     }
 
     public boolean hasActivatedAllPillars() {
-        return myPillarsActivated >= TOTAL_PILLARS;
+        boolean hasAll = myPillarsActivated >= TOTAL_PILLARS;
+        System.out.println("Checking all pillars: " + myPillarsActivated + "/" + TOTAL_PILLARS + " = " + hasAll);
+        return hasAll;
     }
 
     public int specialAttack() {
@@ -288,6 +296,10 @@ public class Hero extends Character {
 
     public String getHealthDisplay() {
         return getHealth() + "/" + getMaxHealth();
+    }
+
+    public int getSpecialMana() {
+        return mySpecialMana;
     }
 
     // Getters
