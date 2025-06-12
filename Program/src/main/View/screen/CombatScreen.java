@@ -89,6 +89,7 @@ public class CombatScreen extends Screen {
     private ProgressBar heroHealthBar;
     private ProgressBar monsterHealthBar;
     private Label heroHealthNumbers;
+    private Label heroManaNumbers;
     private Label monsterHealthNumbers;
     private Text heroNameDisplay;
     private Text monsterNameDisplay;
@@ -355,8 +356,9 @@ public class CombatScreen extends Screen {
 
         VBox nameSection = createNameSection(true);
         VBox healthSection = createHealthSection(true);
+        VBox manaSection = createManaSection(true);
 
-        heroInfo.getChildren().addAll(nameSection, healthSection);
+        heroInfo.getChildren().addAll(nameSection, healthSection, manaSection);
         return heroInfo;
     }
 
@@ -452,6 +454,14 @@ public class CombatScreen extends Screen {
             heroHealthBar = healthBar;
             heroHealthNumbers = healthNumbers;
             updateHeroHealthDisplay();
+
+            // Create and store mana display
+            heroManaNumbers = new Label();
+            heroManaNumbers.getStyleClass().add("combat-subtitle");
+            heroManaNumbers.fontProperty().bind(Bindings.createObjectBinding(() ->
+                            Font.font("PixelFont", subtitleFontSizeBinding.getValue().doubleValue()),
+                    subtitleFontSizeBinding));
+            updateHeroManaDisplay(heroManaNumbers);
         } else {
             monsterHealthBar = healthBar;
             monsterHealthNumbers = healthNumbers;
@@ -460,6 +470,34 @@ public class CombatScreen extends Screen {
 
         healthSection.getChildren().addAll(hpLabel, healthBar, healthNumbers);
         return healthSection;
+    }
+
+    private VBox createManaSection(boolean isHero) {
+        if (!isHero) {
+            return null; // Only heroes have mana, monsters don't
+        }
+
+        VBox manaSection = new VBox();
+        manaSection.setAlignment(Pos.CENTER_LEFT);
+        manaSection.spacingProperty().bind(spacingBinding.divide(6));
+
+        Label manaLabel = new Label("MANA");
+        manaLabel.getStyleClass().add("combat-subtitle");
+        manaLabel.fontProperty().bind(Bindings.createObjectBinding(() ->
+                        Font.font("PixelFont", subtitleFontSizeBinding.getValue().doubleValue()),
+                subtitleFontSizeBinding));
+
+        if (heroManaNumbers == null) {
+            heroManaNumbers = new Label();
+            heroManaNumbers.getStyleClass().add("combat-subtitle");
+            heroManaNumbers.fontProperty().bind(Bindings.createObjectBinding(() ->
+                            Font.font("PixelFont", subtitleFontSizeBinding.getValue().doubleValue()),
+                    subtitleFontSizeBinding));
+            updateHeroManaDisplay(heroManaNumbers);
+        }
+
+        manaSection.getChildren().addAll(manaLabel, heroManaNumbers);
+        return manaSection;
     }
 
     private ProgressBar createHealthBar() {
@@ -634,6 +672,7 @@ public class CombatScreen extends Screen {
         if (currentHero != null) {
             heroNameDisplay.setText(currentHero.getName());
             updateHeroHealthDisplay();
+            updateHeroManaDisplay(heroManaNumbers);
         }
 
         if (currentMonster != null) {
@@ -675,6 +714,12 @@ public class CombatScreen extends Screen {
         if (currentHero != null && heroHealthNumbers != null) {
             heroHealthNumbers.setText(currentHero.getHealthDisplay());
             updateHealthBarColor(heroHealthBar, currentHero.getHealthPercentage());
+        }
+    }
+
+    private void updateHeroManaDisplay(Label manaNumbers) {
+        if (currentHero != null && manaNumbers != null) {
+            manaNumbers.setText(currentHero.getSpecialMana() + "/4");
         }
     }
 

@@ -290,6 +290,10 @@ public class Hero extends Character {
         return getHealth() + "/" + getMaxHealth();
     }
 
+    public int getSpecialMana() {
+        return mySpecialMana;
+    }
+
     // Getters
     public HeroType getType() { return myHeroType; }
     public List<Item> getInventory() { return Collections.unmodifiableList(myInventory); }
