@@ -5,9 +5,9 @@ import javafx.beans.binding.NumberBinding;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -19,10 +19,13 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
 import main.Controller.Controller;
 import main.Model.element.Item;
 import main.View.GameUI;
 
+import java.io.InputStream;
+import java.io.StringReader;
 import java.util.List;
 
 public class InventoryScreen extends Screen {
@@ -58,6 +61,14 @@ public class InventoryScreen extends Screen {
         static final String SECTION_TITLE_COLOR = "#DAA520"; // GoldenRod
         static final String SELECTION_COLOR = "#8B4513";
         static final String EMPTY_TEXT_COLOR = "#AAAAAA";
+
+        // potion icons
+        static final String HEALTH_POTION_ICON = "/sprites/icons/health_potion.png";
+        static final String VISION_POTION_ICON = "/sprites/icons/vision_potion.png";
+        static final String DEFAULT_ITEM_ICON = "/sprites/icons/default_item.png";
+        static final double ITEM_ICON_SIZE_RATIO = 0.08;
+        static final double ITEM_ICON_MIN_SIZE = 40.0;
+        static final double ITEM_ICON_MAX_SIZE = 80.0;
 
         // Button styles (matching HeroSelectionScreen)
         static final String BUTTON_BASE_STYLE =
@@ -104,6 +115,8 @@ public class InventoryScreen extends Screen {
     private int mySelectedIndex = 0;
     private List<Item> myCurrentInventory;
     private boolean isUIInitialized = false;
+    private NumberBinding itemIconSizeBinding;
+
 
     public InventoryScreen(final Stage thePrimaryStage, final Controller theController) {
         super(thePrimaryStage, theController);
@@ -125,6 +138,13 @@ public class InventoryScreen extends Screen {
         BorderPane root = createInventoryLayout();
         Scene scene = new Scene(root, windowWidth, windowHeight);
         scene.setFill(null); // Make scene background transparent
+
+        itemIconSizeBinding = Bindings.createDoubleBinding(() -> {
+            double widthBased = scene.getWidth() * 0.12; // 12% of window width
+            double heightBased = scene.getHeight() * Config.ITEM_ICON_SIZE_RATIO;
+            double calculated = Math.min(widthBased, heightBased); // Use the smaller of the two
+            return Math.max(Config.ITEM_ICON_MIN_SIZE, Math.min(Config.ITEM_ICON_MAX_SIZE, calculated));
+        }, scene.heightProperty());
 
         setupEventHandlers(scene);
 
@@ -409,18 +429,24 @@ public class InventoryScreen extends Screen {
     }
 
     private Label createItemLabel(String itemName, int itemIndex) {
-        Label itemLabel = new Label(itemName);
+        Label itemLabel = new Label();
 
-        // Set up font binding with size constraints
-        itemLabel.fontProperty().bind(Bindings.createObjectBinding(() -> {
-            double baseFontSize = Math.min(myInventoryStage.getScene().getHeight() * Config.ITEM_FONT_RATIO, 14);
-            Font pixelFont = loadFont(Config.FONT_PATH, (int)baseFontSize, "Arial");
-            return Font.font(pixelFont.getFamily(), baseFontSize);
-        }, myInventoryStage.getScene().heightProperty()));
+        // Create icon for the item
+        ImageView itemIcon = createItemIcon(itemName);
+        itemLabel.setGraphic(itemIcon);
+
+        // ICON ONLY - No text displayed
+        itemLabel.setText(""); // Empty text
+        itemLabel.setContentDisplay(ContentDisplay.GRAPHIC_ONLY); // Show only the graphic (icon)
+
+        // Add tooltip so users can see item name on hover
+        Tooltip tooltip = new Tooltip(itemName);
+        tooltip.setShowDelay(Duration.millis(500)); // Show after 0.5 second hover
+        itemLabel.setTooltip(tooltip);
 
         // Enable text wrapping and set proper alignment
         itemLabel.setWrapText(true);
-        itemLabel.setAlignment(Pos.CENTER_LEFT);
+        itemLabel.setAlignment(Pos.CENTER);
 
         NumberBinding padding = myInventoryStage.getScene().heightProperty().multiply(0.008);
         itemLabel.paddingProperty().bind(Bindings.createObjectBinding(() ->
@@ -428,7 +454,7 @@ public class InventoryScreen extends Screen {
 
         itemLabel.setMaxWidth(Double.MAX_VALUE);
 
-        // Bind max width to ensure proper wrapping within the panel
+        // Bind max width to ensure proper sizing within the panel
         itemLabel.maxWidthProperty().bind(myInventoryStage.getScene().widthProperty().multiply(0.15));
 
         // Add click handler to select item
@@ -463,6 +489,67 @@ public class InventoryScreen extends Screen {
         }
 
         return itemLabel;
+    }
+
+    private ImageView createItemIcon(String itemName) {
+        ImageView iconView = new ImageView();
+
+        // Bind icon size to responsive dimensions
+        iconView.fitWidthProperty().bind(itemIconSizeBinding);
+        iconView.fitHeightProperty().bind(itemIconSizeBinding);
+        iconView.setPreserveRatio(true);
+        iconView.setSmooth(true);
+
+        // Determine which icon to use based on item name
+        String iconPath = getIconPathForItem(itemName);
+
+        try (InputStream iconStream = getClass().getResourceAsStream(iconPath)) {
+            if (iconStream != null) {
+                Image iconImage = new Image(iconStream);
+                iconView.setImage(iconImage);
+            } else {
+                // Fallback to colored rectangle if icon not found
+                createFallbackIcon(iconView, itemName);
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading item icon: " + iconPath + " - " + e.getMessage());
+            createFallbackIcon(iconView, itemName);
+        }
+
+        return iconView;
+    }
+
+    private void createFallbackIcon(ImageView iconView, String itemName) {
+        // Create a simple colored rectangle as fallback
+        String fallbackColor = getFallbackColorForItem(itemName);
+        iconView.setStyle("-fx-background-color: " + fallbackColor + "; " +
+                "-fx-border-color: #DAA520; " +
+                "-fx-border-width: 1px;");
+    }
+
+    private String getFallbackColorForItem(String itemName) {
+        if (itemName == null) {
+            return "#CCCCCC";
+        }
+
+        return switch (itemName.toLowerCase()) {
+            case "health potion", "minor healing potion" -> "#FF6B6B"; // Red for health
+            case "vision potion" -> "#4ECDC4"; // Teal for vision
+            default -> "#CCCCCC"; // Gray for unknown
+        };
+    }
+
+    private String getIconPathForItem(String itemName) {
+        if (itemName == null) {
+            return Config.DEFAULT_ITEM_ICON;
+        }
+
+        // Match item names to their icon paths
+        return switch (itemName.toLowerCase()) {
+            case "health potion", "minor healing potion" -> Config.HEALTH_POTION_ICON;
+            case "vision potion" -> Config.VISION_POTION_ICON;
+            default -> Config.DEFAULT_ITEM_ICON;
+        };
     }
 
     private void updateSelectedItemInfo() {

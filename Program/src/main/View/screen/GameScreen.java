@@ -18,15 +18,19 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import main.Controller.Controller;
 import main.Controller.StateController;
 import main.Model.character.Hero;
 import main.Model.dungeon.Dungeon;
 import main.Model.dungeon.Room;
+import main.Model.element.Item;
 import main.Model.util.Point;
 import main.View.GameUI;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public class GameScreen extends Screen {
@@ -37,7 +41,10 @@ public class GameScreen extends Screen {
     private static final String SHADOW_STYLE = "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.8), 10, 0.5, 4, 4);";
     private static final String FONT_PATH = "/main/View/fonts/PixelFont.ttf";
     private static final String BACKGROUND_PATH = "/sprites/backgrounds/brick_wall_background.png";
-
+    // Trap constants
+    private static final Duration DAMAGE_FLASH_DURATION = Duration.millis(1500); // Longer duration (was 1000)
+    private static final Color DAMAGE_FLASH_COLOR = Color.DARKRED; // Darker, more intense red
+    private static final double DAMAGE_FLASH_OPACITY = 0.7; // Higher opacity (was 0.4)
     // ====== UI COMPONENTS ======
     private Scene scene;
     private StackPane scalableRoot; // For consistent scaling
@@ -63,6 +70,22 @@ public class GameScreen extends Screen {
     // Game Loop
     private AnimationTimer gameLoop;
     private CanvasDimensions currentDimensions;
+
+    // Pillar sprite
+    private Image pillarSprite;
+    private double pillarGlowAnimation = 0.0;
+    private static final double PILLAR_GLOW_SPEED = 0.05;
+    private static final double PILLAR_COLLECTION_DISTANCE = 30.0; // Pixels
+
+    // Chest sprite
+    private Image chestSprite;
+    private double chestGlowAnimation = 0.0;
+    private static final double CHEST_GLOW_SPEED = 0.04;
+    private static final double CHEST_COLLECTION_DISTANCE = 40.0;
+    private boolean hasTriedChestCollection = false;
+    private boolean hasShownGoldWarning = false;
+    private javafx.scene.layout.Pane damageFlashOverlay;
+
 
     // ====== CONSTRUCTOR ======
     public GameScreen(final Stage primaryStage, final Controller controller) {
@@ -95,7 +118,10 @@ public class GameScreen extends Screen {
 
         // Create the main content
         BorderPane mainContent = createMainContent(gameUI);
-        scalableRoot.getChildren().add(mainContent);
+
+        //flash overlay
+        damageFlashOverlay = createDamageFlashOverlay();
+        scalableRoot.getChildren().addAll(mainContent, damageFlashOverlay);
 
         // Apply consistent scaling and theming
         setupScalingAndTheming();
@@ -162,6 +188,8 @@ public class GameScreen extends Screen {
     }
 
     private void setupInitialState() {
+        loadPillarSprite();
+        loadChestSprite();
         initializeHeroPosition();
         scaleCanvas();
 
@@ -596,6 +624,23 @@ public class GameScreen extends Screen {
         return scrollPane;
     }
 
+    /**
+     * Creates the damage flash overlay that covers the entire game screen
+     */
+    private javafx.scene.layout.Pane createDamageFlashOverlay() {
+        javafx.scene.layout.Pane flashOverlay = new javafx.scene.layout.Pane();
+        flashOverlay.setStyle("-fx-background-color: rgba(255, 0, 0, 0.4);"); // Semi-transparent red
+        flashOverlay.setVisible(false); // Initially hidden
+        flashOverlay.setMouseTransparent(true); // Don't block mouse events
+
+        // Make it cover the entire screen
+        flashOverlay.prefWidthProperty().bind(scene.widthProperty());
+        flashOverlay.prefHeightProperty().bind(scene.heightProperty());
+
+        return flashOverlay;
+    }
+
+
     // ====== RESPONSIVE BINDINGS ======
     private void setupResponsiveBindings() {
         // The width available for the canvas is the scene width minus the panels and some padding.
@@ -655,11 +700,195 @@ public class GameScreen extends Screen {
                         new Insets(responsiveDims.getPanelPaddingBinding().getValue().doubleValue() / 4, 0,
                                 responsiveDims.getPanelPaddingBinding().getValue().doubleValue() / 4, 0),
                 responsiveDims.getPanelPaddingBinding()));
-        label.maxWidthProperty().bind(scene.widthProperty().subtract(responsiveDims.getPanelWidthBinding().multiply(2)).subtract(100));
+        //label.maxWidthProperty().bind(scene.widthProperty().subtract(responsiveDims.getPanelWidthBinding().multiply(2)).subtract(100));
         label.setTextFill(TAN_COLOR);
         label.setWrapText(true);
         label.setStyle(SHADOW_STYLE);
         return label;
+    }
+
+    private void loadPillarSprite() {
+        try {
+            pillarSprite = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/sprites/icons/pillar.png")));
+        } catch (Exception e) {
+            System.err.println("Could not load pillar sprite: " + e.getMessage());
+            pillarSprite = null;
+        }
+    }
+
+    private void loadChestSprite() {
+        try {
+            chestSprite = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/sprites/icons/chest.png")));
+        } catch (Exception e) {
+            System.err.println("Could not load chest sprite: " + e.getMessage());
+            chestSprite = null;
+        }
+    }
+
+    private void checkPillarCollection() {
+        Room currentRoom = getCurrentRoom();
+        Hero player = getController().getPlayer();
+
+        if (currentRoom == null || player == null || !currentRoom.hasPillar()) {
+            return;
+        }
+
+        // Check if pillar is already activated
+        if (currentRoom.getPillar().isActivated()) {
+            return;
+        }
+
+        // Calculate pillar center position
+        double pillarCenterX = currentDimensions.getSize() / 2;
+        double pillarCenterY = currentDimensions.getSize() / 2;
+
+        // Calculate player center position
+        double playerCenterX = player.getPixelX() + currentDimensions.getHeroSize() / 2;
+        double playerCenterY = player.getPixelY() + currentDimensions.getHeroSize() / 2;
+
+        // Calculate distance between player and pillar
+        double distance = Math.sqrt(
+                Math.pow(playerCenterX - pillarCenterX, 2) +
+                        Math.pow(playerCenterY - pillarCenterY, 2)
+        );
+
+        // If player is close enough, collect the pillar
+        if (distance <= PILLAR_COLLECTION_DISTANCE) {
+            collectPillar(currentRoom);
+        }
+    }
+
+    private void checkChestCollection() {
+        Room currentRoom = getCurrentRoom();
+        Hero player = getController().getPlayer();
+
+        if (currentRoom == null || player == null || !currentRoom.hasChest()) {
+            hasTriedChestCollection = false;
+            return;
+        }
+
+        // Check if chest is already opened
+        if (currentRoom.isChestOpened() || hasTriedChestCollection) {
+            return;
+        }
+
+        if(hasTriedChestCollection) {
+            return;
+        }
+
+        // Smart positioning: if there's a pillar, place chest in a different location
+        double chestCenterX, chestCenterY;
+        if (currentRoom.hasPillar() && !currentRoom.getPillar().isActivated()) {
+            // Place chest in top-right corner if pillar is present
+            chestCenterX = currentDimensions.getSize() / 2 + currentDimensions.getTileSize() * 3;
+            chestCenterY = currentDimensions.getSize() / 2 - currentDimensions.getTileSize() * 2;
+        } else {
+            // Place chest in center if no pillar
+            chestCenterX = currentDimensions.getSize() / 2;
+            chestCenterY = currentDimensions.getSize() / 2;
+        }
+
+        // Calculate player center position
+        double playerCenterX = player.getPixelX() + currentDimensions.getHeroSize() / 2;
+        double playerCenterY = player.getPixelY() + currentDimensions.getHeroSize() / 2;
+
+        // Calculate distance between player and chest
+        double distance = Math.sqrt(
+                Math.pow(playerCenterX - chestCenterX, 2) +
+                        Math.pow(playerCenterY - chestCenterY, 2)
+        );
+
+        // If player is close enough, collect the chest
+        if (distance <= CHEST_COLLECTION_DISTANCE) {
+            collectChest(currentRoom);
+        } else {
+            hasShownGoldWarning = false;
+        }
+    }
+
+    private void collectPillar(Room room) {
+        try {
+            Hero player = getController().getPlayer();
+
+            // Activate the pillar
+            room.getPillar().activate(player);
+
+            // Update player's pillar count
+            player.setPillarsActivated(player.getPillarsActivated() + 1);
+
+            // Add collection message
+            addGameMessage("You collected the " + room.getPillar().getType() + " Pillar!");
+
+            // Update stats display
+            updatePlayerStats();
+
+            // Update minimap to reflect the change
+            updateMinimap();
+
+            // Check if all pillars are collected
+            if (player.getPillarsActivated() >= 4) {
+                addGameMessage("All pillars collected! You can now challenge the final boss!");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error collecting pillar: " + e.getMessage());
+        }
+    }
+
+    private void collectChest(Room room) {
+        try {
+            Hero player = getController().getPlayer();
+
+            // Check if player has enough gold (5 gold required to open chest)
+            if (player.getGold() < 5) {
+                if (!hasShownGoldWarning) {
+                    addGameMessage("You need 5 gold to open this chest. Current gold: " + player.getGold());
+                    hasShownGoldWarning = true;
+                }
+                return;
+            }
+
+            int originalGold = player.getGold();
+
+            int originalInventorySize = player.getInventory().size();
+
+            // Open the chest (this handles the gold cost and item collection)
+            room.openChest(player);
+
+            boolean chestWasOpened = player.getGold() < originalGold;
+
+            if (chestWasOpened) {
+                hasTriedChestCollection = true;
+
+                // Check what was actually collected by comparing inventory
+                List<Item> currentInventory = player.getInventory();
+                List<Item> newlyCollectedItems = new ArrayList<>();
+
+                // Get the newly added items (from the end of the inventory)
+                for (int i = originalInventorySize; i < currentInventory.size(); i++) {
+                    newlyCollectedItems.add(currentInventory.get(i));
+                }
+
+                // Add collection message
+                if (!newlyCollectedItems.isEmpty()) {
+                    addGameMessage("Chest opened! Found:");
+                    for (Item item : newlyCollectedItems) {
+                        addGameMessage("• " + item.getName() + " - " + item.getDescription());
+                    }
+                } else {
+                    addGameMessage("Chest opened but was empty!");
+                }
+            }
+
+            // Update stats display
+            updatePlayerStats();
+
+            // Update minimap to reflect the change
+            updateMinimap();
+
+        } catch (Exception e) {
+            System.err.println("Error collecting chest: " + e.getMessage());
+        }
     }
 
     // ====== HERO INITIALIZATION AND GAME LOOP ======
@@ -693,6 +922,56 @@ public class GameScreen extends Screen {
         gameLoop.start();
     }
 
+    /**
+     * Intense damage flash effect with multiple pulses and screen shake feel
+     */
+    public void flashDamageEffect() {
+        if (damageFlashOverlay == null) {
+            System.err.println("Warning: damageFlashOverlay is null, cannot show damage flash");
+            return;
+        }
+
+        // Show the flash overlay
+        damageFlashOverlay.setVisible(true);
+        damageFlashOverlay.setOpacity(0.0);
+
+        // Create intense pulsing effect with multiple flashes
+        javafx.animation.Timeline flashTimeline = new javafx.animation.Timeline(
+                // Initial flash - quick and bright
+                new javafx.animation.KeyFrame(Duration.ZERO,
+                        new javafx.animation.KeyValue(damageFlashOverlay.opacityProperty(), 0.0)),
+                new javafx.animation.KeyFrame(Duration.millis(50),
+                        new javafx.animation.KeyValue(damageFlashOverlay.opacityProperty(), 0.8)), // Very bright flash
+
+                // First pulse
+                new javafx.animation.KeyFrame(Duration.millis(150),
+                        new javafx.animation.KeyValue(damageFlashOverlay.opacityProperty(), 0.2)),
+                new javafx.animation.KeyFrame(Duration.millis(250),
+                        new javafx.animation.KeyValue(damageFlashOverlay.opacityProperty(), 0.6)), // Second pulse
+
+                // Second pulse
+                new javafx.animation.KeyFrame(Duration.millis(350),
+                        new javafx.animation.KeyValue(damageFlashOverlay.opacityProperty(), 0.1)),
+                new javafx.animation.KeyFrame(Duration.millis(450),
+                        new javafx.animation.KeyValue(damageFlashOverlay.opacityProperty(), 0.4)), // Third pulse
+
+                // Final fade out
+                new javafx.animation.KeyFrame(Duration.millis(600),
+                        new javafx.animation.KeyValue(damageFlashOverlay.opacityProperty(), 0.2)),
+                new javafx.animation.KeyFrame(Duration.millis(1200),
+                        new javafx.animation.KeyValue(damageFlashOverlay.opacityProperty(), 0.0))
+        );
+
+        // Hide the overlay when animation completes
+        flashTimeline.setOnFinished(event -> damageFlashOverlay.setVisible(false));
+
+        // Play the animation
+        flashTimeline.play();
+
+        System.out.println("Intense damage flash effect triggered");
+    }
+
+
     private boolean shouldUpdateGame() {
         Controller c = getController();
         return c != null && c.getGameController() != null && c.getPlayer() != null &&
@@ -705,8 +984,21 @@ public class GameScreen extends Screen {
             player.updatePixelPosition();
             player.updateAnimation(System.nanoTime());
 
+            checkPillarCollection();
+            checkChestCollection();
+
             if (checkRoomTransition()) {
                 onRoomChanged();
+            }
+
+            pillarGlowAnimation += PILLAR_GLOW_SPEED;
+            if (pillarGlowAnimation > Math.PI * 2) {
+                pillarGlowAnimation = 0.0;
+            }
+
+            chestGlowAnimation += CHEST_GLOW_SPEED;
+            if (chestGlowAnimation > Math.PI * 2) {
+                chestGlowAnimation = 0.0;
             }
 
             updatePortraitCanvas();
@@ -790,6 +1082,8 @@ public class GameScreen extends Screen {
         clearCanvas();
         drawFloor();
         drawWalls();
+        drawPillar();
+        drawChest();
         drawPlayer();
     }
 
@@ -822,36 +1116,168 @@ public class GameScreen extends Screen {
         double thickness = currentDimensions.getWallThickness();
         double doorWidth = currentDimensions.getDoorWidth();
 
+        // Draw walls with proper coordinates
+        // North wall (top)
         drawWall(0, 0, size, thickness, currentRoom.hasNorthDoor(), true, doorWidth, wallColor, doorColor);
+
+        // South wall (bottom)
         drawWall(0, size - thickness, size, thickness, currentRoom.hasSouthDoor(), true, doorWidth, wallColor, doorColor);
+
+        // West wall (left)
         drawWall(0, 0, thickness, size, currentRoom.hasWestDoor(), false, doorWidth, wallColor, doorColor);
+
+        // East wall (right)
         drawWall(size - thickness, 0, thickness, size, currentRoom.hasEastDoor(), false, doorWidth, wallColor, doorColor);
     }
 
     private void drawWall(double x, double y, double width, double height, boolean hasDoor, boolean isHorizontal,
                           double doorSize, Color wallColor, Color doorColor) {
+
+        // Always draw the base wall first
+        graphicsContext.setFill(wallColor);
+        graphicsContext.fillRect(x, y, width, height);
+
+        // If there's a door, draw the opening over the wall
         if (hasDoor) {
-            double doorStart;
+            graphicsContext.setFill(doorColor);
+
             if (isHorizontal) {
-                doorStart = x + (width - doorSize) / 2;
-                graphicsContext.setFill(wallColor);
-                graphicsContext.fillRect(x, y, doorStart - x, height); // Left part
-                graphicsContext.setFill(doorColor);
-                graphicsContext.fillRect(doorStart, y, doorSize, height); // Door opening
-                graphicsContext.setFill(wallColor);
-                graphicsContext.fillRect(doorStart + doorSize, y, x + width - (doorStart + doorSize), height); // Right part
+                // For horizontal walls (north/south), door is centered horizontally
+                double doorStart = x + (width - doorSize) / 2;
+                graphicsContext.fillRect(doorStart, y, doorSize, height);
             } else {
-                doorStart = y + (height - doorSize) / 2;
-                graphicsContext.setFill(wallColor);
-                graphicsContext.fillRect(x, y, width, doorStart - y); // Top part
-                graphicsContext.setFill(doorColor);
-                graphicsContext.fillRect(x, doorStart, width, doorSize); // Door opening
-                graphicsContext.setFill(wallColor);
-                graphicsContext.fillRect(x, doorStart + doorSize, width, y + height - (doorStart + doorSize)); // Bottom part
+                // For vertical walls (east/west), door is centered vertically
+                double doorStart = y + (height - doorSize) / 2;
+                graphicsContext.fillRect(x, doorStart, width, doorSize);
             }
+        }
+    }
+
+    private void drawPillar() {
+        Room currentRoom = getCurrentRoom();
+        if (currentRoom == null || !currentRoom.hasPillar() || currentRoom.getPillar().isActivated()) {
+            return;
+        }
+
+        double pillarSize = currentDimensions.getTileSize() * 4; // Make pillar 2 tiles big
+        double pillarX = (currentDimensions.getSize() - pillarSize) / 2;
+        double pillarY = (currentDimensions.getSize() - pillarSize) / 2;
+
+        if (pillarSprite != null) {
+            // Calculate glow effect
+            double glowIntensity = (Math.sin(pillarGlowAnimation) + 1.0) / 2.0; // 0.0 to 1.0
+            double alpha = 0.7 + (glowIntensity * 0.3); // 0.7 to 1.0 alpha
+
+            // Save the current global alpha
+            double originalAlpha = graphicsContext.getGlobalAlpha();
+
+            // Apply glow effect
+            graphicsContext.setGlobalAlpha(alpha);
+
+            // Draw the pillar sprite
+            graphicsContext.drawImage(pillarSprite, pillarX, pillarY, pillarSize, pillarSize);
+
+            // Draw a subtle glow around the pillar
+            graphicsContext.setGlobalAlpha(glowIntensity * 0.3);
+            graphicsContext.setFill(Color.YELLOW);
+            graphicsContext.fillOval(pillarX - 5, pillarY - 5, pillarSize + 10, pillarSize + 10);
+
+            // Restore original alpha
+            graphicsContext.setGlobalAlpha(originalAlpha);
         } else {
-            graphicsContext.setFill(wallColor);
-            graphicsContext.fillRect(x, y, width, height);
+            // Fallback rendering if sprite is missing
+            double glowIntensity = (Math.sin(pillarGlowAnimation) + 1.0) / 2.0;
+
+            // Draw glow effect
+            graphicsContext.setFill(Color.rgb(255, 255, 0, glowIntensity * 0.3));
+            graphicsContext.fillOval(pillarX - 10, pillarY - 10, pillarSize + 20, pillarSize + 20);
+
+            // Draw pillar base
+            graphicsContext.setFill(Color.rgb(200, 200, 200));
+            graphicsContext.fillRect(pillarX, pillarY, pillarSize, pillarSize);
+
+            // Draw pillar top with glow
+            Color pillarColor = Color.rgb(
+                    (int)(255 * (0.7 + glowIntensity * 0.3)),
+                    (int)(255 * (0.7 + glowIntensity * 0.3)),
+                    0
+            );
+            graphicsContext.setFill(pillarColor);
+            graphicsContext.fillRect(pillarX + 5, pillarY + 5, pillarSize - 10, pillarSize - 10);
+        }
+    }
+
+    private void drawChest() {
+        Room currentRoom = getCurrentRoom();
+        if (currentRoom == null || !currentRoom.hasChest()) {
+            return; // No chest in room
+        }
+
+        // Check if chest is opened OR if we've already tried to collect it
+        if (currentRoom.isChestOpened()) {
+            return; // Don't draw if chest is opened
+        }
+
+        double chestSize = currentDimensions.getTileSize() * 3; // Make chest 3 tiles big
+
+        // Smart positioning: if there's a pillar, place chest in a different location
+        double chestX, chestY;
+        if (currentRoom.hasPillar() && !currentRoom.getPillar().isActivated()) {
+            // Place chest in top-right area if pillar is present
+            chestX = (currentDimensions.getSize() / 2 + currentDimensions.getTileSize() * 3) - (chestSize / 2);
+            chestY = (currentDimensions.getSize() / 2 - currentDimensions.getTileSize() * 2) - (chestSize / 2);
+        } else {
+            // Place chest in center if no pillar
+            chestX = (currentDimensions.getSize() - chestSize) / 2;
+            chestY = (currentDimensions.getSize() - chestSize) / 2;
+        }
+
+        // Rest of the drawing code remains the same...
+        if (chestSprite != null) {
+            // Calculate glow effect
+            double glowIntensity = (Math.sin(chestGlowAnimation) + 1.0) / 2.0; // 0.0 to 1.0
+            double alpha = 0.7 + (glowIntensity * 0.3); // 0.7 to 1.0 alpha
+
+            // Save the current global alpha
+            double originalAlpha = graphicsContext.getGlobalAlpha();
+
+            // Apply glow effect
+            graphicsContext.setGlobalAlpha(alpha);
+
+            // Draw the chest sprite
+            graphicsContext.drawImage(chestSprite, chestX, chestY, chestSize, chestSize);
+
+            // Draw a subtle glow around the chest (golden glow)
+            graphicsContext.setGlobalAlpha(glowIntensity * 0.3);
+            graphicsContext.setFill(Color.GOLD);
+            graphicsContext.fillOval(chestX - 5, chestY - 5, chestSize + 10, chestSize + 10);
+
+            // Restore original alpha
+            graphicsContext.setGlobalAlpha(originalAlpha);
+        } else {
+            // Fallback rendering remains the same...
+            double glowIntensity = (Math.sin(chestGlowAnimation) + 1.0) / 2.0;
+
+            // Draw glow effect (golden)
+            graphicsContext.setFill(Color.rgb(255, 215, 0, glowIntensity * 0.3));
+            graphicsContext.fillOval(chestX - 10, chestY - 10, chestSize + 20, chestSize + 20);
+
+            // Draw chest base (brown)
+            graphicsContext.setFill(Color.rgb(139, 69, 19));
+            graphicsContext.fillRect(chestX, chestY, chestSize, chestSize);
+
+            // Draw chest details with glow
+            Color chestColor = Color.rgb(
+                    (int)(255 * (0.7 + glowIntensity * 0.3)),
+                    (int)(215 * (0.7 + glowIntensity * 0.3)),
+                    0
+            );
+            graphicsContext.setFill(chestColor);
+            graphicsContext.fillRect(chestX + 5, chestY + 5, chestSize - 10, chestSize - 10);
+
+            // Draw chest lock
+            graphicsContext.setFill(Color.DARKGRAY);
+            graphicsContext.fillOval(chestX + chestSize/2 - 5, chestY + chestSize/2 - 5, 10, 10);
         }
     }
 
@@ -980,7 +1406,7 @@ public class GameScreen extends Screen {
             case BOSS: return Color.DARKRED;
             case PILLAR: return room.hasPillar() && room.getPillar().isActivated() ? Color.PURPLE : Color.MEDIUMPURPLE;
             case MONSTER: return room.getMonsters().isEmpty() ? Color.LIGHTGRAY : Color.RED;
-            case TREASURE: return room.getItems().isEmpty() ? Color.LIGHTGRAY : Color.GOLD;
+            case TREASURE: return room.isChestOpened() ? Color.LIGHTGRAY : Color.GOLD;
             case TRAP: return room.hasTrap() && room.getTrap().isSprung() ? Color.LIGHTGRAY : Color.ORANGERED;
             case EMPTY:
             default: return Color.LIGHTGRAY;
@@ -1002,6 +1428,7 @@ public class GameScreen extends Screen {
     }
 
     public void onRoomChanged() {
+        hasTriedChestCollection = false;
         updateMinimap();
         updatePlayerStats();
         if (getController().getGameController() != null) {
@@ -1059,6 +1486,9 @@ public class GameScreen extends Screen {
         static final double BUTTON_FONT_SIZE_RATIO = 0.018;
         static final double BUTTON_FONT_MIN_SIZE = 8.0;
         static final double BUTTON_FONT_MAX_SIZE = 16.0;
+
+        // Traps
+
 
         // Colors
         static final String PANEL_BORDER_COLOR = "#DAA520";
