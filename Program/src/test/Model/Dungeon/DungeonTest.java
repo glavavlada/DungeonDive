@@ -121,17 +121,21 @@ public class DungeonTest {
         assertTrue(dungeon.areAllPillarsActivated());
     }
 
-    @Test
-    @DisplayName("Demo dungeon should have boss pre-spawned")
-    void testDemoDungeonBossSpawning() {
-        // Demo dungeon has boss pre-spawned in the demo layout
-        assertTrue(dungeon.isBossSpawned());
+    // This test assumes generateDemoLayout() is on instead of generateLayout().
+    // because it was a temporary demo, and because how the code is wired, I'm leaving
+    // this commented out unless we want to change the Dungeon constructor functionality.
 
-        // Check that exit room is boss room
-        Room exitRoom = dungeon.getRoom(dungeon.getExitPoint());
-        assertEquals(RoomType.BOSS, exitRoom.getRoomType());
-        assertFalse(exitRoom.getMonsters().isEmpty());
-    }
+//    @Test
+//    @DisplayName("Demo dungeon should have boss pre-spawned")
+//    void testDemoDungeonBossSpawning() {
+//        // Demo dungeon has boss pre-spawned in the demo layout
+//        assertTrue(dungeon.isBossSpawned());
+//
+//        // Check that exit room is boss room
+//        Room exitRoom = dungeon.getRoom(dungeon.getExitPoint());
+//        assertEquals(RoomType.BOSS, exitRoom.getRoomType());
+//        assertFalse(exitRoom.getMonsters().isEmpty());
+//    }
 
     @Test
     @DisplayName("Non-demo dungeon should not have boss initially")
@@ -264,25 +268,29 @@ public class DungeonTest {
         assertEquals(0, noDemoGeneration.getActivatedPillars());
     }
 
-    @Test
-    @DisplayName("Demo layout should have linear structure")
-    void testDemoLayout() {
-        // Test the demo layout structure
-        Point spawn = dungeon.getHeroSpawnPoint();
-        Point exit = dungeon.getExitPoint();
+    // This test assumes generateDemoLayout() is on instead of generateLayout().
+    // because it was a temporary demo, and because how the code is wired, I'm leaving
+    // this commented out unless we want to change the Dungeon constructor functionality.
 
-        assertEquals(new Point(0, 0), spawn);
-        assertEquals(new Point(9, 0), exit);
-
-        // Check that rooms are connected in a line
-        for (int x = 0; x < 9; x++) {
-            Room currentRoom = dungeon.getRoom(x, 0);
-            Room nextRoom = dungeon.getRoom(x + 1, 0);
-
-            assertTrue(currentRoom.hasEastDoor());
-            assertTrue(nextRoom.hasWestDoor());
-        }
-    }
+//    @Test
+//    @DisplayName("Demo layout should have linear structure")
+//    void testDemoLayout() {
+//        // Test the demo layout structure
+//        Point spawn = dungeon.getHeroSpawnPoint();
+//        Point exit = dungeon.getExitPoint();
+//
+//        assertEquals(new Point(0, 0), spawn);
+//        assertEquals(new Point(9, 0), exit);
+//
+//        // Check that rooms are connected in a line
+//        for (int x = 0; x < 9; x++) {
+//            Room currentRoom = dungeon.getRoom(x, 0);
+//            Room nextRoom = dungeon.getRoom(x + 1, 0);
+//
+//            assertTrue(currentRoom.hasEastDoor());
+//            assertTrue(nextRoom.hasWestDoor());
+//        }
+//    }
 
     @Test
     @DisplayName("Multiple pillar activations beyond total should not break system")

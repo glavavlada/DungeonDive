@@ -45,8 +45,8 @@ public class Dungeon {
         this.myMonsterFactory = new MonsterFactory();
         // This stops a load from save file from creating new random placements.
         if (theNewDungeon) {
-            generateDemoLayout(); // Demo purposes
-            // generateLayout();
+            //generateDemoLayout(); // Demo purposes
+             generateLayout();
         }
     }
 

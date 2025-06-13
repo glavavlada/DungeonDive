@@ -11,6 +11,9 @@ public class VisionPotion extends Item {
 
     public VisionPotion(final String theName, final String theDescription, final Dungeon theDungeon) {
         super(theName, theDescription);
+        if (theDungeon == null) {
+            throw new IllegalArgumentException("Dungeon cannot be null for potion");
+        }
         myDungeon = theDungeon;
     }
 
@@ -38,6 +41,13 @@ public class VisionPotion extends Item {
                 if (currX >= 0 && currX < myDungeon.getHeight() && currY >= 0 && currY < myDungeon.getWidth()) {
                     myDungeon.getRoom(currX, currY).setVisited(true);
                 }
+            }
+        } else {
+            if (theHero == null) {
+                throw new NullPointerException("Hero is null for vision potion use method.");
+            }
+            if (!theHero.isAlive()) {
+                throw new IllegalArgumentException("Hero must be alive to use potion.");
             }
         }
     }

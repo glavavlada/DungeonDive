@@ -27,7 +27,6 @@ class MonsterTest {
     private HeroFactory myHeroFactory;
     private MonsterFactory myMonsterFactory;
 
-    // TODO: Add tests for stuff in factories, builders, etc.
 
     @BeforeEach
     void setUp() {
@@ -43,25 +42,30 @@ class MonsterTest {
         assertEquals("Goblin", regularMonster.getName(), "Monster name should be initialized.");
         assertEquals(MonsterType.GOBLIN, regularMonster.getType(), "Monster type should be initialized.");
         assertFalse(regularMonster.isElite(), "Monster should not be elite by default in this setup.");
-        assertEquals(30, regularMonster.getHealth(), "Monster initial health should be set.");
+        assertEquals(40, regularMonster.getHealth(), "Monster initial health should be set.");
         assertEquals(new Point(1, 1), regularMonster.getPosition(), "Monster initial position should be set.");
         assertNotNull(regularMonster.getRewardOnDefeat(), "Rewards list should be initialized.");
         assertTrue(regularMonster.getRewardOnDefeat().isEmpty(), "Rewards list should be initially empty.");
-
         assertTrue(eliteMonster.isElite(), "Elite monster should be set as elite.");
+        assertEquals(5, regularMonster.getGoldReward());
+        assertEquals(10, eliteMonster.getGoldReward());
     }
 
     @Test
     void attack_regularMonster_dealsBaseDamage() {
-        int damageDealt = regularMonster.attack(dummyHero);
-        // Current Monster.attack() logic: baseDamage = 5. If elite, baseDamage *= 2;
-        assertEquals(5, damageDealt, "Regular monster should deal base damage.");
+        // Checks for all four damage scenarios. Loops to make sure.
+        for (int i = 0; i < 100; i++) {
+            int damageDealt = regularMonster.attack(dummyHero);
+            assertTrue(8 == damageDealt || 10 == damageDealt || 16 == damageDealt || 20 == damageDealt);
+        }
     }
 
     @Test
     void attack_eliteMonster_dealsDoubleDamage() {
-        int damageDealt = eliteMonster.attack(dummyHero);
-        assertEquals(10, damageDealt, "Elite monster should deal double base damage.");
+        for (int i = 0; i < 100; i++) {
+            int damageDealt = eliteMonster.attack(dummyHero);
+            assertTrue(22 == damageDealt || 44 == damageDealt || 27 == damageDealt || 54 == damageDealt);
+        }
     }
 
     @Test
@@ -84,12 +88,12 @@ class MonsterTest {
     @Test
     void monsterTakeDamage_reducesHealth() {
         regularMonster.takeDamage(10);
-        assertEquals(20, regularMonster.getHealth());
+        assertEquals(30, regularMonster.getHealth());
     }
 
     @Test
     void monsterIsAlive_returnsFalseWhenHealthIsZero() {
-        regularMonster.takeDamage(30);
+        regularMonster.takeDamage(40);
         assertFalse(regularMonster.isAlive());
     }
 
@@ -97,5 +101,70 @@ class MonsterTest {
     void monsterMove_updatesPosition() {
         regularMonster.move(Direction.SOUTH);
         assertEquals(new Point(1, 2), regularMonster.getPosition());
+    }
+
+    @Test
+    void getGoldReward_properGold() {
+        assertEquals(5, regularMonster.getGoldReward());
+        assertEquals(10, eliteMonster.getGoldReward());
+    }
+
+    @Test
+    void getGoldReward_isDefeated() {
+        regularMonster.getGoldReward();
+        assertTrue(regularMonster.getIsDefeated());
+    }
+
+    @Test
+    void getIsDefeated_properBoolean() {
+        assertFalse(regularMonster.getIsDefeated());
+        regularMonster.getGoldReward();
+        assertTrue(regularMonster.getIsDefeated());
+    }
+
+    @Test
+    void getHealthDisplay_properDisplay() {
+        assertTrue("40 / 40".equals(regularMonster.getHealthDisplay()));
+        assertTrue("80 / 80".equals(eliteMonster.getHealthDisplay()));
+        regularMonster.takeDamage(15);
+        eliteMonster.takeDamage(17);
+        assertTrue("25 / 40".equals(regularMonster.getHealthDisplay()));
+        assertTrue("63 / 80".equals(eliteMonster.getHealthDisplay()));
+    }
+
+    @Test
+    void setMonsterType_properBuild() {
+        // setIsElite is needed here because boolean tries to auto set to null and gives error
+        Monster monster = new Monster.MonsterBuilder().setMonsterType(MonsterType.GIANT).setIsElite(false).build();
+        assertEquals(MonsterType.GIANT, monster.getType());
+    }
+
+    @Test
+    void setIsElite_properBuild() {
+        Monster monster = new Monster.MonsterBuilder().setIsElite(true).build();
+        assertTrue(monster.isElite());
+    }
+
+    @Test
+    void setGoldReward_properBuild() {
+        Monster monster = new Monster.MonsterBuilder().setGoldReward(32423).setIsElite(false).build();
+        assertEquals(32423, monster.getGoldReward());
+    }
+
+    @Test
+    void build_properMonsterBuild() {
+        Monster monster = new Monster.MonsterBuilder().
+                setGoldReward(32423).
+                setIsElite(false).
+                setMaxHealth(4).
+                build();
+        // Non-set int fields should automatically be 0.
+        assertEquals(monster.getBaseAttackDamage(), 0);
+        assertEquals(0, monster.getHealth());
+        // Checks assigned values here.
+        assertEquals(monster.getGoldReward(), 32423);
+        assertFalse(monster.isElite());
+        assertEquals(4, monster.getMaxHealth());
+
     }
 }
