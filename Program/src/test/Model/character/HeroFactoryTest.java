@@ -45,5 +45,33 @@ class HeroFactoryTest {
         assertEquals(20, hero.getBaseAttackDamage());
     }
 
+    @Test
+    void getHero_nullName() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Hero hero = myHeroFactory.getHero(null, HeroType.THIEF, new Point(0, 0));
+        });
+    }
+
+    @Test
+    void getHero_nullType() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Hero hero = myHeroFactory.getHero("Name", null, new Point(0, 0));
+        });
+    }
+
+    @Test
+    void getHero_nullPoint() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Hero hero = myHeroFactory.getHero("name", HeroType.THIEF, null);
+        });
+    }
+
+    @Test
+    void getHero_emptyName() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Hero hero = myHeroFactory.getHero("", HeroType.THIEF, new Point(0, 0));
+        });
+    }
+
     // buildHero is indirectly tested through the above methods, and builder tests in Hero and Character tests.
 }

@@ -1,4 +1,5 @@
 package test.Model.character;
+import main.Model.character.Hero;
 import main.Model.character.Monster;
 import main.Model.character.MonsterFactory;
 import main.Model.util.MonsterType;
@@ -62,6 +63,20 @@ public class MonsterFactoryTest {
         Monster monster = myMonsterFactory.getMonster(MonsterType.GIANT, new Point(0, 0));
         assertEquals(25, monster.getBaseAttackDamage());
         assertEquals("Giant", monster.getName());
+    }
+
+    @Test
+    void getMonster_nullType() {
+        assertThrows(NullPointerException.class, () -> {
+            Monster monster = myMonsterFactory.getMonster(null, new Point(0, 0));
+        });
+    }
+
+    @Test
+    void getMonster_nullPoint() {
+        assertThrows(NullPointerException.class, () -> {
+            Monster monster = myMonsterFactory.getMonster(MonsterType.GOBLIN, null);
+        });
     }
 
     // buildMonster is indirectly tested through the above methods, and builder tests in Monster and Character tests.
