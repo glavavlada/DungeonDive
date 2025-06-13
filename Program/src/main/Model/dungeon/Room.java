@@ -332,7 +332,7 @@ public class Room {
             if (myChestOpened) {
                 description.append(". There is an empty chest here that has already been opened.");
             } else {
-                description.append(". There is a chest here. Double click 'E' to open it for 5 gold.");
+                description.append(". There is a chest here. I wonder what's in here?");
             }
         }
 
@@ -344,9 +344,9 @@ public class Room {
         //add pillar information
         if (hasPillar()) {
             if (myPillar.isActivated()) {
-                description.append(". The Pillar of ").append(myPillar.getType().getDisplayName()).append(" stands here, already activated.");
+                description.append(". The Pillar of ").append(myPillar.getType().getDisplayName()).append(" has already been collected.");
             } else {
-                description.append(". The Pillar of ").append(myPillar.getType().getDisplayName()).append(" stands here. Press 'E' to activate it.");
+                description.append(". The Pillar of ").append(myPillar.getType().getDisplayName()).append(" stands here. Walk over to collect it.");
             }
         }
 
