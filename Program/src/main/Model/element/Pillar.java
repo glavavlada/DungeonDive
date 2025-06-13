@@ -7,6 +7,11 @@ import java.util.Objects;
 /**
  * Represents a Pillar of OO in the dungeon.
  * Activating a pillar grants the hero a permanent buff.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public class Pillar extends DungeonElement {
 

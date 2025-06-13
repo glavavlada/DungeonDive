@@ -3,6 +3,11 @@ package main.Model.util;
 /**
  * Enum representing the different types of heroes available in the game.
  * Each hero type can have distinct base stats and abilities.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public enum HeroType {
     WARRIOR("Warrior", "A strong and resilient fighter, excelling in melee combat.", 125, 15, "Mighty Swing", 25, 0.05, 2.0),

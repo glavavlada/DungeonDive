@@ -2,6 +2,11 @@ package main.Model.util;
 
 /**
  * Enum representing the different types of Pillars of OO.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public enum PillarType {
     ABSTRACTION("Abstraction", "Grants enhanced understanding of complex systems, increasing critical hit chance."),

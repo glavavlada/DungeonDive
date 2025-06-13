@@ -3,6 +3,14 @@ package main.Model.character;
 import main.Model.util.Point;
 import main.Model.util.Direction;
 
+/**
+ * Abstract class for Character, representing Heros and Monsters.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
+ */
 public abstract class Character {
 
     private final String myName;
@@ -16,7 +24,11 @@ public abstract class Character {
     private final double myCritMultiplier;
     private final String myDescription;
 
-
+    /**
+     * Character Constructor.
+     *
+     * @param theCharacterBuilder builder object for character.
+     */
     public Character(final CharacterBuilder theCharacterBuilder) {
         myName = theCharacterBuilder.myName;
         myMaxHealth = theCharacterBuilder.myMaxHealth;
@@ -30,16 +42,37 @@ public abstract class Character {
         myDescription = theCharacterBuilder.myDescription;
     }
 
+    /**
+     * Abstract attack method.
+     *
+     * @param theTarget target to be attacked.
+     * @return integer of damage.
+     */
     public abstract int attack(final Character theTarget);
 
+    /**
+     * Takes damage.
+     *
+     * @param theDamage the damage to apply.
+     */
     public void takeDamage(final int theDamage) {
         myHealth = Math.max(0, myHealth - theDamage);
     }
 
+    /**
+     * Checks if character is alive.
+     *
+     * @return boolean of alive status.
+     */
     public boolean isAlive() {
         return myHealth > 0;
     }
 
+    /**
+     * Moves character.
+     *
+     * @param theDirection direction to be moved in.
+     */
     public void move(final Direction theDirection) {
         switch (theDirection) {
             case NORTH:
@@ -57,22 +90,45 @@ public abstract class Character {
         }
     }
 
+    /**
+     * Gets character name.
+     *
+     * @return a name.
+     */
     public String getName() {
         return myName;
     }
 
+    /**
+     * Gets character health.
+     *
+     * @return health as an integer.
+     */
     public int getHealth() {
         return myHealth;
     }
 
+    /**
+     * Gets character health.
+     *
+     * @return health as an integer.
+     */
     public int getMaxHealth() {
         return myMaxHealth;
     }
 
+    /**
+     * Gets character position
+     *
+     * @return position as a Point
+     */
     public Point getPosition() {
         return myPosition;
     }
 
+    /**
+     * Adds character max health.
+     */
     public void addMaxHealth(final int theHealth) {
         myMaxHealth += theHealth;
     }
@@ -81,6 +137,9 @@ public abstract class Character {
         myHealth = Math.min(theHealth, myMaxHealth);
     }
 
+    /**
+     * Sets position.
+     */
     public void setPosition(final Point thePosition) {
         myPosition = thePosition;
     }
@@ -111,6 +170,12 @@ public abstract class Character {
         myCritChance += theCritChance;
     }
 
+    /**
+     * Character builder class.
+     *
+     * @param <BuilderType> Builder type.
+     * @param <Type> class type.
+     */
     public static abstract class CharacterBuilder<BuilderType, Type> {
 
         private String myName;
@@ -123,8 +188,6 @@ public abstract class Character {
         private double myCritChance;
         private double myCritMultiplier;
         private String myDescription;
-
-        // TODO: do null checks and other error checking for builder methods
 
         public BuilderType setName(final String theName) {
             myName = theName;

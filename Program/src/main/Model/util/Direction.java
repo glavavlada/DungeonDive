@@ -3,6 +3,11 @@ package main.Model.util;
 /**
  * Enum representing the four cardinal directions.
  * Used for character movement and defining room connections.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public enum Direction {
     NORTH,

@@ -16,7 +16,7 @@ import main.Model.util.Point;
  * @author Jacob Hilliker
  * @author Emanuel Feria
  * @author Vladyslav Glavatskyi
- * @version 5/13/2025
+ * @version 6/13/2025
  */
 public class Model {
     private Hero myPlayer;

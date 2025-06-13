@@ -5,6 +5,11 @@ import java.util.Objects;
 /**
  * Represents a 2D point with x and y coordinates.
  * This class is used to define positions within the dungeon.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public class Point {
     private final int myX;

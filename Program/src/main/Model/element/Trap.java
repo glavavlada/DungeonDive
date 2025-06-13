@@ -5,6 +5,11 @@ import java.util.Objects;
 
 /**
  * Represents a trap in the dungeon that can affect a hero.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public class Trap extends DungeonElement {
     private final String myName;
