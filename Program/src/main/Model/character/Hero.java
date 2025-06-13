@@ -62,8 +62,6 @@ public class Hero extends Character {
         loadSpriteSheet();
     }
 
-
-
     private void loadSpriteSheet() {
         try {
             String spritePath = getSpritePathForHeroType();
@@ -295,7 +293,7 @@ public class Hero extends Character {
     }
 
     public String getHealthDisplay() {
-        return getHealth() + "/" + getMaxHealth();
+        return getHealth() + " / " + getMaxHealth();
     }
 
     public int getSpecialMana() {
@@ -321,6 +319,10 @@ public class Hero extends Character {
 
     public void addAttackBuff(final int theAttackBuff) {
         myAttackBuff += theAttackBuff;
+    }
+    // This is just for testing in HeroTest.
+    public int getAttackBuff() {
+        return myAttackBuff;
     }
 
     public void addItem(final Item theItem) {

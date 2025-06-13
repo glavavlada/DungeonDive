@@ -93,12 +93,18 @@ public abstract class Character {
         return mySpecialAttackName;
     }
 
+    public int getSpecialAttackDamage() {return mySpecialAttackDamage; }
+
     public double getCritChance() {
         return myCritChance;
     }
 
     public double getCritMultiplier() {
         return myCritMultiplier;
+    }
+
+    public String getDescription() {
+        return myDescription;
     }
 
     public void addCritChance(final double theCritChance) {
