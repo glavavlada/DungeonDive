@@ -18,7 +18,7 @@ public abstract class Item extends DungeonElement {
      * @param theDescription The description of the item.
      */
     public Item(final String theName, final String theDescription) {
-        if (theName == null || theName.isEmpty()) {
+        if (theName == null || theName.isEmpty() || theName.trim().isEmpty()) {
             throw new IllegalArgumentException("Item name cannot be null or empty.");
         }
         this.myName = theName;

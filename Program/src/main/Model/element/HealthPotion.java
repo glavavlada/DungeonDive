@@ -28,7 +28,25 @@ public class HealthPotion extends Item {
     @Override
     public void use(final Hero theHero) {
         if (theHero != null && theHero.isAlive()) {
-            theHero.setHealth(Math.min(theHero.getMaxHealth(), theHero.getHealth() + this.myHealingAmount)); // Assuming Hero has getMaxHealth()
+            int currentHealth = theHero.getHealth();
+            int maxHealth = theHero.getMaxHealth();
+            int newHealth;
+
+            // Handle potential integer overflow/underflow
+            if (myHealingAmount > 0 && currentHealth > Integer.MAX_VALUE - myHealingAmount) {
+                // Positive overflow - set to max health
+                newHealth = maxHealth;
+            } else if (myHealingAmount < 0 && currentHealth < Integer.MIN_VALUE - myHealingAmount) {
+                // Negative underflow - set to 0
+                newHealth = 0;
+            } else {
+                // Safe to add
+                newHealth = currentHealth + myHealingAmount;
+                // Clamp between 0 and max health
+                newHealth = Math.max(0, Math.min(maxHealth, newHealth));
+            }
+
+            theHero.setHealth(newHealth);
             System.out.println(theHero.getName() + " used " + getName() + " and restored " + this.myHealingAmount + " health.");
         }
     }
