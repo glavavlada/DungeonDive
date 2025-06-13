@@ -8,6 +8,11 @@ import main.Model.util.MonsterType;
 
 /**
  * Represents an enemy in the game.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public class Monster extends Character {
     private boolean myIsElite;

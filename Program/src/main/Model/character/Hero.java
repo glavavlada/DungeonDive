@@ -18,6 +18,11 @@ import main.Model.util.Point;
  * Represents the player character.
  * This class extends Character and includes hero-specific attributes like inventory,
  * hero type, and interaction with game elements.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public class Hero extends Character {
 
@@ -51,6 +56,11 @@ public class Hero extends Character {
     private final AnimationState myAnimationState;
     private transient Image mySprite;
 
+    /**
+     * Constructor.
+     *
+     * @param theHeroBuilder hero builder object for assigning fields.
+     */
     public Hero(final HeroBuilder theHeroBuilder) {
         super(theHeroBuilder);
         this.myHeroType = theHeroBuilder.myHeroType;
@@ -62,6 +72,9 @@ public class Hero extends Character {
         loadSpriteSheet();
     }
 
+    /**
+     * Loads a sprite sheet into mySpriteSheet.
+     */
     private void loadSpriteSheet() {
         try {
             String spritePath = getSpritePathForHeroType();
@@ -73,6 +86,11 @@ public class Hero extends Character {
         }
     }
 
+    /**
+     * Gets sprite file path.
+     *
+     * @return file path string.
+     */
     private String getSpritePathForHeroType() {
         return switch (myHeroType) {
             case THIEF -> "/sprites/heroes/thief_walk_spritesheet.png";
@@ -121,6 +139,11 @@ public class Hero extends Character {
         return (target instanceof Monster monster) ? monster.getName() : "target";
     }
 
+    /**
+     * Uses an item if in inventory.
+     *
+     * @param theItem item to be used.
+     */
     public void useItem(final Item theItem) {
         if (theItem == null || !myInventory.contains(theItem)) {
             if (theItem != null) {
@@ -172,6 +195,11 @@ public class Hero extends Character {
         return hasAll;
     }
 
+    /**
+     * Special attack.
+     *
+     * @return damage.
+     */
     public int specialAttack() {
         int baseDamage = myHeroType.getSpecialAttackDamage();
         // Stat bonuses from pillars

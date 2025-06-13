@@ -5,10 +5,26 @@ import main.Model.dungeon.Dungeon;
 import main.Model.dungeon.Room;
 import main.Model.util.Point;
 
+
+/**
+ * Class for the Vision Potion which reveals nearby tiles.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
+ */
 public class VisionPotion extends Item {
 
     private final Dungeon myDungeon;
 
+    /**
+     * Constructor.
+     *
+     * @param theName item name.
+     * @param theDescription item description.
+     * @param theDungeon the dungeon that the potion will light up.
+     */
     public VisionPotion(final String theName, final String theDescription, final Dungeon theDungeon) {
         super(theName, theDescription);
         if (theDungeon == null) {

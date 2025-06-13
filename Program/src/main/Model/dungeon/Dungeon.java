@@ -18,6 +18,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  * Uses DFS to generate a randomized layout.
  * IMPORTANT: FULL DUNGEON PRINT MENU OPTION IS IN HELP MENU, BUTTON CALLED "VISION CHEAT"
  * THIS VISION CHEAT SHOWS FULL DUNGEON ON THE MINIMAP.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public class Dungeon {
     private final Room[][] myRooms;

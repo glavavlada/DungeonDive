@@ -2,6 +2,11 @@ package main.Model.util;
 
 /**
  * Enum representing the different types of rooms in the dungeon.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public enum RoomType {
     EMPTY("Empty", "An empty room with nothing of interest."),

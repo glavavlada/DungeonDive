@@ -6,6 +6,11 @@ import main.Model.character.Hero;
  * Abstract base class for all elements that can exist in a dungeon room
  * and with which a Hero can interact.
  * This includes items, traps, pillars, and potentially other interactive objects.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public abstract class DungeonElement {
 
