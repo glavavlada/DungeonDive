@@ -108,16 +108,23 @@ public class PauseScreen extends Screen {
      */
     private ImageView createBlurredBackground(GameUI theUI) {
         try {
-            if (theUI != null && theUI.getPrimaryStage() != null) {
-                Scene gameScene = theUI.getPrimaryStage().getScene();
-                if (gameScene != null) {
-                    WritableImage snapshot = gameScene.snapshot(null);
-                    ImageView backgroundImage = new ImageView(snapshot);
-                    GaussianBlur blur = new GaussianBlur();
-                    blur.setRadius(20);
-                    backgroundImage.setEffect(blur);
-                    return backgroundImage;
-                }
+            // Check if there's an active game first
+            if (getController().getPlayer() == null) {
+                return null; // No game running, use solid background
+            }
+
+            // Temporarily switch to game screen to capture it
+            theUI.showGameScreen();
+
+            // Get the game screen scene after switching to it
+            Scene gameScene = getStage().getScene();
+            if (gameScene != null) {
+                WritableImage snapshot = gameScene.snapshot(null);
+                ImageView backgroundImage = new ImageView(snapshot);
+                GaussianBlur blur = new GaussianBlur();
+                blur.setRadius(20);
+                backgroundImage.setEffect(blur);
+                return backgroundImage;
             }
         } catch (Exception e) {
             System.err.println("Could not create blurred game screen background: " + e.getMessage());
