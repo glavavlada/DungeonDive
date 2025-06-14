@@ -36,6 +36,14 @@ public class Dungeon {
     private String myDifficulty;
     private final MonsterFactory myMonsterFactory;
 
+    /**
+     * Constructor for the dungeon
+     *
+     * @param theWidth dungeon width
+     * @param theHeight dungeon height
+     * @param theDifficulty dungeon difficulty
+     * @param theNewDungeon keeps track if this is a new or loaded dungeon
+     */
     public Dungeon(final int theWidth, final int theHeight, final String theDifficulty, final boolean theNewDungeon) {
         if (theWidth <= 0 || theHeight <= 0) {
             throw new IllegalArgumentException("Dungeon dimensions must be positive.");
@@ -287,6 +295,12 @@ public class Dungeon {
         }
     }
 
+    /**
+     * Gets room at a location
+     * @param theX the x coordinate of room
+     * @param theY the y coordinate of room
+     * @return a room.
+     */
     public Room getRoom(final int theX, final int theY) {
         if (theX >= 0 && theX < myWidth && theY >= 0 && theY < myHeight) {
             return myRooms[theY][theX];
@@ -294,31 +308,60 @@ public class Dungeon {
         return null;
     }
 
+    /**
+     * Same as the other getRoom, but uses a point.
+     * @param thePoint point for locating room
+     * @return a room.
+     */
     public Room getRoom(final Point thePoint) {
         if (thePoint == null) return null;
         return getRoom(thePoint.getX(), thePoint.getY());
     }
 
+    /**
+     * gets dungeon width
+     * @return width
+     */
     public int getWidth() {
         return myWidth;
     }
 
+    /**
+     * gets dungeon height
+     * @return dungeon height
+     */
     public int getHeight() {
         return myHeight;
     }
 
+    /**
+     * finds where hero spawned
+     * @return Point of hero spawn
+     */
     public Point getHeroSpawnPoint() {
         return myHeroSpawnPoint;
     }
 
+    /**
+     * finds dungeon exit
+     * @return exit point
+     */
     public Point getExitPoint() {
         return myExitPoint;
     }
 
+    /**
+     * gets total pillars
+     * @return pillar count
+     */
     public int getTotalPillars() {
         return myTotalPillars;
     }
 
+    /**
+     * gets activated pillars
+     * @return activated pillar count
+     */
     public int getActivatedPillars() {
         return myActivatedPillars;
     }
@@ -334,15 +377,26 @@ public class Dungeon {
         }
     }
 
+    /**
+     * checks if all pillars on
+     * @return true if yes
+     */
     public boolean areAllPillarsActivated() {
         // Ensure there are pillars to activate for this condition to be meaningful
         return myTotalPillars > 0 && myActivatedPillars >= myTotalPillars;
     }
 
+    /**
+     * checks if boss was spawned
+     * @return true if yes
+     */
     public boolean isBossSpawned() {
         return myBossSpawned;
     }
 
+    /**
+     * spawns boss.
+     */
     private void spawnBoss() {
         if (myBossSpawned) return;
 
@@ -366,10 +420,19 @@ public class Dungeon {
         }
     }
 
+    /**
+     * gets game difficulty
+     * @return string of difficulty
+     */
     public String getDifficulty() {
         return myDifficulty;
     }
 
+    /**
+     * gets map in string form
+     * @param theHeroCurrentPosition hero's current location
+     * @return map string
+     */
     public String getMapString(final Point theHeroCurrentPosition) {
         StringBuilder sb = new StringBuilder();
         for (int y = 0; y < myHeight; y++) {
@@ -399,6 +462,11 @@ public class Dungeon {
         return sb.toString();
     }
 
+    /**
+     * gives percent chances of each monster spawning
+     * @param theRoom room to spawn
+     * @param theSpot point to spawn at
+     */
     private void addMonsterToRoom(final Room theRoom, final Point theSpot) {
         Random rand = new Random();
         double percentChance = rand.nextDouble(1);
@@ -417,6 +485,10 @@ public class Dungeon {
         }
     }
 
+    /**
+     * makes a chest in the room
+     * @param theRoom room for the chest
+     */
     private void createChest(final Room theRoom) {
         Random rand = new Random();
         int itemAmount = rand.nextInt(5) + 1;

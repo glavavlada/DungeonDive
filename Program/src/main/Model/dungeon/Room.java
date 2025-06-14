@@ -75,10 +75,18 @@ public class Room {
         this.myHasWestDoor = false;
     }
 
+    /**
+     * sets if chest was opened
+     * @param theOpened true if opened
+     */
     public void setChestOpened(final boolean theOpened) {
         this.myChestOpened = theOpened;
     }
 
+    /**
+     * sets if items have been collected
+     * @param theCollected true if collected
+     */
     public void setItemsCollected(final boolean theCollected) {
         this.myItemsCollected = theCollected;
     }

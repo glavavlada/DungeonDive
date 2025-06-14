@@ -144,28 +144,49 @@ public abstract class Character {
         myPosition = thePosition;
     }
 
+    /**
+     * Gets base damage.
+     */
     public int getBaseAttackDamage() {
         return myBaseAttackDamage;
     }
 
+    /**
+     * gets special attack name.
+     */
     public String getSpecialAttackName() {
         return mySpecialAttackName;
     }
 
+    /**
+     * gets special attack damage.
+     */
     public int getSpecialAttackDamage() {return mySpecialAttackDamage; }
 
+    /**
+     * gets critical hit chance.
+     */
     public double getCritChance() {
         return myCritChance;
     }
 
+    /**
+     * gets critical hit multiplier.
+     */
     public double getCritMultiplier() {
         return myCritMultiplier;
     }
 
+    /**
+     * gets character description.
+     */
     public String getDescription() {
         return myDescription;
     }
 
+    /**
+     * increases critical hit chance.
+     */
     public void addCritChance(final double theCritChance) {
         myCritChance += theCritChance;
     }
@@ -189,11 +210,17 @@ public abstract class Character {
         private double myCritMultiplier;
         private String myDescription;
 
+        /**
+         * sets myName.
+         */
         public BuilderType setName(final String theName) {
             myName = theName;
             return self();
         }
 
+        /**
+         * sets myHealth
+         */
         public BuilderType setHealth(final int theHealth) {
             if (theHealth > 0) {
                 myHealth = theHealth;
@@ -204,6 +231,9 @@ public abstract class Character {
             }
         }
 
+        /**
+         * sets myMaxHealth
+         */
         public BuilderType setMaxHealth(final int theMaxHealth) {
             if (theMaxHealth > 0) {
                 myMaxHealth = theMaxHealth;
@@ -214,43 +244,70 @@ public abstract class Character {
             }
         }
 
+        /**
+         * sets myPosition
+         */
         public BuilderType setPosition(final Point thePosition) {
             myPosition = thePosition;
             return self();
         }
 
+        /**
+         * sets myBaseAttackDamage
+         */
         public BuilderType setBaseAttackDamage(final int theBaseAttackDamage) {
             myBaseAttackDamage = theBaseAttackDamage;
             return self();
         }
 
+        /**
+         * sets mySpecialAttackDamage
+         */
         public BuilderType setSpecialAttackDamage(final int theSpecialAttackDamage) {
             mySpecialAttackDamage = theSpecialAttackDamage;
             return self();
         }
 
+        /**
+         * sets mySpecialAttackName
+         */
         public BuilderType setSpecialAttackName(final String theSpecialAttackName) {
             mySpecialAttackName = theSpecialAttackName;
             return self();
         }
 
+        /**
+         * sets myCritChance
+         */
         public BuilderType setCritChance(final double theCritChance) {
             myCritChance = theCritChance;
             return self();
         }
 
+        /**
+         * sets myCritMultiplier
+         */
         public BuilderType setCritMultiplier(final double theCritMultiplier) {
             myCritMultiplier = theCritMultiplier;
             return self();
         }
 
+        /**
+         * sets myDescription
+         */
         public BuilderType setDescription(final String theDescription) {
             myDescription = theDescription;
             return self();
         }
 
+        /**
+         * Abstract for returning an object of a builder type.
+         */
         protected abstract BuilderType self();
 
+        /**
+         * builds the object.
+         */
         public abstract Type build();
 
     }
