@@ -18,7 +18,7 @@ import java.sql.Statement;
  * @author Jacob Hilliker
  * @author Emanuel Feria
  * @author Vladyslav Glavatskyi
- * @version 5/13/2025
+ * @version 6/13/2025
  */
 public class Database {
     private Connection myConnection;

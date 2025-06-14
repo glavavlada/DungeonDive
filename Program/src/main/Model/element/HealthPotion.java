@@ -4,6 +4,11 @@ import main.Model.character.Hero;
 
 /**
  * Represents a health potion that restores health to a hero.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public class HealthPotion extends Item {
     private final int myHealingAmount;
@@ -28,7 +33,25 @@ public class HealthPotion extends Item {
     @Override
     public void use(final Hero theHero) {
         if (theHero != null && theHero.isAlive()) {
-            theHero.setHealth(Math.min(theHero.getMaxHealth(), theHero.getHealth() + this.myHealingAmount)); // Assuming Hero has getMaxHealth()
+            int currentHealth = theHero.getHealth();
+            int maxHealth = theHero.getMaxHealth();
+            int newHealth;
+
+            // Handle potential integer overflow/underflow
+            if (myHealingAmount > 0 && currentHealth > Integer.MAX_VALUE - myHealingAmount) {
+                // Positive overflow - set to max health
+                newHealth = maxHealth;
+            } else if (myHealingAmount < 0 && currentHealth < Integer.MIN_VALUE - myHealingAmount) {
+                // Negative underflow - set to 0
+                newHealth = 0;
+            } else {
+                // Safe to add
+                newHealth = currentHealth + myHealingAmount;
+                // Clamp between 0 and max health
+                newHealth = Math.max(0, Math.min(maxHealth, newHealth));
+            }
+
+            theHero.setHealth(newHealth);
             System.out.println(theHero.getName() + " used " + getName() + " and restored " + this.myHealingAmount + " health.");
         }
     }
@@ -42,15 +65,4 @@ public class HealthPotion extends Item {
         return myHealingAmount;
     }
 
-    /**
-     * When a hero interacts with a HealthPotion on the ground, they pick it up.
-     * This overrides the default interact method from Item if specific behavior is needed,
-     * but the default Item.interact() already calls hero.pickupItem(this), which is suitable.
-     * If you wanted different behavior (e.g., auto-use if health is low), you could change it here.
-     * For now, relying on the parent's interact method is fine.
-     */
-    // @Override
-    // public void interact(Hero hero) {
-    //     super.interact(hero); // This will call hero.pickupItem(this)
-    // }
 }

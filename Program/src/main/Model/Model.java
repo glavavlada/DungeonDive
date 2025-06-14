@@ -16,7 +16,7 @@ import main.Model.util.Point;
  * @author Jacob Hilliker
  * @author Emanuel Feria
  * @author Vladyslav Glavatskyi
- * @version 5/13/2025
+ * @version 6/13/2025
  */
 public class Model {
     private Hero myPlayer;
@@ -93,13 +93,11 @@ public class Model {
             System.err.println("Cannot save game: Player or Dungeon not initialized.");
             return false;
         }
-        // TODO: Implement saving logic using myDatabase
         System.out.println("Saving game to slot: " + theSaveSlotName + " (Not yet implemented)");
         return false;
     }
 
     public boolean loadGame(final String theSaveSlotName) {
-        // TODO: Implement loading logic using myDatabase
         System.out.println("Loading game from slot: " + theSaveSlotName + " (Not yet implemented)");
         // This method should reconstruct myPlayer and myDungeon from database data
         // and then potentially call a method to update the UI.

@@ -18,6 +18,11 @@ import main.Model.util.Point;
  * Represents the player character.
  * This class extends Character and includes hero-specific attributes like inventory,
  * hero type, and interaction with game elements.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public class Hero extends Character {
 
@@ -51,6 +56,11 @@ public class Hero extends Character {
     private final AnimationState myAnimationState;
     private transient Image mySprite;
 
+    /**
+     * Constructor.
+     *
+     * @param theHeroBuilder hero builder object for assigning fields.
+     */
     public Hero(final HeroBuilder theHeroBuilder) {
         super(theHeroBuilder);
         this.myHeroType = theHeroBuilder.myHeroType;
@@ -62,8 +72,9 @@ public class Hero extends Character {
         loadSpriteSheet();
     }
 
-
-
+    /**
+     * Loads a sprite sheet into mySpriteSheet.
+     */
     private void loadSpriteSheet() {
         try {
             String spritePath = getSpritePathForHeroType();
@@ -75,6 +86,11 @@ public class Hero extends Character {
         }
     }
 
+    /**
+     * Gets sprite file path.
+     *
+     * @return file path string.
+     */
     private String getSpritePathForHeroType() {
         return switch (myHeroType) {
             case THIEF -> "/sprites/heroes/thief_walk_spritesheet.png";
@@ -123,6 +139,11 @@ public class Hero extends Character {
         return (target instanceof Monster monster) ? monster.getName() : "target";
     }
 
+    /**
+     * Uses an item if in inventory.
+     *
+     * @param theItem item to be used.
+     */
     public void useItem(final Item theItem) {
         if (theItem == null || !myInventory.contains(theItem)) {
             if (theItem != null) {
@@ -137,6 +158,9 @@ public class Hero extends Character {
         myInventory.remove(theItem);
     }
 
+    /**
+     * Picks up an item.
+     */
     public boolean pickupItem(final Item theItem) {
         if (theItem == null) {
             return false;
@@ -154,6 +178,9 @@ public class Hero extends Character {
         return true;
     }
 
+    /**
+     * activates a pillar.
+     */
     public boolean activatePillar(final Pillar thePillar) {
         if (thePillar == null || thePillar.isActivated()) {
             return false;
@@ -168,12 +195,22 @@ public class Hero extends Character {
         return true;
     }
 
+    /**
+     * checks if player has activated all 4 pillars
+     *
+     * @return boolean
+     */
     public boolean hasActivatedAllPillars() {
         boolean hasAll = myPillarsActivated >= TOTAL_PILLARS;
         System.out.println("Checking all pillars: " + myPillarsActivated + "/" + TOTAL_PILLARS + " = " + hasAll);
         return hasAll;
     }
 
+    /**
+     * Special attack.
+     *
+     * @return damage.
+     */
     public int specialAttack() {
         int baseDamage = myHeroType.getSpecialAttackDamage();
         // Stat bonuses from pillars
@@ -196,6 +233,10 @@ public class Hero extends Character {
         return totalDamage;
     }
 
+    /**
+     * checks if player can use special attack
+     * @return true if you can, false if not
+     */
     public boolean canUseSpecialAttack() {
         boolean canUse = false;
         if (myManaBuff) {
@@ -206,6 +247,9 @@ public class Hero extends Character {
         return canUse;
     }
 
+    /**
+     * adds a single mana to player.
+     */
     public void addMana() {
         if (mySpecialMana < 4){
             mySpecialMana++;
@@ -215,6 +259,10 @@ public class Hero extends Character {
         }
     }
 
+    /**
+     * Hero takes damage.
+     * @param theDamageAmount the damage to apply.
+     */
     @Override
     public void takeDamage(final int theDamageAmount) {
         super.takeDamage(theDamageAmount);
@@ -226,6 +274,10 @@ public class Hero extends Character {
         }
     }
 
+    /**
+     * adds gold to player's gold
+     * @param theAmount the amount to add
+     */
     public void addGold(final int theAmount) {
         if (theAmount > 0) {
             this.myGold += theAmount;
@@ -234,6 +286,11 @@ public class Hero extends Character {
         }
     }
 
+    /**
+     * spends gold.
+     * @param theAmount the amount to spend
+     * @return true if successful, false if not.
+     */
     public boolean spendGold(final int theAmount) {
         if (theAmount <= 0 || this.myGold < theAmount) {
             System.out.println(getName() + " does not have enough gold to spend " +
@@ -247,12 +304,20 @@ public class Hero extends Character {
         return true;
     }
 
+    /**
+     * sets player position.
+     * @param x x coordinate
+     * @param y y coordinate
+     */
     // Movement methods
     public void setPixelPosition(double x, double y) {
         myPixelX = x;
         myPixelY = y;
     }
 
+    /**
+     * Moves player north.
+     */
     public void startMovingNorth() { myMovementState.setMovingNorth(true); }
     public void stopMovingNorth() { myMovementState.setMovingNorth(false); }
     public void startMovingSouth() { myMovementState.setMovingSouth(true); }
@@ -262,12 +327,19 @@ public class Hero extends Character {
     public void startMovingWest() { myMovementState.setMovingWest(true); }
     public void stopMovingWest() { myMovementState.setMovingWest(false); }
 
+    /**
+     * sets movement speed
+     * @param canvasSize size of canvas to help determine move speed
+     */
     public void setMovementSpeedForCanvasSize(double canvasSize) {
         double speedScale = canvasSize / BASE_CANVAS_SIZE;
         myMovementSpeed = BASE_MOVEMENT_SPEED * speedScale;
         myMovementSpeed = Math.max(1.0, Math.min(myMovementSpeed, 8.0));
     }
 
+    /**
+     * updates pixel location
+     */
     public void updatePixelPosition() {
         if (myMovementState.isMovingNorth()) myPixelY -= myMovementSpeed;
         if (myMovementState.isMovingSouth()) myPixelY += myMovementSpeed;
@@ -275,10 +347,18 @@ public class Hero extends Character {
         if (myMovementState.isMovingWest()) myPixelX -= myMovementSpeed;
     }
 
+    /**
+     * checks if moving
+     * @return true if so, false otherwise
+     */
     public boolean isMoving() {
         return myMovementState.isMoving();
     }
 
+    /**
+     * updates player animation
+     * @param currentTimeNanos time passed
+     */
     public void updateAnimation(long currentTimeNanos) {
         myAnimationState.update(currentTimeNanos, isMoving(), myMovementState);
     }
@@ -294,10 +374,18 @@ public class Hero extends Character {
         return Math.max(0.0, Math.min(1.0, (double) getHealth() / getMaxHealth()));
     }
 
+    /**
+     * gets health display
+     * @return a health display
+     */
     public String getHealthDisplay() {
-        return getHealth() + "/" + getMaxHealth();
+        return getHealth() + " / " + getMaxHealth();
     }
 
+    /**
+     * player mana amount
+     * @return player mana amount
+     */
     public int getSpecialMana() {
         return mySpecialMana;
     }
@@ -322,6 +410,10 @@ public class Hero extends Character {
     public void addAttackBuff(final int theAttackBuff) {
         myAttackBuff += theAttackBuff;
     }
+    // This is just for testing in HeroTest.
+    public int getAttackBuff() {
+        return myAttackBuff;
+    }
 
     public void addItem(final Item theItem) {
         pickupItem(theItem);
@@ -335,7 +427,9 @@ public class Hero extends Character {
         myBossSlain = theBossSlain;
     }
 
-    // Inner classes for better organization
+    /**
+     * Inner class for dealing with player movement.
+     */
     private static class MovementState {
         private boolean isMovingNorth = false;
         private boolean isMovingSouth = false;
@@ -357,6 +451,9 @@ public class Hero extends Character {
         }
     }
 
+    /**
+     * Inner class for the player's animation.
+     */
     private static class AnimationState {
         private static final int TOTAL_FRAMES_PER_DIRECTION = 3;
         private static final long FRAME_DURATION_MILLIS = 150;
@@ -400,6 +497,9 @@ public class Hero extends Character {
         public int getAnimationRow() { return animationRow; }
     }
 
+    /**
+     * Builder class for hero building.
+     */
     public static class HeroBuilder extends CharacterBuilder<HeroBuilder, Hero> {
         private HeroType myHeroType;
 

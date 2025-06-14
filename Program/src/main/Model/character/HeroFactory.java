@@ -11,10 +11,19 @@ import java.sql.SQLException;
  * Factory class for hero creation.
  *
  * @author Jacob Hilliker
- * @version 5/29/2025
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public class HeroFactory {
-
+    /**
+     * Returns a new Hero object.
+     *
+     * @param theHeroName the name.
+     * @param theHeroType the hero type.
+     * @param theStartingPoint the starting spot.
+     * @return a new Hero.
+     */
     public Hero getHero(final String theHeroName, final HeroType theHeroType,
                         final Point theStartingPoint) {
         Hero hero;
@@ -48,6 +57,15 @@ public class HeroFactory {
         return hero;
     }
 
+    /**
+     * Builder method for creating a hero.
+     *
+     * @param theRS the result set for SQLite.
+     * @param theHeroName name.
+     * @param theHeroType type.
+     * @param theStartingPoint starting spot.
+     * @return a new Hero.
+     */
     private Hero buildHero(final ResultSet theRS, final String theHeroName,
                            final HeroType theHeroType, final Point theStartingPoint) {
         try {

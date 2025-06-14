@@ -22,19 +22,44 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * control main game logic
+ * Controls main game logic and coordinates between the game model and UI
+ * This controller manages game state transitions, player actions, combat,
+ * room interactions, and overall game flow during active gameplay.
  */
 public class GameController {
+
+    /**
+     * The main game model containing all game state, dungeon data, and player information
+     */
     private final Model myGameModel;
+
+    /**
+     * The game user interface responsible for displaying game state and handling visual updates
+     */
     private final GameUI myGameUI;
+
+    /**
+     * The state controller that manages overall game state transitions
+     */
     private final StateController myStateController;
 
+    /**
+     * The currently selected index in player's inventory
+     */
     private int mySelectedInventoryIndex = 0;
+
+    /**
+     * Flag indicating whether player is currently entering combat
+     */
     private boolean myEnteringCombat = false;
+
+    /**
+     * Timestamp of when last combat encounter ended
+     */
     private long myLastCombatEndTime = 0;
 
     /**
-     * Constructor for GameController.
+     * Constructor for GameController
      *
      * @param theGameModel game model containing game data
      * @param theGameUI  game UI displaying game state
@@ -61,41 +86,61 @@ public class GameController {
         if (player != null) {
             Room startingRoom = myGameModel.getDungeon().getRoom(player.getPosition());
             if (startingRoom != null) {
-                // Use the existing enterRoom logic to handle all initial room effects consistently.
+                // Use existing enterRoom logic to handle all initial room effects consistently
                 enterRoom(startingRoom);
             }
         }
     }
-    // Add this method to prevent room transitions during combat
+
+    /**
+     * Determines if player can currently move based on game state
+     *
+     * @return true if player can move, false otherwise
+     */
     private boolean canMovePlayer() {
         return myStateController.isInState(GameState.EXPLORING) && !myEnteringCombat;
     }
 
-    // Update all movement methods to use this check:
+
+    /**
+     * Initiates north movement for player character
+     */
     public void startPlayerMovementNorth() {
         if (canMovePlayer()) {
             myGameModel.getPlayer().startMovingNorth();
         }
     }
 
+    /**
+     * Initiates south movement for player character
+     */
     public void startPlayerMovementSouth() {
         if (canMovePlayer()) {
             myGameModel.getPlayer().startMovingSouth();
         }
     }
 
+    /**
+     * Initiates east movement for player character
+     */
     public void startPlayerMovementEast() {
         if (canMovePlayer()) {
             myGameModel.getPlayer().startMovingEast();
         }
     }
 
+    /**
+     * Initiates west movement for player character
+     */
     public void startPlayerMovementWest() {
         if (canMovePlayer()) {
             myGameModel.getPlayer().startMovingWest();
         }
     }
 
+    /**
+     * Stops north movement for player character
+     */
     public void stopPlayerMovementNorth() {
         Hero player = myGameModel.getPlayer();
         if (player != null) {
@@ -103,6 +148,9 @@ public class GameController {
         }
     }
 
+    /**
+     * Stops south movement for player character
+     */
     public void stopPlayerMovementSouth() {
         Hero player = myGameModel.getPlayer();
         if (player != null) {
@@ -110,6 +158,9 @@ public class GameController {
         }
     }
 
+    /**
+     * Stops east movement for player character
+     */
     public void stopPlayerMovementEast() {
         Hero player = myGameModel.getPlayer();
         if (player != null) {
@@ -117,6 +168,9 @@ public class GameController {
         }
     }
 
+    /**
+     * Stops west movement for player character
+     */
     public void stopPlayerMovementWest() {
         Hero player = myGameModel.getPlayer();
         if (player != null) {
@@ -125,9 +179,9 @@ public class GameController {
     }
 
     /**
-     * Updates existing room transition methods to only handle room changes,
-     * not pixel movement (that's handled in Hero.updatePixelPosition()).
-     */
+      * Updates existing room transition methods to only handle room changes,
+      * not pixel movement (that's handled in Hero.updatePixelPosition()).
+      */
     public void movePlayerNorth() {
         if (!canMovePlayer()) {
             System.out.println("Cannot move player - not in exploring state or entering combat");
@@ -138,10 +192,10 @@ public class GameController {
         Point currentPos = player.getPosition();
         Point newPos = new Point(currentPos.getX(), currentPos.getY() - 1);
 
-        // Move player to the new room
+        // Move player to new room
         player.setPosition(newPos);
 
-        // Enter the new room and handle room effects
+        // Enter new room and handle room effects
         Room newRoom = myGameModel.getDungeon().getRoom(newPos);
         enterRoom(newRoom);
 
@@ -151,6 +205,9 @@ public class GameController {
         System.out.println("Player moved north to " + newPos);
     }
 
+    /**
+     * Moves player to room south of their current position
+     */
     public void movePlayerSouth() {
         if (!myStateController.isInState(GameState.EXPLORING)) {
             return;
@@ -168,6 +225,9 @@ public class GameController {
         System.out.println("Player moved south to " + newPos);
     }
 
+    /**
+     * Moves player to room east of their current position
+     */
     public void movePlayerEast() {
         if (!myStateController.isInState(GameState.EXPLORING)) {
             return;
@@ -185,6 +245,9 @@ public class GameController {
         System.out.println("Player moved east to " + newPos);
     }
 
+    /**
+     * Moves player to room west of their current position
+     */
     public void movePlayerWest() {
         if (!myStateController.isInState(GameState.EXPLORING)) {
             return;
@@ -202,29 +265,8 @@ public class GameController {
         System.out.println("Player moved west to " + newPos);
     }
 
-//    /**
-//     * Update the legacy startPlayerMovement method to work with new system.
-//     */
-//    public void startPlayerMovement(final Direction theDirection) {
-//        switch (theDirection) {
-//            case NORTH:
-//                startPlayerMovementNorth();
-//                break;
-//            case SOUTH:
-//                startPlayerMovementSouth();
-//                break;
-//            case EAST:
-//                startPlayerMovementEast();
-//                break;
-//            case WEST:
-//                startPlayerMovementWest();
-//                break;
-//        }
-//    }
-//
-//    /**
     /**
-     * Stops all player movement - useful when transitioning between states
+     * Stops all player movement
      */
     public void stopPlayerMovement() {
         Hero player = myGameModel.getPlayer();
@@ -238,7 +280,7 @@ public class GameController {
     }
 
     /**
-     * Notifies the UI that the player has moved to a new room.
+     * Notifies UI that player has moved to new room
      */
     private void notifyRoomChanged() {
         if (myGameUI != null && myGameUI.getGameScreen() != null) {
@@ -248,12 +290,11 @@ public class GameController {
 
 
     /**
-     * Handles room entry logic.
+     * Handles room entry logic
      */
     private void enterRoom(final Room theRoom) {
-        // Add cooldown check to prevent immediate re-entry into combat
         long timeSinceLastCombat = System.currentTimeMillis() - myLastCombatEndTime;
-        if (timeSinceLastCombat < 200) { // 200ms cooldown
+        if (timeSinceLastCombat < 200) {
             System.out.println("DEBUG: Too soon after last combat, skipping room entry");
             return;
         }
@@ -321,6 +362,10 @@ public class GameController {
         myGameUI.updateRoomDescription(theRoom);
     }
 
+    /**
+     * Activates a cheat that reveals the entire dungeon map
+     * Sets all rooms in the dungeon as visited, making them visible to the player
+     */
     public void activateDungeonVisionCheat() {
         Dungeon dungeon = myGameModel.getDungeon();
         for (int row = 0; row < dungeon.getHeight(); row++) {
@@ -331,10 +376,10 @@ public class GameController {
     }
 
     /**
-     * Activates a trap in the room and applies its effects.
-     * Trap only triggers once per room.
+     * Activates trap in room and applies its effects
+     * Trap only triggers once per room
      *
-     * @param theRoom The room containing the trap
+     * @param theRoom room containing trap
      */
     private void activateTrap(final Room theRoom) {
         // Check if trap exists and hasn't been sprung yet
@@ -347,7 +392,7 @@ public class GameController {
             System.out.println("Player triggered a trap and took " + damage + " damage!");
 
             // Mark the trap as sprung so it won't trigger again
-            theRoom.getTrap().trigger(player); // This should set isSprung to true
+            theRoom.getTrap().trigger(player);
 
             // Trigger the damage flash effect
             triggerDamageFlash();
@@ -364,7 +409,7 @@ public class GameController {
     }
 
     /**
-     * Triggers the damage flash effect on the game screen
+     * Triggers damage flash effect on game screen
      */
     private void triggerDamageFlash() {
         if (myGameUI != null && myGameUI.getGameScreen() != null) {
@@ -377,7 +422,7 @@ public class GameController {
     /**
      *activates pillar in room
      *
-     * @param theRoom The room containing the pillar
+     * @param theRoom room containing pillar
      */
     private void activatePillar(final Room theRoom) {
         if (theRoom.hasPillar() && !theRoom.getPillar().isActivated()) {
@@ -401,7 +446,7 @@ public class GameController {
                 System.out.println("Pillar of " + pillar.getType().getDisplayName() + " activated!");
                 System.out.println("Player now has " + player.getPillarsActivated() + "/4 pillars");
 
-                // Check if all pillars activated (win condition)
+                // Check if all pillars activated
                 checkWinCondition();
             } else {
                 System.out.println("DEBUG: Failed to activate pillar");
@@ -410,7 +455,7 @@ public class GameController {
     }
 
     /**
-     * Checks if the player has met the win condition (activated all pillars and in exit).
+     * Checks if player has met win condition
      */
     public void checkWinCondition() {
         Hero player = myGameModel.getPlayer();
@@ -435,8 +480,6 @@ public class GameController {
         System.out.println("- At exit: " + atExit);
         System.out.println("- Boss defeated: " + bossDefeated);
 
-        // For now, let's make it so you only need pillars and exit (not boss)
-        // You can add boss requirement later
         if (allPillarsActivated && atExit) {
             System.out.println("🎉 WIN CONDITION MET! 🎉");
             myStateController.changeState(GameState.VICTORY);
@@ -451,7 +494,7 @@ public class GameController {
     }
 
     /**
-     * Checks player's health status and handles death if necessary.
+     * Checks player's health status and handles death if necessary
      */
     private void checkPlayerStatus() {
         if (myGameModel.getPlayer().getHealth() <= 0) {
@@ -474,7 +517,7 @@ public class GameController {
 
         System.out.println("DEBUG: Interacting in room at " + currentRoom.getPosition());
 
-        // Check for pillar interaction
+        // Check for pillar interaction FIRST
         if (currentRoom.hasPillar() && !currentRoom.getPillar().isActivated()) {
             if (isPlayerNearPillar()) {
                 System.out.println("DEBUG: Manually activating pillar via interaction");
@@ -523,12 +566,12 @@ public class GameController {
     }
 
     /**
-     * Collects all items from the current room.
+     * Collects all items from current room
      *
-     * @param theRoom The room containing items
+     * @param theRoom room containing items
      */
     private void collectItems(final Room theRoom) {
-        List<Item> items = new ArrayList<>(theRoom.getItems()); // Create copy to avoid modification issues
+        List<Item> items = new ArrayList<>(theRoom.getItems());
         if (!items.isEmpty()) {
             List<Item> collectedItems = new ArrayList<>();
 
@@ -557,7 +600,7 @@ public class GameController {
     }
 
     /**
-     * Opens the player's inventory.
+     * Opens the player's inventory
      */
     public void openInventory() {
         myStateController.changeState(GameState.INVENTORY);
@@ -566,7 +609,7 @@ public class GameController {
     }
 
     /**
-     * Closes the inventory and returns to previous state.
+     * Closes the inventory and returns to previous state
      */
     public void closeInventory() {
         // Determine what state to return to
@@ -586,7 +629,7 @@ public class GameController {
     }
 
     /**
-     * Scrolls the inventory selection up.
+     * Scrolls the inventory selection up
      */
     public void scrollInventoryUp() {
         if (!myStateController.isInState(GameState.INVENTORY)) {
@@ -648,7 +691,6 @@ public class GameController {
         // Call the void useItem method
         myGameModel.getPlayer().useItem(selectedItem);
 
-        // Since we can't check the return value, we'll assume the item was used successfully
         System.out.println("Used item: " + selectedItem.getName());
 
         // Update UI
@@ -687,7 +729,7 @@ public class GameController {
 
         System.out.println("Player attacked " + target.getName() + " for " + damage + " damage!");
 
-        // Check if monster is defeated - SAME FIX HERE
+        // Check if monster is defeated
         if (target.getHealth() <= 0) {
             System.out.println("Defeated " + target.getName() + "!");
             currentRoom.removeMonster(target);
@@ -700,7 +742,7 @@ public class GameController {
             }
         }
 
-        // Monsters' turn to attack (only if combat continues)
+        // Monsters' turn to attack
         if (myStateController.isInState(GameState.COMBAT)) {
             myGameUI.updateCombatScreen(currentRoom.getMonsters());
             myGameUI.updatePlayerStats(); // Update mana/energy display
@@ -709,7 +751,7 @@ public class GameController {
 
 
     /**
-     * Performs a special attack against monsters in the current room.
+     * Performs a special attack against monsters in the current room
      */
     public void playerSpecialAttack() {
         if (!myStateController.isInState(GameState.COMBAT)) {
@@ -741,7 +783,7 @@ public class GameController {
         target.takeDamage(damage);
         System.out.println("Player used special attack on " + target.getName() + " for " + damage + " damage!");
 
-        // Check if monster is defeated - THIS IS THE KEY FIX
+        // Check if monster is defeated
         if (target.getHealth() <= 0) {
             System.out.println("Defeated " + target.getName() + "!");
             currentRoom.removeMonster(target);
@@ -797,15 +839,15 @@ public class GameController {
 
 
     /**
-     *attempts to run from combat.
+     *attempts to run from combat
      */
     public void playerRun() {
         if (!myStateController.isInState(GameState.COMBAT)) {
             return; // Can only run during combat
         }
 
-        // Chance to successfully run away (could be based on player stats)
-        double runChance = 0.6; // 60% chance to run
+        // Chance to successfully run away
+        double runChance = 0.6;
 
         if (Math.random() < runChance) {
             System.out.println("Successfully ran away from combat!");
@@ -821,7 +863,7 @@ public class GameController {
 
 
     /**
-     * Ends combat and returns to exploration mode.
+     * Ends combat and returns to exploration mode
      */
     private void endCombat() {
         System.out.println("DEBUG: endCombat called - resetting flags");
@@ -835,7 +877,7 @@ public class GameController {
     }
 
     /**
-     * Opens a chest in the current room.
+     * Opens a chest in the current room
      */
     public void openChest() {
         if (!myStateController.isInState(GameState.CHEST)) {
@@ -865,7 +907,7 @@ public class GameController {
     }
 
     /**
-     * Cancels chest interaction.
+     * Cancels chest interaction
      */
     public void cancelChestInteraction() {
         if (myStateController.isInState(GameState.CHEST)) {
@@ -876,7 +918,7 @@ public class GameController {
     }
 
     /**
-     *pauses game
+     * pauses game
      */
     public void pauseGame() {
         myStateController.changeState(GameState.PAUSED);
@@ -884,26 +926,14 @@ public class GameController {
         System.out.println("Game paused");
     }
 
+
     /**
-     *resumes game from pause
+     * Inner class for serializing game state data to JSON
      */
-    public void resumeGame() {
-        // Return to previous state
-        Room currentRoom = myGameModel.getDungeon().getRoom(myGameModel.getPlayer().getPosition());
-
-        if (!currentRoom.getMonsters().isEmpty()) {
-            myStateController.changeState(GameState.COMBAT);
-            myGameUI.showCombatScreen(currentRoom.getMonsters());
-        } else {
-            myStateController.changeState(GameState.EXPLORING);
-            myGameUI.hideAllOverlays();
-        }
-
-        System.out.println("Game resumed");
-    }
-
     private static class GameStateData {
+        /** current game state as string */
         public String currentState;
+        /** Timestamp when game was saved */
         public long saveTimestamp;
     }
 
@@ -946,88 +976,34 @@ public class GameController {
         return description.toString();
     }
 
+    /**
+     * Sets currently selected inventory index
+     *
+     * @param theIndex index of inventory item to select
+     */
     public void setInventoryIndex(final int theIndex) {
         mySelectedInventoryIndex = theIndex;
     }
 
     /**
-     *gets current combat status description
-     *
-     * @return string description of current combat
-     */
-    public String getCombatDescription() {
-        Hero player = myGameModel.getPlayer();
-        Room currentRoom = myGameModel.getDungeon().getRoom(player.getPosition());
-        List<Monster> monsters = currentRoom.getMonsters();
-
-        if (monsters.isEmpty()) {
-            return "No monsters present.";
-        }
-
-        StringBuilder description = new StringBuilder();
-        description.append("Combat with: ");
-
-        for (Monster monster : monsters) {
-            description.append("\n").append(monster.getName())
-                    .append(" (HP: ").append(monster.getHealth()).append(")");
-        }
-
-        return description.toString();
-    }
-
-    /**
-     *gets the player's inventory as a formatted string.
-     *
-     * @return string representation of player's inventory
-     */
-    public String getInventoryDescription() {
-        List<Item> inventory = myGameModel.getPlayer().getInventory();
-
-        if (inventory.isEmpty()) {
-            return "Your inventory is empty.";
-        }
-
-        StringBuilder description = new StringBuilder();
-        description.append("Inventory:\n");
-
-        for (int i = 0; i < inventory.size(); i++) {
-            Item item = inventory.get(i);
-            description.append(i == mySelectedInventoryIndex ? "→ " : "  ");
-            description.append(item.getName()).append(" - ").append(item.getDescription()).append("\n");
-        }
-
-        return description.toString();
-    }
-
-    /**
-     * Gets the StateController associated with this GameController.
-     * @return The StateController instance.
+     * Gets StateController associated with this GameController
+     * @return StateController instance
      */
     public StateController getStateController() {
         return myStateController;
     }
 
-    /**
-     * temporary method to demonstrate GameController is working.
-     */
-    public void printStatus() {
-        System.out.println("Game is working");
-        System.out.println("Current state: " + myStateController.getCurrentState());
-        System.out.println("Player: " + myGameModel.getPlayer().getName() +
-                " (HP: " + myGameModel.getPlayer().getHealth() + "/" +
-                myGameModel.getPlayer().getMaxHealth() + ")");
-    }
 
     /**
-     * Gets reference to the GameUI for screen transitions
-     * @return The GameUI instance
+     * Gets reference to GameUI for screen transitions
+     * @return GameUI instance
      */
     public GameUI getGameUI() {
         return myGameUI;
     }
 
     /**
-     * Loads a game from database data (called from SavesScreen)
+     * Loads game from database data
      */
     public boolean loadGameFromSaveData(String playerData, String dungeonData, String gameStateData) {
         try {
@@ -1111,7 +1087,7 @@ public class GameController {
     }
 
     /**
-     * Call this method after loading a game to ensure everything is properly initialized
+     * Outputs debug information about the player's current movement state
      */
     public void initializeLoadedGame() {
         System.out.println("Initializing loaded game...");
@@ -1132,7 +1108,7 @@ public class GameController {
             player.synchronizePositions(480.0, 480.0); // Adjust based on your actual room pixel size
 
             System.out.println("Player initialized - Position: " + player.getPosition() +
-                    ", Pixel: (" + player.getPixelX() + "," + player.getPixelY() + ")");
+                              ", Pixel: (" + player.getPixelX() + "," + player.getPixelY() + ")");
         }
 
         // Ensure we're in the correct state

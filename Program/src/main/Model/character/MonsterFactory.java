@@ -11,10 +11,18 @@ import java.sql.SQLException;
  * Factory class for creating Monsters.
  *
  * @author Jacob Hilliker
- * @version 5/28/2025
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public class MonsterFactory {
-
+    /**
+     * Creates a Monster.
+     *
+     * @param theMonsterType monster type.
+     * @param theSpot monster location.
+     * @return a new Monster.
+     */
     public Monster getMonster(final MonsterType theMonsterType, final Point theSpot) {
         Monster monster;
         if (theMonsterType == null || theSpot == null) {
@@ -59,6 +67,14 @@ public class MonsterFactory {
         }
     }
 
+    /**
+     * Builds a monster.
+     *
+     * @param theRS rs SQLite stuff.
+     * @param theMonsterType monster type.
+     * @param theSpot monster location.
+     * @return a new Monster.
+     */
     private Monster buildMonster(final ResultSet theRS, final MonsterType theMonsterType, final Point theSpot) {
         try {
             return new Monster.MonsterBuilder().setName(theRS.getString("name")).

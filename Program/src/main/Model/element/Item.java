@@ -6,6 +6,11 @@ import java.util.Objects;
 /**
  * Abstract base class for items that can be found and used in the dungeon.
  * Items are DungeonElements that can typically be picked up and used by a Hero.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public abstract class Item extends DungeonElement {
     private final String myName;
@@ -18,7 +23,7 @@ public abstract class Item extends DungeonElement {
      * @param theDescription The description of the item.
      */
     public Item(final String theName, final String theDescription) {
-        if (theName == null || theName.isEmpty()) {
+        if (theName == null || theName.isEmpty() || theName.trim().isEmpty()) {
             throw new IllegalArgumentException("Item name cannot be null or empty.");
         }
         this.myName = theName;

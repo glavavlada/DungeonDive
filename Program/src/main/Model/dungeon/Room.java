@@ -19,6 +19,11 @@ import java.util.Objects;
  * Represents a single room within a dungeon.
  * A room has a type, position, and can contain various dungeon elements
  * like monsters, items, pillars, and traps.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public class Room {
     private final Point myPosition;
@@ -70,10 +75,18 @@ public class Room {
         this.myHasWestDoor = false;
     }
 
+    /**
+     * sets if chest was opened
+     * @param theOpened true if opened
+     */
     public void setChestOpened(final boolean theOpened) {
         this.myChestOpened = theOpened;
     }
 
+    /**
+     * sets if items have been collected
+     * @param theCollected true if collected
+     */
     public void setItemsCollected(final boolean theCollected) {
         this.myItemsCollected = theCollected;
     }

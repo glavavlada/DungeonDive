@@ -2,6 +2,7 @@ package test.Model.character;
 
 import main.Model.character.Character;
 import main.Model.character.Hero;
+import main.Model.character.Monster;
 import main.Model.util.Direction;
 import main.Model.util.HeroType;
 import main.Model.util.Point;
@@ -14,8 +15,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * Note: The abstract attack() method is tested in concrete subclasses (HeroTest, MonsterTest).
  */
 class CharacterTest {
-
-    // TODO: Add tests for added changes like factory and builder stuff
 
     // A concrete implementation of Character for testing purposes
     private static class ConcreteCharacter extends main.Model.character.Character {
@@ -51,11 +50,26 @@ class CharacterTest {
     @BeforeEach
     void setUp() {
         character = new ConcreteCharacter.ConcreteBuilder().
+                                          setName("Name").
                                           setHealth(100).
+                                          setMaxHealth(100).
+                                          setBaseAttackDamage(10).
+                                          setSpecialAttackDamage(20).
+                                          setSpecialAttackName("Special").
+                                          setCritChance(0.10).
+                                          setCritMultiplier(2).
+                                          setDescription("Description").
                                           setPosition(new Point(0, 0)).
                                           build();
         targetCharacter = new ConcreteCharacter.ConcreteBuilder().
                                                 setHealth(50).
+                                                setMaxHealth(50).
+                                                setBaseAttackDamage(10).
+                                                setSpecialAttackDamage(20).
+                                                setSpecialAttackName("Special").
+                                                setCritChance(0.10).
+                                                setCritMultiplier(2).
+                                                setDescription("Description").
                                                 setPosition(new Point(1, 1)).
                                                 build();
     }
@@ -133,4 +147,130 @@ class CharacterTest {
         assertTrue(targetCharacter.getHealth() < initialTargetHealth, "Target character health should decrease after attack.");
         assertEquals(initialTargetHealth - 10, targetCharacter.getHealth(), "Target health should be reduced by attack damage.");
     }
+
+    @Test
+    void getName_properNames() {
+        String name = "Name";
+        assertTrue(name.equals(character.getName()));
+    }
+
+    @Test
+    void addMaxHealth_properHealth() {
+        character.addMaxHealth(15);
+        assertEquals(115, character.getMaxHealth());
+    }
+
+    @Test
+    void getBaseAttack_properAttack() {
+        assertEquals(10, character.getBaseAttackDamage());
+    }
+
+    @Test
+    void getSpecialAttackName_properName() {
+        assertTrue("Special".equals(character.getSpecialAttackName()));
+    }
+
+    @Test
+    void getCritChance_properCritChance() {
+        assertEquals(0.10, character.getCritChance());
+    }
+
+    @Test
+    void getCritMultiplier_properCritMultiplier() {
+        assertEquals(2, character.getCritMultiplier());
+    }
+
+    @Test
+    void addCritChance_properCritChance() {
+        character.addCritChance(0.5);
+        assertEquals(0.6, character.getCritChance());
+    }
+
+    @Test
+    void setName_properBuild() {
+        Character character = new ConcreteCharacter.ConcreteBuilder().setName("hello").build();
+        assertEquals("hello", character.getName());
+    }
+
+    @Test
+    void sethealth_properBuild() {
+        Character character = new ConcreteCharacter.ConcreteBuilder().setHealth(234).build();
+        assertEquals(234, character.getHealth());
+    }
+
+    @Test
+    void sethealth_properThrows() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Character character = new ConcreteCharacter.ConcreteBuilder().setHealth(-23).build();
+        });
+    }
+
+    @Test
+    void setMaxHealth_properBuild() {
+        Character character = new ConcreteCharacter.ConcreteBuilder().setMaxHealth(234).build();
+        assertEquals(234, character.getMaxHealth());
+    }
+
+    @Test
+    void setMaxHealth_properThrows() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            Character character = new ConcreteCharacter.ConcreteBuilder().setMaxHealth(-23).build();
+        });
+    }
+
+    @Test
+    void setPosition_properBuild() {
+        Character character = new ConcreteCharacter.ConcreteBuilder().setPosition(new Point(2,4)).build();
+        assertEquals(2, character.getPosition().getX());
+        assertEquals(4, character.getPosition().getY());
+    }
+
+    @Test
+    void setBaseAttackDamage_properBuild() {
+        Character character = new ConcreteCharacter.ConcreteBuilder().setBaseAttackDamage(27).build();
+        assertEquals(27, character.getBaseAttackDamage());
+    }
+
+    @Test
+    void setSpecialAttackDamage_properBuild() {
+        Character character = new ConcreteCharacter.ConcreteBuilder().setSpecialAttackDamage(84).build();
+        assertEquals(84, character.getSpecialAttackDamage());
+    }
+
+    @Test
+    void setSpecialAttackName_properBuild() {
+        Character character = new ConcreteCharacter.ConcreteBuilder().setSpecialAttackName("Goofy Name").build();
+        assertEquals("Goofy Name", character.getSpecialAttackName());
+    }
+
+    @Test
+    void setCritChance_properBuild() {
+        Character character = new ConcreteCharacter.ConcreteBuilder().setCritChance(0.23423).build();
+        assertEquals(0.23423, character.getCritChance());
+    }
+
+    @Test
+    void setCritMultiplier_properBuild() {
+        Character character = new ConcreteCharacter.ConcreteBuilder().setCritMultiplier(234.4236312).build();
+        assertEquals(234.4236312, character.getCritMultiplier());
+    }
+
+    @Test
+    void setDescription_properBuild() {
+        Character character = new ConcreteCharacter.ConcreteBuilder().setDescription("Hello World").build();
+        assertEquals("Hello World", character.getDescription());
+    }
+
+    @Test
+    void build_properBuild() {
+        Character character = new ConcreteCharacter.ConcreteBuilder().
+                setMaxHealth(4).
+                setBaseAttackDamage(34).
+                build();
+        assertEquals(0, character.getHealth());
+        assertNull(character.getPosition());
+        assertEquals(4, character.getMaxHealth());
+        assertEquals(34, character.getBaseAttackDamage());
+    }
+
 }

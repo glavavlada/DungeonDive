@@ -5,17 +5,46 @@ import javafx.scene.input.KeyCode;
 import main.Controller.StateController.GameState;
 import main.Model.util.Direction;
 
+/**
+ * Handles all keyboard input for game and routes commands to appropriate controllers
+ * This controller processes key press and release events, manages input based on current
+ * game state, and provides state-specific input handling for exploration, combat,
+ * inventory management, and other game modes
+ */
 public class InputController {
+
+    /**
+     * Reference to main game controller that handles game logic and operations
+     */
     private final GameController myGameController;
+
+    /**
+     * Reference to state controller that manages overall game state transitions
+     */
     private final StateController myStateController;
 
-    // Track the previous state to detect state changes
+    /**
+     * Tracks previous game state to detect state changes
+     */
     private GameState myPreviousState;
 
-    // Add cooldown tracking
+    /**
+     * Timestamp of when last combat encounter ended
+     */
     private long myLastCombatEndTime = 0;
-    private static final long COMBAT_END_COOLDOWN = 500; // 500ms cooldown after combat
 
+    /**
+     * Duration of the cooldown period after combat ends, in milliseconds
+     */
+    private static final long COMBAT_END_COOLDOWN = 500;
+
+    /**
+     * Constructs new InputController with specified game and state controllers
+     *
+     * @param theGameController GameController to route game actions to, cannot be null
+     * @param theStateController StateController to check game state, cannot be null
+     * @throws IllegalArgumentException if either controller parameter is null
+     */
     public InputController(final GameController theGameController, final StateController theStateController) {
         if (theGameController == null) {
             throw new IllegalArgumentException("GameController cannot be null for InputController.");
@@ -29,17 +58,16 @@ public class InputController {
         System.out.println("InputController initialized with GameController and StateController.");
     }
 
-    // Add this method to test if InputController is working
-    public void testInputController() {
-        System.out.println("InputController is active and ready");
-        System.out.println("Current game state: " + myStateController.getCurrentState());
-    }
 
+    /**
+     * Handles key press events and routes them to appropriate state specific handlers
+     *
+     * @param theEvent KeyEvent containing information about pressed key
+     */
     public void handleKeyPress(final KeyEvent theEvent) {
         KeyCode code = theEvent.getCode();
         GameState currentState = myStateController.getCurrentState();
 
-        // ADD THIS DEBUG LINE
         System.out.println("DEBUG: InputController received key: " + code + " in state: " + currentState);
 
         //check if state changed and stop all movement if transitioning from EXPLORING
@@ -84,6 +112,11 @@ public class InputController {
         theEvent.consume();
     }
 
+    /**
+     * Handles key release events, primarily for movement controls
+     *
+     * @param theEvent KeyEvent containing information about released key
+     */
     public void handleKeyRelease(final KeyEvent theEvent) {
         KeyCode code = theEvent.getCode();
         GameState currentState = myStateController.getCurrentState();
@@ -97,7 +130,9 @@ public class InputController {
     }
 
     /**
-     * Handles movement key releases specifically
+     * Handles movement key releases specifically for directional movement
+     *
+     * @param theCode KeyCode of the released key
      */
     private void handleMovementKeyRelease(final KeyCode theCode) {
         switch (theCode) {
@@ -121,7 +156,9 @@ public class InputController {
     }
 
     /**
-     * Check if we're still in the cooldown period after combat ended
+     * Checks if game is currently in cooldown period after combat ended
+     *
+     * @return true if still in post-combat cooldown, false otherwise
      */
     private boolean isInPostCombatCooldown() {
         if (myLastCombatEndTime == 0) {
@@ -132,6 +169,11 @@ public class InputController {
         return timeSinceCombatEnd < COMBAT_END_COOLDOWN;
     }
 
+    /**
+     * Handles input during exploration state
+     *
+     * @param theCode KeyCode of pressed key
+     */
     private void handleExplorationInput(final KeyCode theCode) {
         // Check if we're in cooldown period after combat
         if (isInPostCombatCooldown()) {
@@ -171,6 +213,11 @@ public class InputController {
         }
     }
 
+    /**
+     * Handles input during combat state
+     *
+     * @param theCode KeyCode of pressed key
+     */
     private void handleCombatInput(final KeyCode theCode) {
         // Make sure we're actually in combat state
         if (!myStateController.isInState(GameState.COMBAT)) {
@@ -194,13 +241,18 @@ public class InputController {
             case ESCAPE:
                 myGameController.pauseGame();
                 break;
-            // Don't handle W, A, S, D as movement in combat!
+            // Don't handle W, A, S, D as movement in combat
             default:
                 System.out.println("Unhandled key in combat: " + theCode);
                 break;
         }
     }
 
+    /**
+     * Handles input during inventory state
+     *
+     * @param theCode KeyCode of pressed key
+     */
     private void handleInventoryInput(final KeyCode theCode) {
         switch (theCode) {
             case UP:
@@ -224,6 +276,11 @@ public class InputController {
         }
     }
 
+    /**
+     * Handles input during chest interaction state
+     *
+     * @param theCode KeyCode of pressed key
+     */
     private void handleChestInput(final KeyCode theCode) {
         switch (theCode) {
             case E:

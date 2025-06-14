@@ -3,6 +3,11 @@ package main.Model.util;
 /**
  * Enum representing the different types of monsters in the game.
  * Each type can have predefined stats and abilities.
+ *
+ * @author Jacob Hilliker
+ * @author Emanuel Feria
+ * @author Vladyslav Glavatskyi
+ * @version 6/13/2025
  */
 public enum MonsterType {
     // Regular Monsters
