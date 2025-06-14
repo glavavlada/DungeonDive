@@ -340,8 +340,21 @@ public class SavesScreen extends Screen {
         backButton.setPrefWidth(BASE_BACK_BUTTON_WIDTH);
         backButton.setPrefHeight(BASE_BACK_BUTTON_HEIGHT);
 
-        backButton.setOnAction(event -> theUI.showIntroScreen());
+        backButton.setOnAction(_ -> handleBackButtonAction(theUI));
         return backButton;
+    }
+
+    private void handleBackButtonAction(GameUI theUI) {
+        // Check if there's an active game (player exists)
+        boolean hasActiveGame = getController().getPlayer() != null;
+
+        if (hasActiveGame) {
+            // If there's an active game, return to the pause menu
+            theUI.showPauseMenu();
+        } else {
+            // If no active game, return to intro screen
+            theUI.showIntroScreen();
+        }
     }
 
     private void handleDeleteSave(String saveName, GameUI theUI) {
