@@ -15,6 +15,7 @@ import main.View.GameUI;
 import main.Controller.StateController.GameState;
 
 import main.Model.util.Point;
+import main.View.screen.gamescreen.GameScreenCanvasDimensions;
 
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -124,9 +125,9 @@ public class GameController {
     }
 
     /**
-      * Updates existing room transition methods to only handle room changes,
-      * not pixel movement (that's handled in Hero.updatePixelPosition()).
-      */
+     * Updates existing room transition methods to only handle room changes,
+     * not pixel movement (that's handled in Hero.updatePixelPosition()).
+     */
     public void movePlayerNorth() {
         if (!canMovePlayer()) {
             System.out.println("Cannot move player - not in exploring state or entering combat");
@@ -258,20 +259,6 @@ public class GameController {
         }
 
         System.out.println("DEBUG: Entering room at " + theRoom.getPosition());
-        System.out.println("DEBUG: Room has pillar: " + theRoom.hasPillar());
-
-        // Check for pillar FIRST before combat
-        if (theRoom.hasPillar()) {
-            Pillar pillar = theRoom.getPillar();
-            System.out.println("DEBUG: Found pillar - Type: " + pillar.getType() + ", Activated: " + pillar.isActivated());
-
-            if (!pillar.isActivated()) {
-                System.out.println("DEBUG: Activating pillar...");
-                activatePillar(theRoom);
-            } else {
-                System.out.println("DEBUG: Pillar already activated");
-            }
-        }
 
         // Prevent multiple rapid combat entries
         if (myEnteringCombat) {
@@ -487,10 +474,14 @@ public class GameController {
 
         System.out.println("DEBUG: Interacting in room at " + currentRoom.getPosition());
 
-        // Check for pillar interaction FIRST
+        // Check for pillar interaction
         if (currentRoom.hasPillar() && !currentRoom.getPillar().isActivated()) {
-            System.out.println("DEBUG: Manually activating pillar via interaction");
-            activatePillar(currentRoom);
+            if (isPlayerNearPillar()) {
+                System.out.println("DEBUG: Manually activating pillar via interaction");
+                activatePillar(currentRoom);
+            } else {
+                myGameUI.getGameScreen().addGameMessage("You are not close enough to the pillar to activate it.");
+            }
             return;
         }
 
@@ -509,6 +500,26 @@ public class GameController {
         }
 
         System.out.println("Nothing to interact with in this room");
+    }
+
+    private boolean isPlayerNearPillar() {
+        Hero player = myGameModel.getPlayer();
+        GameScreenCanvasDimensions canvasDimensions = myGameUI.getGameScreen().getCanvasDimensions();
+        if (player == null || canvasDimensions == null) {
+            return false;
+        }
+        double pillarCenterX = canvasDimensions.getSize() / 2;
+        double pillarCenterY = canvasDimensions.getSize() / 2;
+        double playerCenterX = player.getPixelX() + canvasDimensions.getHeroSize() / 2;
+        double playerCenterY = player.getPixelY() + canvasDimensions.getHeroSize() / 2;
+
+        double distance = Math.sqrt(
+                Math.pow(playerCenterX - pillarCenterX, 2) +
+                        Math.pow(playerCenterY - pillarCenterY, 2)
+        );
+
+        final double PILLAR_COLLECTION_DISTANCE = 30.0;
+        return distance <= PILLAR_COLLECTION_DISTANCE;
     }
 
     /**
@@ -1121,7 +1132,7 @@ public class GameController {
             player.synchronizePositions(480.0, 480.0); // Adjust based on your actual room pixel size
 
             System.out.println("Player initialized - Position: " + player.getPosition() +
-                              ", Pixel: (" + player.getPixelX() + "," + player.getPixelY() + ")");
+                    ", Pixel: (" + player.getPixelX() + "," + player.getPixelY() + ")");
         }
 
         // Ensure we're in the correct state
@@ -1152,4 +1163,3 @@ public class GameController {
     }
 
 }
-
